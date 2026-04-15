@@ -1,0 +1,54 @@
+# Expo
+.expo/
+dist/
+web-build/
+.expo-shared/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# MacOS
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.network*
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Android
+*.apk
+*.aab
+android/.gradle
+android/app/build
+android/.idea
+android/local.properties
+
+# iOS
+ios/Pods/
+ios/.xcode.env.local
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
