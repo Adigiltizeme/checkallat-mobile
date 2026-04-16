@@ -26,7 +26,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
   const [register, { isLoading, error }] = useRegisterMutation();
 
   const registerSchema = useMemo(() => z.object({
-    phone: z.string().min(10, t('auth.phone_invalid')),
+    phone: z.string().regex(/^\+\d{10,15}$/, t('auth.phone_invalid')),
     email: z.string().email(t('auth.email_invalid')).optional(),
     firstName: z.string().min(2, t('auth.first_name_min')),
     lastName: z.string().min(2, t('auth.last_name_min')),
@@ -121,6 +121,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               keyboardType="phone-pad"
+              placeholder={t('auth.phone_placeholder')}
               outlineColor={colors.border}
               activeOutlineColor={colors.primary}
             />
