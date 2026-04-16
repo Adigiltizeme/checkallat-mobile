@@ -17,7 +17,8 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const MainNavigator = () => {
   const { t } = useTranslation();
-  const isDriver = useSelector((state: RootState) => state.auth.isDriver);
+  const activeRole = useSelector((state: RootState) => state.auth.activeRole);
+  const isDriver = activeRole === 'driver';
 
   return (
     <Tab.Navigator

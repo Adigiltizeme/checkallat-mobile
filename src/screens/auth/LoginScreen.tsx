@@ -5,9 +5,10 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLoginMutation } from '../../store/api/authApi';
 import { useDispatch } from 'react-redux';
-import { setCredentials } from '../../store/slices/authSlice';
+import { setCredentials, DEFAULT_ROLE_KEY, UserRole } from '../../store/slices/authSlice';
 import { colors } from '../../theme/colors';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
@@ -36,14 +37,8 @@ export const LoginScreen = ({ navigation }: Props) => {
   const onSubmit = async (data: LoginForm) => {
     try {
       const result = await login(data).unwrap();
-      console.log('[LOGIN] User logged in:', {
-        id: result.user.id,
-        email: result.user.email,
-        isDriver: !!result.user.driver,
-        isPro: !!result.user.pro,
-        isSeller: !!result.user.marketplaceSeller,
-      });
-      dispatch(setCredentials(result));
+      const savedDefault = await AsyncStorage.getItem(DEFAULT_ROLE_KEY) as UserRole | null;
+      dispatch(setCredentials({ ...result, defaultRole: savedDefault }));
       // Navigation handled automatically by RootNavigator
     } catch (err) {
       console.error('Login failed:', err);

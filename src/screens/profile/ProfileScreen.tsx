@@ -7,7 +7,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootState } from '../../store';
-import { logout } from '../../store/slices/authSlice';
+import { logout, setActiveRole, clearDefaultRole, UserRole } from '../../store/slices/authSlice';
 import { ProfileStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -23,7 +23,10 @@ export const ProfileScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileNavProp>();
   const user = useSelector((state: RootState) => state.auth.user);
-  const isDriver = useSelector((state: RootState) => state.auth.isDriver);
+  const activeRole = useSelector((state: RootState) => state.auth.activeRole);
+  const availableRoles = useSelector((state: RootState) => state.auth.availableRoles);
+  const defaultRole = useSelector((state: RootState) => state.auth.defaultRole);
+  const isDriver = activeRole === 'driver';
   const currentLang = useSelector((state: RootState) => state.auth.language ?? 'fr');
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -71,6 +74,38 @@ export const ProfileScreen = () => {
           </View>
         )}
       </View>
+
+      {/* Switcher de rôle — visible uniquement si plusieurs rôles */}
+      {availableRoles.length > 1 && (
+        <View style={styles.section}>
+          {availableRoles.filter((r) => r !== activeRole).map((role, index) => {
+            const iconName = role === 'driver' ? 'truck-delivery' : role === 'pro' ? 'briefcase' : role === 'seller' ? 'store' : 'account';
+            const iconColor = role === 'driver' ? '#F59E0B' : role === 'pro' ? '#10B981' : role === 'seller' ? '#8B5CF6' : colors.primary;
+            return (
+              <React.Fragment key={role}>
+                {index > 0 && <Divider />}
+                <List.Item
+                  title={t(`role_selector.role_${role}`)}
+                  description={defaultRole === role ? t('role_selector.default') : t(`role_selector.desc_${role}`)}
+                  left={(props) => <List.Icon {...props} icon={iconName} color={iconColor} />}
+                  right={(props) => <List.Icon {...props} icon="swap-horizontal" />}
+                  onPress={() => dispatch(setActiveRole({ role, setAsDefault: false }))}
+                />
+              </React.Fragment>
+            );
+          })}
+          {defaultRole && (
+            <>
+              <Divider />
+              <List.Item
+                title={t('role_selector.clear_default')}
+                left={(props) => <List.Icon {...props} icon="star-off" color={colors.gray} />}
+                onPress={() => dispatch(clearDefaultRole())}
+              />
+            </>
+          )}
+        </View>
+      )}
 
       {/* Compte */}
       <View style={styles.section}>

@@ -4,15 +4,21 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
+import { RoleSelectorScreen } from '../screens/auth/RoleSelectorScreen';
 
 export const RootNavigator = () => {
-  const isAuthenticated = useSelector(
-    (state: RootState) => state.auth.isAuthenticated,
-  );
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const needsRoleSelection = useSelector((state: RootState) => state.auth.needsRoleSelection);
 
   return (
     <NavigationContainer>
-      {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
+      {!isAuthenticated ? (
+        <AuthNavigator />
+      ) : needsRoleSelection ? (
+        <RoleSelectorScreen />
+      ) : (
+        <MainNavigator />
+      )}
     </NavigationContainer>
   );
 };
