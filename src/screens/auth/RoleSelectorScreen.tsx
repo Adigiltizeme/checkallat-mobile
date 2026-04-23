@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: spacing.xs,
-    color: colors.text,
+    color: colors.text.primary,
   },
   subtitle: {
     textAlign: 'center',
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   roleLabel: {
     fontWeight: '600',
     flex: 1,
-    color: colors.text,
+    color: colors.text.primary,
   },
   roleDesc: {
     color: colors.gray,
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
   },
   defaultToggleText: {
-    color: colors.text,
+    color: colors.text.primary,
     fontSize: 14,
   },
   confirmBtn: {

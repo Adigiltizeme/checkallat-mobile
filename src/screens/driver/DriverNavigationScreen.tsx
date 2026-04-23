@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import Mapbox from '@rnmapbox/maps';
 import * as Location from 'expo-location';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -17,9 +17,9 @@ import { useTranslation } from 'react-i18next';
 type Props = StackScreenProps<DriverStackParamList, 'DriverNavigation'>;
 
 export const DriverNavigationScreen = ({ navigation, route }: Props) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { requestId } = route.params;
-  const { data: request, isLoading } = useGetTransportRequestQuery(requestId);
+  const { data: request } = useGetTransportRequestQuery(requestId);
   const [updateLocation] = useUpdateDriverLocationMutation();
 
   const [currentLocation, setCurrentLocation] = useState<{
@@ -27,7 +27,7 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
     longitude: number;
   } | null>(null);
   const [heading, setHeading] = useState<number>(0);
-  const mapRef = useRef<MapView>(null);
+  const cameraRef = useRef<Mapbox.Camera>(null);
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
 
   useEffect(() => {
@@ -46,11 +46,18 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
       }
 
       const location = await Location.getCurrentPositionAsync({});
-      setCurrentLocation({
+      const initialCoords = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-      });
+      };
+      setCurrentLocation(initialCoords);
       setHeading(location.coords.heading || 0);
+
+      cameraRef.current?.setCamera({
+        centerCoordinate: [initialCoords.longitude, initialCoords.latitude],
+        zoomLevel: 15,
+        animationDuration: 0,
+      });
 
       locationSubscription.current = await Location.watchPositionAsync(
         {
@@ -66,7 +73,13 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
           setCurrentLocation(newCoords);
           setHeading(newLocation.coords.heading || 0);
 
-          // Update backend
+          cameraRef.current?.setCamera({
+            centerCoordinate: [newCoords.longitude, newCoords.latitude],
+            zoomLevel: 15,
+            heading: newLocation.coords.heading || 0,
+            animationDuration: 1000,
+          });
+
           updateLocation({
             id: requestId,
             lat: newLocation.coords.latitude,
@@ -86,12 +99,11 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
   };
 
   const handleCenterMap = () => {
-    if (currentLocation && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
+    if (currentLocation) {
+      cameraRef.current?.setCamera({
+        centerCoordinate: [currentLocation.longitude, currentLocation.latitude],
+        zoomLevel: 15,
+        animationDuration: 500,
       });
     }
   };
@@ -108,7 +120,6 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
     Linking.openURL(url);
   };
 
-  // Vérifications complètes avant d'afficher la carte
   if (!request) {
     return (
       <View style={styles.loadingContainer}>
@@ -125,12 +136,14 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
     );
   }
 
-  // Vérifier que les coordonnées pickup et delivery existent
-  if (!request.pickup || !request.delivery ||
-      typeof request.pickup.lat !== 'number' ||
-      typeof request.pickup.lng !== 'number' ||
-      typeof request.delivery.lat !== 'number' ||
-      typeof request.delivery.lng !== 'number') {
+  if (
+    !request.pickup ||
+    !request.delivery ||
+    typeof request.pickup.lat !== 'number' ||
+    typeof request.pickup.lng !== 'number' ||
+    typeof request.delivery.lat !== 'number' ||
+    typeof request.delivery.lng !== 'number'
+  ) {
     return (
       <View style={styles.loadingContainer}>
         <Text>{t('transport.invalid_destination_coordinates')}</Text>
@@ -141,84 +154,78 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
     );
   }
 
-  const destination =
-    request.status === 'driver_en_route_pickup' ||
-    request.status === 'arrived_pickup' ||
-    request.status === 'loading'
-      ? request.pickup
-      : request.delivery;
-
   const isGoingToPickup =
     request.status === 'driver_en_route_pickup' ||
     request.status === 'arrived_pickup' ||
     request.status === 'loading';
 
+  const destination = isGoingToPickup ? request.pickup : request.delivery;
+
+  const currentCoord: [number, number] = [currentLocation.longitude, currentLocation.latitude];
+  const pickupCoord: [number, number] = [request.pickup.lng, request.pickup.lat];
+  const deliveryCoord: [number, number] = [request.delivery.lng, request.delivery.lat];
+  const destinationCoord: [number, number] = [destination.lng, destination.lat];
+
+  const routeShape = {
+    type: 'Feature' as const,
+    geometry: {
+      type: 'LineString' as const,
+      coordinates: [currentCoord, destinationCoord],
+    },
+    properties: {},
+  };
+
   return (
     <View style={styles.container}>
-      {/* Map */}
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        initialRegion={{
-          latitude: currentLocation.latitude,
-          longitude: currentLocation.longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        }}
-        showsUserLocation
-        showsMyLocationButton={false}
-        followsUserLocation
-      >
-        {/* Current Location Marker */}
-        <Marker
-          coordinate={currentLocation}
-          anchor={{ x: 0.5, y: 0.5 }}
-          rotation={heading}
-        >
-          <View style={styles.driverMarker}>
+      <Mapbox.MapView style={styles.map}>
+        <Mapbox.Camera
+          ref={cameraRef}
+          defaultSettings={{
+            centerCoordinate: currentCoord,
+            zoomLevel: 15,
+          }}
+        />
+
+        {/* Marqueur chauffeur */}
+        <Mapbox.PointAnnotation id="driver" coordinate={currentCoord}>
+          <View style={[styles.driverMarker, { transform: [{ rotate: `${heading}deg` }] }]}>
             <Icon name="truck" size={24} color={colors.white} />
           </View>
-        </Marker>
+        </Mapbox.PointAnnotation>
 
-        {/* Pickup Marker */}
-        <Marker
-          coordinate={{
-            latitude: request.pickup.lat,
-            longitude: request.pickup.lng,
-          }}
-          title={t('transport.loading_point')}
-          description={request.pickup.address}
-          pinColor={isGoingToPickup ? colors.primary : colors.gray}
-        />
-
-        {/* Delivery Marker */}
-        <Marker
-          coordinate={{
-            latitude: request.delivery.lat,
-            longitude: request.delivery.lng,
-          }}
-          title={t('transport.delivery_point')}
-          description={request.delivery.address}
-          pinColor={!isGoingToPickup ? colors.success : colors.gray}
-        />
-
-        {/* Route Line */}
-        {destination &&
-         typeof destination.lat === 'number' &&
-         typeof destination.lng === 'number' &&
-         typeof currentLocation.latitude === 'number' &&
-         typeof currentLocation.longitude === 'number' && (
-          <Polyline
-            coordinates={[
-              currentLocation,
-              { latitude: destination.lat, longitude: destination.lng }
+        {/* Marqueur pickup */}
+        <Mapbox.PointAnnotation id="pickup" coordinate={pickupCoord}>
+          <View
+            style={[
+              styles.waypointMarker,
+              { backgroundColor: isGoingToPickup ? colors.primary : colors.gray },
             ]}
-            strokeColor={isGoingToPickup ? colors.primary : colors.success}
-            strokeWidth={4}
           />
-        )}
-      </MapView>
+          <Mapbox.Callout title={t('transport.loading_point')} />
+        </Mapbox.PointAnnotation>
+
+        {/* Marqueur livraison */}
+        <Mapbox.PointAnnotation id="delivery" coordinate={deliveryCoord}>
+          <View
+            style={[
+              styles.waypointMarker,
+              { backgroundColor: !isGoingToPickup ? colors.success : colors.gray },
+            ]}
+          />
+          <Mapbox.Callout title={t('transport.delivery_point')} />
+        </Mapbox.PointAnnotation>
+
+        {/* Ligne de route */}
+        <Mapbox.ShapeSource id="routeSource" shape={routeShape}>
+          <Mapbox.LineLayer
+            id="routeLine"
+            style={{
+              lineColor: isGoingToPickup ? colors.primary : colors.success,
+              lineWidth: 4,
+            }}
+          />
+        </Mapbox.ShapeSource>
+      </Mapbox.MapView>
 
       {/* Top Info Card */}
       <Card style={styles.topCard}>
@@ -231,7 +238,9 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
             />
             <View style={styles.destinationText}>
               <Text variant="labelSmall" style={styles.destinationLabel}>
-                {isGoingToPickup ? t('driver.loading_point_label') : t('driver.delivery_point_label')}
+                {isGoingToPickup
+                  ? t('driver.loading_point_label')
+                  : t('driver.delivery_point_label')}
               </Text>
               <Text variant="bodyMedium" numberOfLines={1} style={styles.destinationAddress}>
                 {destination.address}
@@ -292,6 +301,13 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 3,
+    borderColor: colors.white,
+  },
+  waypointMarker: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 3,
     borderColor: colors.white,
   },

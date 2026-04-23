@@ -14,6 +14,7 @@ export const paymentsApi = createApi({
       query: (body: {
         amount: number;
         currency: string;
+        type?: 'transport' | 'booking' | 'marketplace';
         bookingId?: string;
         transportId?: string;
         orderId?: string;

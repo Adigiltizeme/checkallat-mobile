@@ -24,7 +24,6 @@
         "backgroundColor": "#00B8A9"
       },
       "package": "com.digiltizeme.checkallat",
-      "usesCleartextTraffic": true,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "CAMERA",
