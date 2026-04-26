@@ -11,8 +11,7 @@ import {
   Step3Data,
   Step4Data,
 } from '../../types/transport';
-import { calculateTransportPrice, formatPrice } from '../../utils/transport/priceCalculator';
-import { useCreateTransportRequestMutation } from '../../store/api/transportApi';
+import { useCreateTransportRequestMutation, useCalculatePriceMutation } from '../../store/api/transportApi';
 
 type Props = StackScreenProps<any, 'TransportRequestStep5'>;
 
@@ -27,13 +26,43 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
   const { t, i18n } = useTranslation();
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cash'>('cash');
   const [createRequest, { isLoading }] = useCreateTransportRequestMutation();
+  const [calculatePrice, { isLoading: priceLoading }] = useCalculatePriceMutation();
+
+  // Prix retourné par le backend (source unique de vérité)
+  const [priceBreakdown, setPriceBreakdown] = useState<any>(null);
 
   // État pour la modal de visualisation des photos
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Calculer le prix
-  const priceBreakdown = calculateTransportPrice(step1Data, step2Data, step3Data);
+  // Appel API pour récupérer le prix depuis la DB (tarifs gérés dans le web-admin)
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        const result = await calculatePrice({
+          transportType: step1Data.objectType,
+          transportTypes: step1Data.objectTypes || [step1Data.objectType],
+          estimatedVolume: step1Data.estimatedVolume,
+          distance: step2Data.distance,
+          pickupFloor: step2Data.pickup.floor || 0,
+          hasElevator: step2Data.pickup.hasElevator || false,
+          deliveryFloor: step2Data.delivery.floor || 0,
+          hasElevatorDelivery: step2Data.delivery.hasElevator || false,
+          needHelpers: step3Data.needHelpers,
+          helpersCount: step3Data.helpersCount,
+          needDisassembly: step3Data.needDisassembly,
+          needReassembly: step3Data.needReassembly,
+          needPacking: step3Data.needPacking,
+          pickupLat: step2Data.pickup.lat,
+          pickupLng: step2Data.pickup.lng,
+        }).unwrap();
+        setPriceBreakdown(result);
+      } catch (err) {
+        console.error('Failed to calculate price:', err);
+      }
+    };
+    fetchPrice();
+  }, []);
 
   const openPhotoViewer = (index: number) => {
     setSelectedPhotoIndex(index);
@@ -120,7 +149,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
       if (paymentMethod === 'stripe') {
         navigation.navigate('StripePayment', {
           requestId: result.id,
-          amount: priceBreakdown.total,
+          amount: priceBreakdown?.total ?? result.totalPrice,
           type: 'transport',
         });
       } else {
@@ -329,49 +358,60 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
             💰 {t('transport.pricing')}
           </Text>
 
-          <View style={styles.priceRow}>
-            <Text variant="bodyMedium">{t('transport.package_label', { vehicle: t('transport.vehicle_' + priceBreakdown.vehicleType) })}</Text>
-            <Text variant="bodyMedium">{formatPrice(priceBreakdown.baseFare)}</Text>
-          </View>
-
-          <View style={styles.priceRow}>
-            <Text variant="bodyMedium">{t('transport.distance_label')} ({step2Data.distance} km)</Text>
-            <Text variant="bodyMedium">{formatPrice(priceBreakdown.distanceFare)}</Text>
-          </View>
-
-          {priceBreakdown.floorFare > 0 && (
-            <View style={styles.priceRow}>
-              <Text variant="bodyMedium">{t('transport.floors_label')}</Text>
-              <Text variant="bodyMedium">{formatPrice(priceBreakdown.floorFare)}</Text>
-            </View>
-          )}
-
-          {priceBreakdown.helpersFare > 0 && (
-            <View style={styles.priceRow}>
-              <Text variant="bodyMedium">
-                {t('transport.helpers_fare_label')} ({step3Data.helpersCount} × 50 EGP)
+          {priceLoading || !priceBreakdown ? (
+            <View style={styles.priceLoading}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text variant="bodyMedium" style={styles.priceLoadingText}>
+                {t('transport.calculating_price')}
               </Text>
-              <Text variant="bodyMedium">{formatPrice(priceBreakdown.helpersFare)}</Text>
             </View>
+          ) : (
+            <>
+              <View style={styles.priceRow}>
+                <Text variant="bodyMedium">{t('transport.package_label', { vehicle: t('transport.vehicle_' + priceBreakdown.vehicleType) })}</Text>
+                <Text variant="bodyMedium">{priceBreakdown.baseFare} {priceBreakdown.currency || 'EGP'}</Text>
+              </View>
+
+              <View style={styles.priceRow}>
+                <Text variant="bodyMedium">{t('transport.distance_label')} ({step2Data.distance} km)</Text>
+                <Text variant="bodyMedium">{priceBreakdown.distanceFare} {priceBreakdown.currency || 'EGP'}</Text>
+              </View>
+
+              {priceBreakdown.floorFare > 0 && (
+                <View style={styles.priceRow}>
+                  <Text variant="bodyMedium">{t('transport.floors_label')}</Text>
+                  <Text variant="bodyMedium">{priceBreakdown.floorFare} {priceBreakdown.currency || 'EGP'}</Text>
+                </View>
+              )}
+
+              {priceBreakdown.helpersFare > 0 && (
+                <View style={styles.priceRow}>
+                  <Text variant="bodyMedium">
+                    {t('transport.helpers_fare_label')} ({step3Data.helpersCount} {t('transport.helpers_unit')})
+                  </Text>
+                  <Text variant="bodyMedium">{priceBreakdown.helpersFare} {priceBreakdown.currency || 'EGP'}</Text>
+                </View>
+              )}
+
+              {priceBreakdown.servicesFare > 0 && (
+                <View style={styles.priceRow}>
+                  <Text variant="bodyMedium">{t('transport.services_fare')}</Text>
+                  <Text variant="bodyMedium">{priceBreakdown.servicesFare} {priceBreakdown.currency || 'EGP'}</Text>
+                </View>
+              )}
+
+              <Divider style={styles.totalDivider} />
+
+              <View style={styles.totalRow}>
+                <Text variant="titleLarge" style={styles.totalLabel}>
+                  {t('transport.total')}
+                </Text>
+                <Text variant="titleLarge" style={styles.totalValue}>
+                  {priceBreakdown.total} {priceBreakdown.currency || 'EGP'}
+                </Text>
+              </View>
+            </>
           )}
-
-          {priceBreakdown.servicesFare > 0 && (
-            <View style={styles.priceRow}>
-              <Text variant="bodyMedium">{t('transport.services_fare')}</Text>
-              <Text variant="bodyMedium">{formatPrice(priceBreakdown.servicesFare)}</Text>
-            </View>
-          )}
-
-          <Divider style={styles.totalDivider} />
-
-          <View style={styles.totalRow}>
-            <Text variant="titleLarge" style={styles.totalLabel}>
-              {t('transport.total')}
-            </Text>
-            <Text variant="titleLarge" style={styles.totalValue}>
-              {formatPrice(priceBreakdown.total)}
-            </Text>
-          </View>
         </Card.Content>
       </Card>
 
@@ -576,6 +616,16 @@ const styles = StyleSheet.create({
   totalValue: {
     color: colors.primary,
     fontWeight: '700',
+  },
+  priceLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+  },
+  priceLoadingText: {
+    color: colors.gray,
   },
   infoCard: {
     backgroundColor: '#FFF3CD',

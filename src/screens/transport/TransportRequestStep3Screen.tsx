@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { Step1Data, Step2Data, Step3Data } from '../../types/transport';
+import { useGetActivePricingQuery } from '../../store/api/transportApi';
 
 type Props = StackScreenProps<any, 'TransportRequestStep3'>;
 
@@ -15,6 +16,9 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
     step1Data: Step1Data;
     step2Data: Step2Data;
   };
+
+  const { data: pricing } = useGetActivePricingQuery();
+  const cur = pricing?.currency || 'EGP';
 
   const [needHelpers, setNeedHelpers] = useState(false);
   const [helpersCount, setHelpersCount] = useState(1);
@@ -87,9 +91,11 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
                   onPress={() => setHelpersCount(Math.min(5, helpersCount + 1))}
                 />
               </View>
-              <Text variant="bodySmall" style={styles.servicePrice}>
-                +{helpersCount * 50} EGP
-              </Text>
+              {pricing && (
+                <Text variant="bodySmall" style={styles.servicePrice}>
+                  +{helpersCount * pricing.helperRatePerPerson} {cur}
+                </Text>
+              )}
             </View>
           )}
         </Card.Content>
@@ -111,9 +117,9 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
               <Text variant="bodySmall" style={styles.serviceDescription}>
                 {t('transport.disassembly_desc')}
               </Text>
-              {needDisassembly && (
+              {needDisassembly && pricing && (
                 <Text variant="bodySmall" style={styles.servicePrice}>
-                  +40 EGP
+                  +{pricing.disassemblyRate} {cur}
                 </Text>
               )}
             </View>
@@ -137,9 +143,9 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
               <Text variant="bodySmall" style={styles.serviceDescription}>
                 {t('transport.reassembly_desc')}
               </Text>
-              {needReassembly && (
+              {needReassembly && pricing && (
                 <Text variant="bodySmall" style={styles.servicePrice}>
-                  +40 EGP
+                  +{pricing.reassemblyRate} {cur}
                 </Text>
               )}
             </View>
@@ -163,9 +169,9 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
               <Text variant="bodySmall" style={styles.serviceDescription}>
                 {t('transport.packing_desc')}
               </Text>
-              {needPacking && (
+              {needPacking && pricing && (
                 <Text variant="bodySmall" style={styles.servicePrice}>
-                  +30 EGP
+                  +{pricing.packingRate} {cur}
                 </Text>
               )}
             </View>

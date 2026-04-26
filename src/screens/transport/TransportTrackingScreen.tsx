@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Dimensions, Linking } from 'react-native';
 import { Text, Card, Button, Avatar, ActivityIndicator, IconButton } from 'react-native-paper';
-import Mapbox from '@rnmapbox/maps';
+import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -10,6 +10,13 @@ import { useTranslation } from 'react-i18next';
 import { STATUS_COLORS, TransportStatus } from '../../types/transport';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
+// Expo Go uses react-native-maps (pre-bundled, works without native build).
+// Production builds use @rnmapbox/maps (native module, better performance + offline).
+const isExpoGo = Constants.appOwnership === 'expo';
+
+import RNMapView, { Marker, Polyline } from 'react-native-maps';
+const Mapbox = isExpoGo ? null : require('@rnmapbox/maps').default;
+
 type Props = StackScreenProps<any, 'TransportTracking'>;
 
 const { width, height } = Dimensions.get('window');
@@ -17,7 +24,7 @@ const { width, height } = Dimensions.get('window');
 export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   const { t, i18n } = useTranslation();
   const { requestId } = route.params as { requestId: string };
-  const cameraRef = useRef<Mapbox.Camera>(null);
+  const cameraRef = useRef<any>(null);
 
   const { data: request, isLoading: requestLoading } = useGetTransportRequestQuery(requestId);
   const { data: trackingInfo } = useGetTrackingInfoQuery(requestId, {
@@ -25,7 +32,8 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   });
 
   useEffect(() => {
-    if (!request || !cameraRef.current) return;
+    if (!request || isExpoGo) return;
+    if (!cameraRef.current) return;
 
     const lngs = [request.pickup.lng, request.delivery.lng];
     const lats = [request.pickup.lat, request.delivery.lat];
@@ -37,13 +45,10 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
 
     const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)];
     const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)];
-
     cameraRef.current.fitBounds(ne, sw, [100, 50, 300, 50], 500);
   }, [request, trackingInfo]);
 
-  const handleCall = (phone: string) => {
-    Linking.openURL(`tel:${phone}`);
-  };
+  const handleCall = (phone: string) => Linking.openURL(`tel:${phone}`);
 
   if (requestLoading) {
     return (
@@ -82,63 +87,83 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
     properties: {},
   };
 
-  return (
-    <View style={styles.container}>
-      <Mapbox.MapView style={styles.map}>
-        <Mapbox.Camera
-          ref={cameraRef}
-          defaultSettings={{
-            centerCoordinate: pickupCoord,
-            zoomLevel: 10,
-          }}
-        />
+  const renderMap = () => {
+    // --- Expo Go : react-native-maps (Google Maps, pre-bundled in Expo Go) ---
+    if (isExpoGo) {
+      const region = {
+        latitude: (request.pickup.lat + request.delivery.lat) / 2,
+        longitude: (request.pickup.lng + request.delivery.lng) / 2,
+        latitudeDelta: Math.abs(request.pickup.lat - request.delivery.lat) * 2 + 0.02,
+        longitudeDelta: Math.abs(request.pickup.lng - request.delivery.lng) * 2 + 0.02,
+      };
+      return (
+        <RNMapView style={styles.map} initialRegion={region}>
+          <Marker coordinate={{ latitude: request.pickup.lat, longitude: request.pickup.lng }}
+            title={t('transport.loading_point')} description={request.pickup.address}
+            pinColor="green" />
+          <Marker coordinate={{ latitude: request.delivery.lat, longitude: request.delivery.lng }}
+            title={t('transport.delivery_point')} description={request.delivery.address}
+            pinColor="red" />
+          {driverCoord && (
+            <Marker coordinate={{ latitude: driverCoord[1], longitude: driverCoord[0] }}
+              title={trackingInfo?.driverName || 'Chauffeur'}>
+              <View style={styles.driverMarker}>
+                <Text style={styles.markerText}>🚚</Text>
+              </View>
+            </Marker>
+          )}
+          <Polyline
+            coordinates={[
+              { latitude: request.pickup.lat, longitude: request.pickup.lng },
+              { latitude: request.delivery.lat, longitude: request.delivery.lng },
+            ]}
+            strokeColor={colors.primary}
+            strokeWidth={3}
+            lineDashPattern={[8, 4]}
+          />
+        </RNMapView>
+      );
+    }
 
-        {/* Marker Pickup */}
+    // --- Production : @rnmapbox/maps ---
+    return (
+      <Mapbox.MapView style={styles.map}>
+        <Mapbox.Camera ref={cameraRef}
+          defaultSettings={{ centerCoordinate: pickupCoord, zoomLevel: 10 }} />
         <Mapbox.PointAnnotation id="pickup" coordinate={pickupCoord}>
           <View style={[styles.markerContainer, { backgroundColor: colors.success }]}>
             <Text style={styles.markerText}>📍</Text>
           </View>
           <Mapbox.Callout title={t('transport.loading_point')} />
         </Mapbox.PointAnnotation>
-
-        {/* Marker Delivery */}
         <Mapbox.PointAnnotation id="delivery" coordinate={deliveryCoord}>
           <View style={[styles.markerContainer, { backgroundColor: colors.error }]}>
             <Text style={styles.markerText}>🏁</Text>
           </View>
           <Mapbox.Callout title={t('transport.delivery_point')} />
         </Mapbox.PointAnnotation>
-
-        {/* Marker Driver */}
         {driverCoord && (
-          <Mapbox.PointAnnotation
-            id="driver"
-            coordinate={driverCoord}
-          >
+          <Mapbox.PointAnnotation id="driver" coordinate={driverCoord}>
             <View style={[styles.markerContainer, { backgroundColor: colors.primary }]}>
               <Text style={styles.markerText}>🚚</Text>
             </View>
             <Mapbox.Callout title={trackingInfo?.driverName || 'Driver'} />
           </Mapbox.PointAnnotation>
         )}
-
-        {/* Route polyline */}
         <Mapbox.ShapeSource id="routeSource" shape={routeShape}>
-          <Mapbox.LineLayer
-            id="routeLine"
-            style={{
-              lineColor: colors.primary,
-              lineWidth: 3,
-              lineDasharray: [2, 2],
-            }}
-          />
+          <Mapbox.LineLayer id="routeLine"
+            style={{ lineColor: colors.primary, lineWidth: 3, lineDasharray: [2, 2] }} />
         </Mapbox.ShapeSource>
       </Mapbox.MapView>
+    );
+  };
 
-      {/* Bottom Sheet */}
+  return (
+    <View style={styles.container}>
+      {renderMap()}
+
       <Card style={styles.bottomSheet}>
         <Card.Content>
-          {/* Statut */}
           <View style={[styles.statusBanner, { backgroundColor: statusColor }]}>
             <Text variant="titleMedium" style={styles.statusBannerText}>
               {t('status.' + request.status)}
@@ -147,16 +172,12 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
               <Text variant="bodyMedium" style={styles.etaText}>
                 ⏱️ {t('transport.eta_label')}{' '}
                 {new Date(trackingInfo.estimatedArrival).toLocaleDateString(i18n.language, {
-                  day: 'numeric',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit',
+                  day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
                 })}
               </Text>
             )}
           </View>
 
-          {/* Info Chauffeur */}
           {trackingInfo?.driverName && (
             <View style={styles.driverSection}>
               <View style={styles.driverHeader}>
@@ -172,19 +193,14 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
                   )}
                 </View>
                 {trackingInfo.driverPhone && (
-                  <IconButton
-                    icon="phone"
-                    size={24}
-                    iconColor={colors.white}
+                  <IconButton icon="phone" size={24} iconColor={colors.white}
                     containerColor={colors.success}
-                    onPress={() => handleCall(trackingInfo.driverPhone!)}
-                  />
+                    onPress={() => handleCall(trackingInfo.driverPhone!)} />
                 )}
               </View>
             </View>
           )}
 
-          {/* Pas de position GPS */}
           {!hasDriverLocation && request.driverId && (
             <Card style={styles.infoCard}>
               <Card.Content>
@@ -201,21 +217,18 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
             </Card>
           )}
 
-          {/* Position GPS active */}
           {hasDriverLocation && trackingInfo!.lastUpdate && (
             <View style={styles.locationInfo}>
               <Icon name="map-marker-check" size={20} color={colors.success} />
               <Text variant="bodySmall" style={styles.locationText}>
                 {t('transport.position_updated')}:{' '}
                 {new Date(trackingInfo!.lastUpdate).toLocaleTimeString(i18n.language, {
-                  hour: '2-digit',
-                  minute: '2-digit',
+                  hour: '2-digit', minute: '2-digit',
                 })}
               </Text>
             </View>
           )}
 
-          {/* Itinéraire */}
           <View style={styles.routeSection}>
             <Text variant="labelLarge" style={styles.sectionTitle}>
               📍 {t('transport.itinerary')}
@@ -223,12 +236,8 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
             <View style={styles.routeItem}>
               <Icon name="circle" size={16} color={colors.success} />
               <View style={styles.routeContent}>
-                <Text variant="bodySmall" style={styles.routeLabel}>
-                  {t('transport.loading_point')}
-                </Text>
-                <Text variant="bodyMedium" style={styles.routeAddress}>
-                  {request.pickup.address}
-                </Text>
+                <Text variant="bodySmall" style={styles.routeLabel}>{t('transport.loading_point')}</Text>
+                <Text variant="bodyMedium" style={styles.routeAddress}>{request.pickup.address}</Text>
               </View>
             </View>
             <View style={styles.routeDivider}>
@@ -237,22 +246,14 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
             <View style={styles.routeItem}>
               <Icon name="circle" size={16} color={colors.error} />
               <View style={styles.routeContent}>
-                <Text variant="bodySmall" style={styles.routeLabel}>
-                  {t('transport.delivery_point')}
-                </Text>
-                <Text variant="bodyMedium" style={styles.routeAddress}>
-                  {request.delivery.address}
-                </Text>
+                <Text variant="bodySmall" style={styles.routeLabel}>{t('transport.delivery_point')}</Text>
+                <Text variant="bodyMedium" style={styles.routeAddress}>{request.delivery.address}</Text>
               </View>
             </View>
           </View>
 
-          <Button
-            mode="outlined"
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-            icon="arrow-left"
-          >
+          <Button mode="outlined" onPress={() => navigation.goBack()}
+            style={styles.backButton} icon="arrow-left">
             {t('transport.back_to_details')}
           </Button>
         </Card.Content>
@@ -262,151 +263,53 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  error: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  errorButton: {
-    marginTop: spacing.lg,
-  },
-  map: {
-    width,
-    height,
-  },
+  container: { flex: 1 },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  error: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+  errorButton: { marginTop: spacing.lg },
+  map: { width, height },
   markerContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: colors.white,
-    elevation: 5,
+    width: 40, height: 40, borderRadius: 20,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 3, borderColor: colors.white, elevation: 5,
   },
-  markerText: {
-    fontSize: 20,
-  },
-  bottomSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    maxHeight: height * 0.6,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 10,
-  },
-  statusBanner: {
-    padding: spacing.md,
-    borderRadius: 12,
-    marginBottom: spacing.md,
-    alignItems: 'center',
-  },
-  statusBannerText: {
-    color: colors.white,
-    fontWeight: '700',
-  },
-  etaText: {
-    color: colors.white,
-    marginTop: 4,
-  },
-  driverSection: {
-    marginBottom: spacing.md,
-  },
-  driverHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  driverAvatar: {
+  driverMarker: {
+    width: 40, height: 40, borderRadius: 20,
     backgroundColor: colors.primary,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 3, borderColor: colors.white, elevation: 5,
   },
-  driverInfo: {
-    flex: 1,
+  markerText: { fontSize: 20 },
+  bottomSheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    maxHeight: height * 0.6,
+    borderTopLeftRadius: 20, borderTopRightRadius: 20, elevation: 10,
   },
-  driverName: {
-    color: colors.dark,
-    fontWeight: '600',
-  },
-  driverDetails: {
-    color: colors.gray,
-    marginTop: 2,
-  },
-  infoCard: {
-    backgroundColor: '#FFF3CD',
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
-  },
-  infoContent: {
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  infoTitle: {
-    color: colors.dark,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  infoText: {
-    color: colors.dark,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+  statusBanner: { padding: spacing.md, borderRadius: 12, marginBottom: spacing.md, alignItems: 'center' },
+  statusBannerText: { color: colors.white, fontWeight: '700' },
+  etaText: { color: colors.white, marginTop: 4 },
+  driverSection: { marginBottom: spacing.md },
+  driverHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  driverAvatar: { backgroundColor: colors.primary },
+  driverInfo: { flex: 1 },
+  driverName: { color: colors.dark, fontWeight: '600' },
+  driverDetails: { color: colors.gray, marginTop: 2 },
+  infoCard: { backgroundColor: '#FFF3CD', marginTop: spacing.md, marginBottom: spacing.md },
+  infoContent: { alignItems: 'center', gap: spacing.sm },
+  infoTitle: { color: colors.dark, fontWeight: '600', textAlign: 'center' },
+  infoText: { color: colors.dark, textAlign: 'center', lineHeight: 20 },
   locationInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    padding: spacing.sm,
-    backgroundColor: `${colors.success}10`,
-    borderRadius: 8,
-    marginBottom: spacing.md,
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    padding: spacing.sm, backgroundColor: `${colors.success}10`,
+    borderRadius: 8, marginBottom: spacing.md,
   },
-  locationText: {
-    color: colors.success,
-    fontWeight: '500',
-  },
-  routeSection: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  sectionTitle: {
-    color: colors.dark,
-    marginBottom: spacing.md,
-  },
-  routeItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  routeContent: {
-    flex: 1,
-  },
-  routeLabel: {
-    color: colors.gray,
-    textTransform: 'uppercase',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  routeAddress: {
-    color: colors.dark,
-    marginTop: 2,
-  },
-  routeDivider: {
-    paddingLeft: spacing.xs,
-    marginVertical: 4,
-  },
-  backButton: {
-    marginTop: spacing.lg,
-  },
+  locationText: { color: colors.success, fontWeight: '500' },
+  routeSection: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
+  sectionTitle: { color: colors.dark, marginBottom: spacing.md },
+  routeItem: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  routeContent: { flex: 1 },
+  routeLabel: { color: colors.gray, textTransform: 'uppercase', fontSize: 11, fontWeight: '600' },
+  routeAddress: { color: colors.dark, marginTop: 2 },
+  routeDivider: { paddingLeft: spacing.xs, marginVertical: 4 },
+  backButton: { marginTop: spacing.lg },
 });

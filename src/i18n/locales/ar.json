@@ -277,6 +277,8 @@
     "request_title": "نقل #{{id}}",
     "floors_label": "الطوابق",
     "helpers_fare_label": "المساعدون",
+    "helpers_unit": "شخص",
+    "calculating_price": "جاري حساب السعر...",
     "confirmation_notes": "ملاحظات التأكيد",
     "client_label": "العميل:",
     "driver_label": "السائق:",

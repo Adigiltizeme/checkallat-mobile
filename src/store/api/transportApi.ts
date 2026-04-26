@@ -346,6 +346,20 @@ export const transportApi = createApi({
         body: { pushToken },
       }),
     }),
+
+    /**
+     * Tarifs de la zone active (affichage des prix indicatifs dans Step 3)
+     */
+    getActivePricing: builder.query<{
+      currency: string;
+      helperRatePerPerson: number;
+      floorRatePerLevel: number;
+      disassemblyRate: number;
+      reassemblyRate: number;
+      packingRate: number;
+    }, void>({
+      query: () => '/pricing/active',
+    }),
   }),
 });
 
@@ -376,4 +390,5 @@ export const {
   useAcceptRequestMutation,
   useRejectRequestMutation,
   useRegisterPushTokenMutation,
+  useGetActivePricingQuery,
 } = transportApi;

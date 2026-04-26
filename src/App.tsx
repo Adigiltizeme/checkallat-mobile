@@ -1,9 +1,6 @@
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { I18nManager } from 'react-native';
-import Mapbox from '@rnmapbox/maps';
-
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
 import { Provider as ReduxProvider } from 'react-redux';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -20,9 +17,15 @@ import { setCurrencyConfig } from './config/currency';
 import i18n, { isRTL } from './i18n';
 import { I18nextProvider } from 'react-i18next';
 
-// expo-notifications crashes at import time in Expo Go (SDK 53+).
-// We lazy-load it only in real builds where remote push is supported.
+// expo-notifications and @rnmapbox/maps crash at import time in Expo Go (native modules unavailable).
+// We lazy-load them only in real builds.
 const isExpoGo = Constants.appOwnership === 'expo';
+
+if (!isExpoGo) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const Mapbox = require('@rnmapbox/maps').default;
+  Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || '');
+}
 
 if (!isExpoGo) {
   // Dynamic require so the module never loads in Expo Go
@@ -37,6 +40,14 @@ if (!isExpoGo) {
       shouldSetBadge: true,
     }),
   });
+  // Android requires a notification channel to play sound
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'Notifications',
+    importance: Notifications.AndroidImportance.MAX,
+    sound: 'default',
+    vibrationPattern: [0, 250, 250, 250],
+    enableVibrate: true,
+  }).catch(() => {});
 }
 
 async function registerDriverPushToken(accessToken: string): Promise<void> {

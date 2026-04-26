@@ -277,6 +277,8 @@
     "request_title": "Transport #{{id}}",
     "floors_label": "Floors",
     "helpers_fare_label": "Helpers",
+    "helpers_unit": "pers.",
+    "calculating_price": "Calculating price...",
     "confirmation_notes": "Confirmation notes",
     "client_label": "Client:",
     "driver_label": "Driver:",
