@@ -192,7 +192,7 @@ export class MapboxService {
       };
     } catch (error: any) {
       console.error('Mapbox reverse geocoding error:', error.response?.data || error.message);
-      throw new Error('Impossible de récupérer l\'adresse pour ces coordonnées.');
+      return null;
     }
   }
 
