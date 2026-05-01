@@ -21,6 +21,7 @@ export type ProfileStackParamList = {
   EditProfile: undefined;
   Addresses: undefined;
   Language: undefined;
+  Support: undefined;
 };
 
 export type HomeStackParamList = {
@@ -65,6 +66,7 @@ export type TransportStackParamList = {
   };
   PaymentHistory: undefined;
   PaymentDetails: { paymentId?: string; requestId?: string };
+  Dispute: { requestId: string };
 };
 
 
@@ -87,4 +89,5 @@ export type DriverStackParamList = {
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number };
   PaymentDetails: { paymentId?: string; requestId?: string };
+  Support: undefined;
 };

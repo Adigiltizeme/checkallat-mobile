@@ -20,6 +20,8 @@ interface Props {
   detectedCountryCode: string | null;
   onCountrySelected: (country: SupportedCountry) => void;
   onDismiss: () => void;
+  /** 'unsupported' = pays détecté non pris en charge (défaut) | 'change' = choix manuel de pays */
+  mode?: 'unsupported' | 'change';
 }
 
 export const UnsupportedCountryModal = ({
@@ -27,6 +29,7 @@ export const UnsupportedCountryModal = ({
   detectedCountryCode,
   onCountrySelected,
   onDismiss,
+  mode = 'unsupported',
 }: Props) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -35,6 +38,8 @@ export const UnsupportedCountryModal = ({
     dispatch(selectCountry(country.code));
     onCountrySelected(country);
   };
+
+  const isChangeMode = mode === 'change';
 
   return (
     <Modal
@@ -47,14 +52,16 @@ export const UnsupportedCountryModal = ({
         {/* Header */}
         <View style={styles.header}>
           <Text variant="headlineSmall" style={styles.title}>
-            🌍 {t('location.unsupported_title')}
+            🌍 {isChangeMode ? t('location.change_country_title') : t('location.unsupported_title')}
           </Text>
           <Text variant="bodyMedium" style={styles.subtitle}>
-            {detectedCountryCode
-              ? t('location.unsupported_msg_with_country', {
-                  country: detectedCountryCode.toUpperCase(),
-                })
-              : t('location.unsupported_msg')}
+            {isChangeMode
+              ? t('location.change_country_msg')
+              : detectedCountryCode
+                ? t('location.unsupported_msg_with_country', {
+                    country: detectedCountryCode.toUpperCase(),
+                  })
+                : t('location.unsupported_msg')}
           </Text>
         </View>
 

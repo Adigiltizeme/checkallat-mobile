@@ -8,10 +8,12 @@ import { DriverStackParamList } from '../../navigation/types';
 import {
   useGetTransportRequestQuery,
   useUpdateTransportStatusMutation,
+  useCancelTransportMutation,
 } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { StatusTimeline } from '../../components/transport/StatusTimeline';
 import { DriverActionButton } from '../../components/transport/DriverActionButton';
+import { DriverCancelModal } from '../../components/transport/DriverCancelModal';
 import { TRANSPORT_STATUS_CONFIG, TransportStatus } from '../../types/transport-status';
 import { colors } from '../../theme/colors';
 
@@ -28,9 +30,11 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
   });
   useRefetchOnFocus(refetch);
   const [updateStatus] = useUpdateTransportStatusMutation();
+  const [cancelTransport, { isLoading: isCancelling }] = useCancelTransportMutation();
   const theme = useTheme();
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
   const [fullScreenPhoto, setFullScreenPhoto] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const handleStatusChange = async (newStatus: TransportStatus) => {
     // Avant de passer à in_transit, imposer les photos de chargement
@@ -54,7 +58,7 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
     try {
       await updateStatus({ requestId, status: newStatus }).unwrap();
       await refetch();
-      Alert.alert(t('common.success'), t('driver.status_updated_msg'));
+      // Alert.alert(t('common.success'), t('driver.status_updated_msg'));
     } catch (error: any) {
       console.error('Error updating status:', error);
       throw error;
@@ -64,6 +68,19 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
   const handleStartNavigation = () => {
     navigation.navigate('DriverNavigation', { requestId });
   };
+
+  const handleCancelConfirm = async (reason: string) => {
+    try {
+      await cancelTransport({ id: requestId, reason }).unwrap();
+      setShowCancelModal(false);
+      navigation.goBack();
+    } catch (error: any) {
+      const msg = error?.data?.message || t('common.error');
+      Alert.alert(t('common.error'), msg);
+    }
+  };
+
+  const CANCELLABLE_STATUSES: TransportStatus[] = ['accepted', 'heading_to_pickup', 'arrived_at_pickup'];
 
   if (isLoading) {
     return (
@@ -460,6 +477,19 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
           </Button>
         )}
 
+        {/* Cancel delivery — only before loading starts */}
+        {CANCELLABLE_STATUSES.includes(request.status as TransportStatus) && (
+          <Button
+            mode="outlined"
+            icon="cancel"
+            onPress={() => setShowCancelModal(true)}
+            textColor={colors.error}
+            style={styles.cancelButton}
+          >
+            {t('driver.cancel_delivery_btn')}
+          </Button>
+        )}
+
         {/* Status Action Button */}
         {request.status !== 'completed' && (
           <DriverActionButton
@@ -469,6 +499,17 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
           />
         )}
       </View>
+
+      <DriverCancelModal
+        visible={showCancelModal}
+        isConfirming={isCancelling}
+        onCancel={() => setShowCancelModal(false)}
+        onConfirm={handleCancelConfirm}
+        onContactSupport={() => {
+          setShowCancelModal(false);
+          navigation.navigate('Support');
+        }}
+      />
     </View>
   );
 };
@@ -592,6 +633,11 @@ const styles = StyleSheet.create({
   navigationButton: {
     marginHorizontal: 16,
     marginBottom: 0,
+  },
+  cancelButton: {
+    marginHorizontal: 16,
+    marginBottom: 0,
+    borderColor: colors.error,
   },
   confirmButton: {
     marginHorizontal: 16,

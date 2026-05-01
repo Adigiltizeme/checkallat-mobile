@@ -18,6 +18,7 @@ import { CashValidationScreen } from '../screens/transport/CashValidationScreen'
 import { StripePaymentScreen } from '../screens/transport/StripePaymentScreen';
 import { PaymentHistoryScreen } from '../screens/transport/PaymentHistoryScreen';
 import { PaymentDetailsScreen } from '../screens/payment/PaymentDetailsScreen';
+import { DisputeScreen } from '../screens/transport/DisputeScreen';
 
 const Stack = createStackNavigator<TransportStackParamList>();
 
@@ -152,6 +153,11 @@ export const TransportStack = () => {
           title: t('payment.details_title'),
           headerShown: true,
         }}
+      />
+      <Stack.Screen
+        name="Dispute"
+        component={DisputeScreen}
+        options={{ title: t('dispute.title') }}
       />
     </Stack.Navigator>
   );

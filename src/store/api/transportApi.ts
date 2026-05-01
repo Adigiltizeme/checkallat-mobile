@@ -218,6 +218,18 @@ export const transportApi = createApi({
     }),
 
     /**
+     * Ouvrir un litige pour un transport
+     */
+    openDispute: builder.mutation<void, { id: string; category: string; description: string }>({
+      query: ({ id, category, description }) => ({
+        url: `/${id}/dispute`,
+        method: 'POST',
+        body: { category, description },
+      }),
+      invalidatesTags: ['TransportRequest'],
+    }),
+
+    /**
      * Annuler un transport
      */
     cancelTransport: builder.mutation({
@@ -349,6 +361,7 @@ export const transportApi = createApi({
 
     /**
      * Tarifs de la zone active (affichage des prix indicatifs dans Step 3)
+     * countryCode optionnel pour obtenir les tarifs de la zone correspondant au pays du client
      */
     getActivePricing: builder.query<{
       currency: string;
@@ -357,8 +370,8 @@ export const transportApi = createApi({
       disassemblyRate: number;
       reassemblyRate: number;
       packingRate: number;
-    }, void>({
-      query: () => '/pricing/active',
+    }, string | void>({
+      query: (countryCode) => countryCode ? `/pricing/active?countryCode=${countryCode}` : '/pricing/active',
     }),
   }),
 });
@@ -378,6 +391,7 @@ export const {
   useUploadPhotosAfterMutation,
   useSaveSignatureMutation,
   useSaveClientSignatureMutation,
+  useOpenDisputeMutation,
   useCancelTransportMutation,
   useGetDriverStatsQuery,
   useUpdateDriverAvailabilityMutation,

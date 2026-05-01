@@ -172,7 +172,16 @@ function AppContent() {
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
         .then((settings) => {
           console.log('[APP] Platform settings loaded:', settings);
-          if (settings.currency) setCurrencyConfig(settings.currency);
+          // Déterminer la devise selon le pays sélectionné ou détecté, en lisant les serviceZones
+          const locationState = store.getState().location;
+          const activeCountryCode = locationState.selectedCountryCode ?? locationState.detectedCountryCode;
+          const zones: Array<{ countryCode?: string; currency: string; enabled: boolean }> =
+            settings.serviceZones ?? [];
+          const matchedZone = activeCountryCode
+            ? zones.find((z) => z.enabled && z.countryCode?.toLowerCase() === activeCountryCode.toLowerCase())
+            : undefined;
+          const currencyCode = matchedZone?.currency ?? settings.currency ?? 'EGP';
+          setCurrencyConfig(currencyCode);
         })
         .catch((error) => console.error('Failed to load platform settings:', error));
     };

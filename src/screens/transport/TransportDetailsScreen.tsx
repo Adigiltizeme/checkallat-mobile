@@ -17,7 +17,6 @@ import {
   TransportStatus,
   TransportObjectType,
 } from '../../types/transport';
-import { formatPrice } from '../../utils/transport/priceCalculator';
 
 type Props = StackScreenProps<any, 'TransportDetails'>;
 
@@ -68,11 +67,20 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   };
 
   const handleCancel = () => {
+    const isArrivedAtPickup = request?.status === 'arrived_at_pickup';
+    const isHeadingToPickup = request?.status === 'heading_to_pickup';
+    const alertTitle = t('transport.cancel_request_title');
+    const alertMessage = isArrivedAtPickup
+      ? t('transport.cancel_arrived_warning')
+      : isHeadingToPickup
+        ? t('transport.cancel_heading_warning')
+        : request?.paymentMethod === 'in_app'
+          ? t('transport.cancel_request_message_inapp')
+          : t('transport.cancel_request_message');
+
     Alert.alert(
-      t('transport.cancel_request_title'),
-      request?.paymentMethod === 'in_app'
-        ? t('transport.cancel_request_message_inapp')
-        : t('transport.cancel_request_message'),
+      alertTitle,
+      alertMessage,
       [
         { text: t('common.no'), style: 'cancel' },
         {
@@ -81,8 +89,14 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
           onPress: async () => {
             try {
               const result: any = await cancelRequest({ id: requestId, reason: 'Annulé par le client' }).unwrap();
-              // Afficher l'info de remboursement si paiement in-app
-              if (result?.refundPercentage !== undefined) {
+              if (result?.feeAmount && result.feeAmount > 0) {
+                // Fee charged — show specific message
+                Alert.alert(
+                  t('transport.cancelled_alert_title'),
+                  t('transport.cancel_fee_charged', { amount: result.feeAmount, currency: (request as any).currency || 'EGP' }),
+                  [{ text: t('common.ok'), onPress: () => navigation.goBack() }],
+                );
+              } else if (result?.refundPercentage !== undefined) {
                 const msg = result.refundPercentage === 100
                   ? t('transport.cancel_refund_full')
                   : result.refundPercentage === 0
@@ -131,7 +145,14 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   }
 
   const statusColor = STATUS_COLORS[request.status as TransportStatus];
-  const canCancel = request.status === 'pending' || request.status === 'accepted';
+  // Client peut annuler jusqu'à arrived_at_pickup (avec possible frais si injustifié)
+  const canCancel = !isDriver && (
+    request.status === 'pending' ||
+    request.status === 'accepted' ||
+    request.status === 'heading_to_pickup' ||
+    request.status === 'arrived_at_pickup'
+  );
+  const hasPendingFee = !!(request as any).cancellationFeeAmount && !(request as any).cancellationFeePaid;
   const canTrack =
     request.status !== 'pending' &&
     request.status !== 'cancelled' &&
@@ -178,6 +199,23 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
           )}
         </Card.Content>
       </Card>
+
+      {/* Bannière frais d'annulation en attente */}
+      {!isDriver && hasPendingFee && (
+        <Card style={[styles.card, { backgroundColor: '#FFF3CD', borderLeftWidth: 4, borderLeftColor: '#F59E0B' }]}>
+          <Card.Content>
+            <Text variant="labelLarge" style={{ color: '#92400E', fontWeight: '700', marginBottom: 4 }}>
+              ⚠️ {t('transport.pending_fee_title')}
+            </Text>
+            <Text variant="bodySmall" style={{ color: '#78350F' }}>
+              {t('transport.pending_fee_message', {
+                amount: (request as any).cancellationFeeAmount,
+                currency: (request as any).currency || 'EGP',
+              })}
+            </Text>
+          </Card.Content>
+        </Card>
+      )}
 
       {/* Assigned driver */}
       {(request as any).driver && (
@@ -389,14 +427,14 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                   {t('transport.package_label', { vehicle: t('transport.vehicle_' + request.priceBreakdown.vehicleType) })}
                 </Text>
                 <Text variant="bodyMedium">
-                  {formatPrice(request.priceBreakdown.baseFare)}
+                  {`${(request.priceBreakdown.baseFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
                 </Text>
               </View>
 
               <View style={styles.priceRow}>
                 <Text variant="bodyMedium">{t('transport.distance_label')}</Text>
                 <Text variant="bodyMedium">
-                  {formatPrice(request.priceBreakdown.distanceFare)}
+                  {`${(request.priceBreakdown.distanceFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
                 </Text>
               </View>
 
@@ -404,7 +442,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.floors_label')}</Text>
                   <Text variant="bodyMedium">
-                    {formatPrice(request.priceBreakdown.floorFare)}
+                    {`${(request.priceBreakdown.floorFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
                   </Text>
                 </View>
               )}
@@ -413,7 +451,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.helpers_fare_label')}</Text>
                   <Text variant="bodyMedium">
-                    {formatPrice(request.priceBreakdown.helpersFare)}
+                    {`${(request.priceBreakdown.helpersFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
                   </Text>
                 </View>
               )}
@@ -422,7 +460,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.services_fare')}</Text>
                   <Text variant="bodyMedium">
-                    {formatPrice(request.priceBreakdown.servicesFare)}
+                    {`${(request.priceBreakdown.servicesFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
                   </Text>
                 </View>
               )}
@@ -434,7 +472,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
           <View style={styles.totalRow}>
             <Text variant="titleLarge">{t('transport.total')}</Text>
             <Text variant="titleLarge" style={styles.totalValue}>
-              {formatPrice(request.price)}
+              {`${(request.price || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
             </Text>
           </View>
 
@@ -591,6 +629,19 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
             style={styles.button}
           >
             {t('payment.history_view_btn')}
+          </Button>
+        )}
+
+        {/* Dispute button — only after completion or when a problem occurred */}
+        {(request.status === 'completed' || request.status === 'cancelled') && (
+          <Button
+            mode="text"
+            icon="flag"
+            textColor={colors.error}
+            onPress={() => navigation.navigate('Dispute', { requestId })}
+            style={styles.button}
+          >
+            {t('dispute.open_btn')}
           </Button>
         )}
 

@@ -8,6 +8,7 @@ import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { AddressesScreen } from '../screens/profile/AddressesScreen';
 import { LanguageScreen } from '../screens/profile/LanguageScreen';
+import { SupportScreen } from '../screens/profile/SupportScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -41,6 +42,11 @@ export const ProfileStack = () => {
         name="Language"
         component={LanguageScreen}
         options={{ title: t('language.title') }}
+      />
+      <Stack.Screen
+        name="Support"
+        component={SupportScreen}
+        options={{ title: t('support.title') }}
       />
     </Stack.Navigator>
   );

@@ -17,6 +17,7 @@ import { DriverReviewsScreen } from '../screens/driver/DriverReviewsScreen';
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
 import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
 import { PaymentDetailsScreen } from '../screens/payment/PaymentDetailsScreen';
+import { SupportScreen } from '../screens/profile/SupportScreen';
 
 const Stack = createStackNavigator<DriverStackParamList>();
 
@@ -93,6 +94,11 @@ export const DriverStack = () => {
         name="PaymentDetails"
         component={PaymentDetailsScreen}
         options={{ title: t('payment.details_title') }}
+      />
+      <Stack.Screen
+        name="Support"
+        component={SupportScreen}
+        options={{ title: t('support.title') }}
       />
     </Stack.Navigator>
   );

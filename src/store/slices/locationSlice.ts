@@ -46,10 +46,13 @@ const locationSlice = createSlice({
       state.userLat = action.payload.lat;
       state.userLng = action.payload.lng;
     },
-    setUnsupportedCountry(state, action: PayloadAction<{ lat: number; lng: number }>) {
+    setUnsupportedCountry(state, action: PayloadAction<{ lat: number; lng: number; countryCode?: string | null }>) {
       state.userLat = action.payload.lat;
       state.userLng = action.payload.lng;
       state.detectionStatus = 'unsupported';
+      if (action.payload.countryCode) {
+        state.detectedCountryCode = action.payload.countryCode;
+      }
     },
     setDetectionDenied(state) {
       state.detectionStatus = 'denied';

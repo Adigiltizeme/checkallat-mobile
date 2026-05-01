@@ -12,6 +12,8 @@ import {
   Step4Data,
 } from '../../types/transport';
 import { useCreateTransportRequestMutation, useCalculatePriceMutation } from '../../store/api/transportApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 type Props = StackScreenProps<any, 'TransportRequestStep5'>;
 
@@ -27,6 +29,9 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cash'>('cash');
   const [createRequest, { isLoading }] = useCreateTransportRequestMutation();
   const [calculatePrice, { isLoading: priceLoading }] = useCalculatePriceMutation();
+  const countryCode = useSelector((state: RootState) =>
+    state.location.selectedCountryCode ?? state.location.detectedCountryCode ?? undefined
+  );
 
   // Prix retourné par le backend (source unique de vérité)
   const [priceBreakdown, setPriceBreakdown] = useState<any>(null);
@@ -40,8 +45,6 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
     const fetchPrice = async () => {
       try {
         const result = await calculatePrice({
-          transportType: step1Data.objectType,
-          transportTypes: step1Data.objectTypes || [step1Data.objectType],
           estimatedVolume: step1Data.estimatedVolume,
           distance: step2Data.distance,
           pickupFloor: step2Data.pickup.floor || 0,
@@ -55,6 +58,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
           needPacking: step3Data.needPacking,
           pickupLat: step2Data.pickup.lat,
           pickupLng: step2Data.pickup.lng,
+          countryCode,
         }).unwrap();
         setPriceBreakdown(result);
       } catch (err) {
@@ -142,6 +146,9 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
 
         // Mode immédiat
         isImmediate: step4Data.isImmediate ?? false,
+
+        // Zone tarifaire (pays sélectionné ou détecté)
+        countryCode,
       };
 
       const result = await createRequest(requestData).unwrap();

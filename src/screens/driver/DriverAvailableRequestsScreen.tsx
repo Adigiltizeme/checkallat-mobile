@@ -65,94 +65,191 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
       minute: '2-digit',
     });
 
-  const renderItem = ({ item }: { item: any }) => (
-    <Card style={styles.card}>
-      <Card.Content>
-        {/* Header: price + payment method */}
-        <View style={styles.cardHeader}>
-          <Text variant="titleLarge" style={styles.price}>
-            {formatCurrency(item.price || item.totalPrice || 0)}
-          </Text>
-          <Chip
-            icon={item.paymentMethod === 'cash' ? 'cash' : 'credit-card'}
-            mode="flat"
-            style={[
-              styles.paymentChip,
-              { backgroundColor: item.paymentMethod === 'cash' ? '#FFF3E0' : '#E8F5F3' },
-            ]}
-            textStyle={{ fontSize: 12 }}
-          >
-            {t('driver.payment_' + item.paymentMethod + '_text')}
-          </Chip>
-        </View>
+  const objectTypeIcons: Record<string, string> = {
+    furniture: 'sofa',
+    appliances: 'washing-machine',
+    boxes: 'package-variant',
+    vehicle: 'car',
+    other: 'dots-horizontal-circle',
+  };
 
-        {/* Route */}
-        <View style={styles.routeSection}>
-          <View style={styles.routeRow}>
-            <Icon name="map-marker" size={18} color={colors.primary} />
-            <View style={styles.routeText}>
-              <Text variant="bodySmall" style={styles.routeLabel}>{t('driver.loading_point_label')}</Text>
-              <Text variant="bodyMedium" numberOfLines={2}>{item.pickup?.address || item.pickupAddress}</Text>
-            </View>
-          </View>
-          <View style={styles.routeLine} />
-          <View style={styles.routeRow}>
-            <Icon name="map-marker-check" size={18} color={colors.success} />
-            <View style={styles.routeText}>
-              <Text variant="bodySmall" style={styles.routeLabel}>{t('driver.delivery_point_label')}</Text>
-              <Text variant="bodyMedium" numberOfLines={2}>{item.delivery?.address || item.deliveryAddress}</Text>
-            </View>
-          </View>
-        </View>
+  const renderItem = ({ item }: { item: any }) => {
+    const objectTypes: string[] = item.objectTypes ?? (item.objectType ? [item.objectType] : []);
+    const hasServices = item.needHelpers || item.needDisassembly || item.needReassembly || item.needPacking;
+    const pickupElevator = item.hasElevator ? t('driver.elevator_yes') : t('driver.elevator_no');
+    const deliveryElevator = item.hasElevatorDelivery ? t('driver.elevator_yes') : t('driver.elevator_no');
 
-        {/* Meta: distance, date, immediate badge */}
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Icon name="map-marker-distance" size={15} color={colors.gray} />
-            <Text variant="bodySmall" style={styles.metaText}>{item.distance?.toFixed(1)} km</Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Icon name="calendar" size={15} color={colors.gray} />
-            <Text variant="bodySmall" style={styles.metaText}>{formatDate(item.scheduledDate)}</Text>
-          </View>
-          {item.isImmediate && (
+    return (
+      <Card style={styles.card}>
+        <Card.Content>
+          {/* Header: price + payment method */}
+          <View style={styles.cardHeader}>
+            <Text variant="titleLarge" style={styles.price}>
+              {formatCurrency(item.price || item.totalPrice || 0)}
+            </Text>
             <Chip
-              icon="lightning-bolt"
+              icon={item.paymentMethod === 'cash' ? 'cash' : 'credit-card'}
               mode="flat"
-              style={styles.immediateChip}
-              textStyle={styles.immediateChipText}
+              style={[
+                styles.paymentChip,
+                { backgroundColor: item.paymentMethod === 'cash' ? '#FFF3E0' : '#E8F5F3' },
+              ]}
+              textStyle={{ fontSize: 12 }}
             >
-              {t('transport.immediate_mode')}
+              {t('driver.payment_' + item.paymentMethod + '_text')}
             </Chip>
-          )}
-        </View>
+          </View>
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          <Button
-            mode="outlined"
-            onPress={() => handleReject(item.id)}
-            textColor={colors.error}
-            style={styles.rejectBtn}
-            icon="close"
-          >
-            {t('driver.reject_request_btn')}
-          </Button>
-          <Button
-            mode="contained"
-            onPress={() => handleAccept(item.id)}
-            buttonColor={colors.primary}
-            style={styles.acceptBtn}
-            icon="check"
-            loading={accepting}
-            disabled={accepting}
-          >
-            {t('driver.accept_request_btn')}
-          </Button>
-        </View>
-      </Card.Content>
-    </Card>
-  );
+          {/* Route */}
+          <View style={styles.routeSection}>
+            <View style={styles.routeRow}>
+              <Icon name="map-marker" size={18} color={colors.primary} />
+              <View style={styles.routeText}>
+                <Text variant="bodySmall" style={styles.routeLabel}>{t('driver.loading_point_label')}</Text>
+                <Text variant="bodyMedium" numberOfLines={2}>{item.pickup?.address || item.pickupAddress}</Text>
+                <Text variant="bodySmall" style={styles.conditionText}>
+                  {t('driver.request_pickup_conditions', {
+                    floor: item.pickupFloor || 0,
+                    elevator: pickupElevator,
+                  })}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.routeLine} />
+            <View style={styles.routeRow}>
+              <Icon name="map-marker-check" size={18} color={colors.success} />
+              <View style={styles.routeText}>
+                <Text variant="bodySmall" style={styles.routeLabel}>{t('driver.delivery_point_label')}</Text>
+                <Text variant="bodyMedium" numberOfLines={2}>{item.delivery?.address || item.deliveryAddress}</Text>
+                <Text variant="bodySmall" style={styles.conditionText}>
+                  {t('driver.request_delivery_conditions', {
+                    floor: item.deliveryFloor || 0,
+                    elevator: deliveryElevator,
+                  })}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Object types */}
+          {objectTypes.length > 0 && (
+            <View style={styles.detailSection}>
+              <Text variant="bodySmall" style={styles.detailSectionLabel}>{t('driver.request_object_section')}</Text>
+              <View style={styles.chipsRow}>
+                {objectTypes.map((type) => (
+                  <Chip
+                    key={type}
+                    icon={objectTypeIcons[type] || 'cube-outline'}
+                    mode="outlined"
+                    style={styles.objectChip}
+                    textStyle={styles.objectChipText}
+                    compact
+                  >
+                    {t(`transport.obj_${type}`, { defaultValue: type })}
+                  </Chip>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Volume / Weight */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Icon name="cube-outline" size={16} color={colors.gray} />
+              <Text variant="bodySmall" style={styles.statText}>
+                {t('driver.volume_m3', { volume: item.estimatedVolume ?? 0 })}
+              </Text>
+            </View>
+            {!!item.estimatedWeight && (
+              <View style={styles.statItem}>
+                <Icon name="weight-kilogram" size={16} color={colors.gray} />
+                <Text variant="bodySmall" style={styles.statText}>
+                  {t('driver.weight_kg', { weight: item.estimatedWeight })}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Services */}
+          <View style={styles.detailSection}>
+            <Text variant="bodySmall" style={styles.detailSectionLabel}>{t('driver.services_section')}</Text>
+            {hasServices ? (
+              <View style={styles.servicesRow}>
+                {item.needHelpers && (
+                  <Chip icon="account-multiple" mode="flat" style={styles.serviceChip} textStyle={styles.serviceChipText} compact>
+                    {t('driver.helpers_extra', { count: item.helpersCount ?? 1 })}
+                  </Chip>
+                )}
+                {item.needDisassembly && (
+                  <Chip icon="toolbox" mode="flat" style={styles.serviceChip} textStyle={styles.serviceChipText} compact>
+                    {t('driver.disassembly_required')}
+                  </Chip>
+                )}
+                {item.needReassembly && (
+                  <Chip icon="hammer-wrench" mode="flat" style={styles.serviceChip} textStyle={styles.serviceChipText} compact>
+                    {t('driver.reassembly_required')}
+                  </Chip>
+                )}
+                {item.needPacking && (
+                  <Chip icon="package-variant-closed" mode="flat" style={styles.serviceChip} textStyle={styles.serviceChipText} compact>
+                    {t('driver.packing_required')}
+                  </Chip>
+                )}
+              </View>
+            ) : (
+              <Text variant="bodySmall" style={styles.noServicesText}>{t('driver.no_extra_services')}</Text>
+            )}
+          </View>
+
+          {/* Meta: distance, date, immediate badge */}
+          <View style={styles.metaRow}>
+            <View style={styles.metaItem}>
+              <Icon name="map-marker-distance" size={15} color={colors.gray} />
+              <Text variant="bodySmall" style={styles.metaText}>{item.distance?.toFixed(1)} km</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Icon name="calendar" size={15} color={colors.gray} />
+              <Text variant="bodySmall" style={styles.metaText}>{formatDate(item.scheduledDate)}</Text>
+            </View>
+            {item.isImmediate && (
+              <Chip
+                icon="lightning-bolt"
+                mode="flat"
+                style={styles.immediateChip}
+                textStyle={styles.immediateChipText}
+              >
+                {t('transport.immediate_mode')}
+              </Chip>
+            )}
+          </View>
+
+          {/* Actions */}
+          <View style={styles.actions}>
+            <Button
+              mode="outlined"
+              onPress={() => handleReject(item.id)}
+              textColor={colors.error}
+              style={styles.rejectBtn}
+              icon="close"
+            >
+              {t('driver.reject_request_btn')}
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => handleAccept(item.id)}
+              buttonColor={colors.primary}
+              style={styles.acceptBtn}
+              icon="check"
+              loading={accepting}
+              disabled={accepting}
+            >
+              {t('driver.accept_request_btn')}
+            </Button>
+          </View>
+        </Card.Content>
+      </Card>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -205,6 +302,24 @@ const styles = StyleSheet.create({
   metaText: { color: '#6B7280' },
   immediateChip: { backgroundColor: '#FFF8E1', height: 26 },
   immediateChipText: { fontSize: 11, color: '#B45309' },
+
+  conditionText: { fontSize: 11, color: '#6B7280', marginTop: 2 },
+
+  detailSection: { marginBottom: spacing.sm },
+  detailSectionLabel: { color: '#9E9E9E', marginBottom: 4, fontWeight: '600', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  objectChip: { height: 26, backgroundColor: '#F3F4F6' },
+  objectChipText: { fontSize: 11 },
+
+  statsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
+  statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  statText: { color: '#374151' },
+
+  servicesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  serviceChip: { height: 26, backgroundColor: '#EEF2FF' },
+  serviceChipText: { fontSize: 11, color: '#4338CA' },
+  noServicesText: { color: '#9CA3AF', fontStyle: 'italic', fontSize: 12 },
 
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
   rejectBtn: { flex: 1, borderColor: colors.error },

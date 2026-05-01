@@ -295,10 +295,12 @@ export class MapboxService {
       }
 
       // Le code court (short_code) est le code ISO alpha-2 (ex: 'eg', 'fr')
+      // Certaines features retournent des codes de subdivision (ex: 'EG-C' pour Le Caire)
+      // On ne garde que les 2 premiers caractères (code pays)
       const feature = response.data.features[0];
       const shortCode: string | undefined = feature.properties?.short_code;
 
-      return shortCode ? shortCode.toLowerCase() : null;
+      return shortCode ? shortCode.split('-')[0].toLowerCase() : null;
     } catch (error: any) {
       console.warn('Mapbox reverseGeocodeCountry error:', error.message);
       return null;

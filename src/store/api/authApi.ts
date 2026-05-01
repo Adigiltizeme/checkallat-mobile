@@ -95,6 +95,13 @@ export const authApi = createApi({
       }),
       invalidatesTags: ['Addresses'],
     }),
+    sendSupportContact: builder.mutation<void, { category: string; message: string }>({
+      query: (body) => ({
+        url: '/admin/settings/support/contact',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -110,4 +117,5 @@ export const {
   useCreateAddressMutation,
   useUpdateAddressMutation,
   useDeleteAddressMutation,
+  useSendSupportContactMutation,
 } = authApi;

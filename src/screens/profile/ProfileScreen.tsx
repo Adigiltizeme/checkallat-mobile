@@ -162,9 +162,9 @@ export const ProfileScreen = () => {
       <View style={styles.section}>
         <List.Item
           title={t('profile.help')}
-          left={(props) => <List.Icon {...props} icon="help-circle" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="headset" color={colors.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => {}}
+          onPress={() => navigation.navigate('Support')}
         />
         <Divider />
         <List.Item

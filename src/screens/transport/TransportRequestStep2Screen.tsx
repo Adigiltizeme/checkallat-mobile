@@ -90,6 +90,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   const [isGeocodingDelivery, setIsGeocodingDelivery] = useState(false);
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
   const [showUnsupportedModal, setShowUnsupportedModal] = useState(false);
+  const [countryModalMode, setCountryModalMode] = useState<'unsupported' | 'change'>('unsupported');
 
   // Suggestions de géocodage
   const [pickupSuggestions, setPickupSuggestions] = useState<any[]>([]);
@@ -113,7 +114,8 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
             lng: result.lng,
           }));
         } else if (result.status === 'unsupported') {
-          dispatch(setUnsupportedCountry({ lat: result.lat, lng: result.lng }));
+          dispatch(setUnsupportedCountry({ lat: result.lat, lng: result.lng, countryCode: result.countryCode }));
+          setCountryModalMode('unsupported');
           setShowUnsupportedModal(true);
         } else {
           // GPS refusé ou erreur — pas de restriction, recherche mondiale
@@ -121,6 +123,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
         }
       })();
     } else if (locationState.detectionStatus === 'unsupported') {
+      setCountryModalMode('unsupported');
       setShowUnsupportedModal(true);
     }
   }, []);
@@ -406,10 +409,11 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Modal pays non supporté */}
+      {/* Modal sélection de pays (pays non supporté ou changement manuel) */}
       <UnsupportedCountryModal
         visible={showUnsupportedModal}
         detectedCountryCode={locationState.detectedCountryCode}
+        mode={countryModalMode}
         onCountrySelected={(country) => {
           dispatch(selectCountry(country.code));
           setShowUnsupportedModal(false);
@@ -426,7 +430,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
         {activeCountryCode && (
           <TouchableOpacity
             style={styles.countryBadge}
-            onPress={() => setShowUnsupportedModal(true)}
+            onPress={() => { setCountryModalMode('change'); setShowUnsupportedModal(true); }}
           >
             <Text style={styles.countryBadgeText}>
               {getCountryInfo(activeCountryCode)?.flag ?? '🌍'}{' '}

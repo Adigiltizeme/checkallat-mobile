@@ -7,6 +7,8 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { Step1Data, Step2Data, Step3Data } from '../../types/transport';
 import { useGetActivePricingQuery } from '../../store/api/transportApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 type Props = StackScreenProps<any, 'TransportRequestStep3'>;
 
@@ -17,7 +19,11 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
     step2Data: Step2Data;
   };
 
-  const { data: pricing } = useGetActivePricingQuery();
+  const countryCode = useSelector((state: RootState) =>
+    state.location.selectedCountryCode ?? state.location.detectedCountryCode ?? undefined
+  );
+
+  const { data: pricing } = useGetActivePricingQuery(countryCode);
   const cur = pricing?.currency || 'EGP';
 
   const [needHelpers, setNeedHelpers] = useState(false);
