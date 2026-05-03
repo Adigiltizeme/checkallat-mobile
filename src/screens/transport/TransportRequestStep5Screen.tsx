@@ -109,7 +109,18 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
         itemDescription: step1Data.description,
         itemPhotos: step1Data.photos,
         estimatedVolume: step1Data.estimatedVolume,
-        estimatedWeight: step1Data.estimatedVolume * 100, // Estimation approximative
+        estimatedWeight: (() => {
+          // Densités réalistes par type d'objet (kg/m³)
+          const densityByType: Record<string, number> = {
+            furniture: 55,   // Meubles (lit, canapé, armoire) : creux, léger relatif
+            appliances: 100, // Électroménager (frigo, lave-linge) : dense
+            boxes: 80,       // Cartons : variable, estimation médiane
+            vehicle: 140,    // Véhicule (moto, vélo) : dense
+            other: 65,       // Divers : estimation basse
+          };
+          const density = densityByType[step1Data.objectType] ?? 65;
+          return Math.round(step1Data.estimatedVolume * density);
+        })(),
 
         // Pickup (décomposé)
         pickupAddress: step2Data.pickup.address,

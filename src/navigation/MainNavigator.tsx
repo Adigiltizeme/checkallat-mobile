@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +19,10 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 export const MainNavigator = () => {
   const { t } = useTranslation();
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
+  const user = useSelector((state: RootState) => state.auth.user);
   const isDriver = activeRole === 'driver';
+
+  const isActiveDriver = user?.driver?.status === 'active';
 
   return (
     <Tab.Navigator
@@ -86,6 +90,19 @@ export const MainNavigator = () => {
               tabBarIcon: ({ color, size }) => (
                 <Icon name="truck-fast" size={size} color={color} />
               ),
+              tabBarButton: isActiveDriver
+                ? (props) => (
+                    <TouchableOpacity
+                      {...props}
+                      onPress={() =>
+                        Alert.alert(
+                          t('common.access_denied'),
+                          t('home.driver_cannot_book_transport'),
+                        )
+                      }
+                    />
+                  )
+                : undefined,
             }}
           />
           <Tab.Screen

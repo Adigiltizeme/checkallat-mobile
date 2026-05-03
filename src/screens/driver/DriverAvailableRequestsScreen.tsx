@@ -90,11 +90,8 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
             <Chip
               icon={item.paymentMethod === 'cash' ? 'cash' : 'credit-card'}
               mode="flat"
-              style={[
-                styles.paymentChip,
-                { backgroundColor: item.paymentMethod === 'cash' ? '#FFF3E0' : '#E8F5F3' },
-              ]}
-              textStyle={{ fontSize: 12 }}
+              style={{ backgroundColor: item.paymentMethod === 'cash' ? '#FFF3E0' : '#E8F5F3' }}
+              textStyle={{ fontSize: 12, includeFontPadding: false, lineHeight: 15 }}
             >
               {t('driver.payment_' + item.paymentMethod + '_text')}
             </Chip>
@@ -289,7 +286,6 @@ const styles = StyleSheet.create({
   card: { marginBottom: spacing.md, backgroundColor: '#FFFFFF', elevation: 2 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   price: { fontWeight: 'bold', color: colors.success },
-  paymentChip: { height: 28 },
 
   routeSection: { marginBottom: spacing.md },
   routeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
@@ -300,8 +296,8 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText: { color: '#6B7280' },
-  immediateChip: { backgroundColor: '#FFF8E1', height: 26 },
-  immediateChipText: { fontSize: 11, color: '#B45309' },
+  immediateChip: { backgroundColor: '#FFF8E1' },
+  immediateChipText: { fontSize: 11, color: '#B45309', includeFontPadding: false, lineHeight: 14 },
 
   conditionText: { fontSize: 11, color: '#6B7280', marginTop: 2 },
 
@@ -309,16 +305,16 @@ const styles = StyleSheet.create({
   detailSectionLabel: { color: '#9E9E9E', marginBottom: 4, fontWeight: '600', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  objectChip: { height: 26, backgroundColor: '#F3F4F6' },
-  objectChipText: { fontSize: 11 },
+  objectChip: { backgroundColor: '#F3F4F6' },
+  objectChipText: { fontSize: 11, includeFontPadding: false, lineHeight: 14 },
 
   statsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
   statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   statText: { color: '#374151' },
 
   servicesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  serviceChip: { height: 26, backgroundColor: '#EEF2FF' },
-  serviceChipText: { fontSize: 11, color: '#4338CA' },
+  serviceChip: { backgroundColor: '#EEF2FF' },
+  serviceChipText: { fontSize: 11, color: '#4338CA', includeFontPadding: false, lineHeight: 14 },
   noServicesText: { color: '#9CA3AF', fontStyle: 'italic', fontSize: 12 },
 
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },

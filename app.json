@@ -9,6 +9,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#00B8A9"
     },
+    "updates": {
+      "enabled": false
+    },
     "assetBundlePatterns": [
       "**/*"
     ],

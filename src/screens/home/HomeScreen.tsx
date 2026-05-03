@@ -8,6 +8,7 @@ import {
   FlatList,
   StatusBar,
   Image,
+  Alert,
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -223,10 +224,39 @@ export const HomeScreen = ({ navigation }: any) => {
     transform: [{ translateY: headerY.value }],
   }));
 
+  const handleTransportPress = () => {
+    if (user?.driver?.status === 'active') {
+      Alert.alert(
+        t('common.access_denied'),
+        t('home.driver_cannot_book_transport'),
+      );
+      return;
+    }
+    navigation.navigate('Transport');
+  };
+
   const handleServicePress = (id: string) => {
-    if (id === 'transport') navigation.navigate('Transport');
-    else if (id === 'market') navigation.navigate('MarketplaceHome');
-    else navigation.navigate('SearchPros', { category: id });
+    if (id === 'transport') {
+      handleTransportPress();
+      return;
+    }
+
+    if (id === 'market') {
+      navigation.navigate('MarketplaceHome');
+      return;
+    }
+
+    // Services classiques : un pro actif dans cette catégorie ne peut pas réserver
+    const proSlugs: string[] = user?.pro?.serviceCategorySlugs ?? [];
+    if (user?.pro?.status === 'active' && proSlugs.includes(id)) {
+      Alert.alert(
+        t('common.access_denied'),
+        t('home.pro_cannot_book_own_category'),
+      );
+      return;
+    }
+
+    navigation.navigate('SearchPros', { category: id });
   };
 
   return (
@@ -313,7 +343,7 @@ export const HomeScreen = ({ navigation }: any) => {
             <Text style={styles.ctaSubtitle}>{t('home.cta_sub')}</Text>
             <TouchableOpacity
               style={styles.ctaBtn}
-              onPress={() => navigation.navigate('Transport')}
+              onPress={handleTransportPress}
               activeOpacity={0.85}
             >
               <Text style={styles.ctaBtnText}>{t('home.cta_btn')}</Text>

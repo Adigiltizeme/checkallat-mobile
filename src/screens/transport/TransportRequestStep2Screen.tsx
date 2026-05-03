@@ -247,11 +247,11 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
         placesSessionRef.current = GooglePlacesService.generateSessionToken();
 
         if (details) {
-          // Construire une adresse lisible :
-          // Si formatted_address contient un Plus Code (ex: "XCJG+PGC, New Cairo..."),
-          // préférer "Nom du lieu — Sous-titre" pour un affichage clair dans l'itinéraire.
-          const isPlusCode = /^[A-Z0-9]{4,}\+[A-Z0-9]{2,}/.test(details.fullAddress);
-          const readableAddress = isPlusCode
+          // Toujours utiliser le nom saisi/sélectionné par l'utilisateur (suggestion.name)
+          // comme adresse affichée, accompagné du sous-titre pour précision.
+          // L'adresse geocodée (details.fullAddress) sert uniquement à la précision des coordonnées.
+          // On ne tombe sur fullAddress qu'en dernier recours (si suggestion.name absent).
+          const readableAddress = suggestion.name
             ? [suggestion.name, suggestion.subtitle].filter(Boolean).join(', ')
             : details.fullAddress;
 

@@ -34,7 +34,8 @@
     "ground_floor": "GF",
     "ok": "OK",
     "error_generic": "An error occurred. Please try again.",
-    "details": "Details"
+    "details": "Details",
+    "access_denied": "Access denied"
   },
   "auth": {
     "login_title": "Welcome",
@@ -49,6 +50,9 @@
     "register_link": "Sign up",
     "forgot_password": "Forgot password?",
     "login_failed": "Invalid credentials.",
+    "choose_language": "Choose your language",
+    "choose_language_hint": "You can change this later in your profile.",
+    "language_dont_ask_again": "Don't ask again",
     "register_title": "Create an account",
     "first_name": "First name",
     "last_name": "Last name",
@@ -241,6 +245,8 @@
     "afternoon": "Afternoon (12pm-5pm)",
     "evening": "Evening (5pm-8pm)",
     "flexible": "Flexible",
+    "immediate_order": "Immediate order",
+    "immediate_order_desc": "Driver dispatched as soon as possible",
     "payment_method": "Payment method",
     "pay_online": "Online payment (Card)",
     "pay_cash": "Cash payment",
@@ -285,6 +291,7 @@
     "cancellation_info": "You can cancel this request for free up to 2 hours before the scheduled time slot.",
     "confirm_delivery": "Confirm delivery",
     "validate_cash": "Validate cash payment",
+    "renew_order": "Renew this order",
     "back_to_list": "Back to list",
     "back_to_details": "Back to details",
     "cancel_request_title": "Cancel request",
@@ -777,7 +784,9 @@
     "feat4_desc": "Expanding network in Egypt, France, Algeria, Morocco and Senegal",
     "cta_title": "Need a move?",
     "cta_sub": "Drivers available now near you",
-    "cta_btn": "Book now"
+    "cta_btn": "Book now",
+    "driver_cannot_book_transport": "As an active driver, you cannot place a transport request as a client.",
+    "pro_cannot_book_own_category": "You cannot book a service in a category in which you are registered as a provider."
   },
   "payment": {
     "title": "Payment",

@@ -16,6 +16,9 @@ import {
   STATUS_COLORS,
   TransportStatus,
   TransportObjectType,
+  Step1Data,
+  Step2Data,
+  Step3Data,
 } from '../../types/transport';
 
 type Props = StackScreenProps<any, 'TransportDetails'>;
@@ -123,6 +126,45 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
 
   const handleTrack = () => {
     navigation.navigate('TransportTracking', { requestId });
+  };
+
+  const handleRenew = () => {
+    const r = request as any;
+    const step1Data: Step1Data = {
+      objectType: request.objectType,
+      objectTypes: r.objectTypes ?? [request.objectType],
+      description: request.description,
+      photos: request.photos ?? [],
+      estimatedVolume: request.estimatedVolume,
+    };
+    const step2Data: Step2Data = {
+      pickup: {
+        address: request.pickup.address,
+        lat: r.pickup?.lat ?? 0,
+        lng: r.pickup?.lng ?? 0,
+        floor: request.pickup.floor ?? 0,
+        hasElevator: request.pickup.hasElevator ?? false,
+        instructions: request.pickup.instructions,
+      },
+      delivery: {
+        address: request.delivery.address,
+        lat: r.delivery?.lat ?? 0,
+        lng: r.delivery?.lng ?? 0,
+        floor: request.delivery.floor ?? 0,
+        hasElevator: request.delivery.hasElevator ?? false,
+        instructions: request.delivery.instructions,
+      },
+      distance: request.distance,
+      estimatedDuration: r.estimatedDuration ?? Math.round(request.distance * 2),
+    };
+    const step3Data: Step3Data = {
+      needHelpers: request.needHelpers,
+      helpersCount: request.helpersCount ?? 1,
+      needDisassembly: request.needDisassembly,
+      needReassembly: request.needReassembly,
+      needPacking: request.needPacking,
+    };
+    navigation.navigate('TransportRequestStep4', { step1Data, step2Data, step3Data });
   };
 
   if (isLoading) {
@@ -405,10 +447,10 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
             📅 {t('transport.planning')}
           </Text>
           <Text variant="bodyLarge" style={styles.value}>
-            {formatDate(request.scheduledDate)}
+            {(request as any).isImmediate ? t('transport.immediate_order') : formatDate(request.scheduledDate)}
           </Text>
           <Text variant="bodyMedium" style={styles.detail}>
-            {t('transport.' + request.timeSlot)}
+            {(request as any).isImmediate ? t('transport.immediate_order_desc') : t('transport.' + request.timeSlot)}
           </Text>
         </Card.Content>
       </Card>
@@ -642,6 +684,17 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
             style={styles.button}
           >
             {t('dispute.open_btn')}
+          </Button>
+        )}
+
+        {!isDriver && (request.status === 'completed' || request.status === 'cancelled') && (
+          <Button
+            mode="outlined"
+            icon="refresh"
+            onPress={handleRenew}
+            style={styles.button}
+          >
+            {t('transport.renew_order')}
           </Button>
         )}
 

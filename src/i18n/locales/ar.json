@@ -34,7 +34,8 @@
     "ground_floor": "الطابق الأرضي",
     "ok": "موافق",
     "error_generic": "حدث خطأ. يرجى المحاولة مجدداً.",
-    "details": "تفاصيل"
+    "details": "تفاصيل",
+    "access_denied": "الوصول مرفوض"
   },
   "auth": {
     "login_title": "أهلاً بك",
@@ -49,6 +50,9 @@
     "register_link": "إنشاء حساب",
     "forgot_password": "نسيت كلمة المرور؟",
     "login_failed": "بيانات الدخول غير صحيحة.",
+    "choose_language": "اختر لغتك",
+    "choose_language_hint": "يمكنك تغييرها في أي وقت من ملفك الشخصي.",
+    "language_dont_ask_again": "لا تسأل مجدداً",
     "register_title": "إنشاء حساب",
     "first_name": "الاسم الأول",
     "last_name": "اسم العائلة",
@@ -241,6 +245,8 @@
     "afternoon": "ظهراً (12م-5م)",
     "evening": "مساءً (5م-8م)",
     "flexible": "مرن",
+    "immediate_order": "طلب فوري",
+    "immediate_order_desc": "سيُرسَل السائق في أقرب وقت ممكن",
     "payment_method": "طريقة الدفع",
     "pay_online": "الدفع الإلكتروني (بطاقة)",
     "pay_cash": "الدفع نقداً",
@@ -285,6 +291,7 @@
     "cancellation_info": "يمكنك إلغاء هذا الطلب مجاناً حتى ساعتين قبل الموعد المحدد.",
     "confirm_delivery": "تأكيد التسليم",
     "validate_cash": "التحقق من الدفع النقدي",
+    "renew_order": "تجديد هذا الطلب",
     "back_to_list": "العودة إلى القائمة",
     "back_to_details": "العودة إلى التفاصيل",
     "cancel_request_title": "إلغاء الطلب",
@@ -777,7 +784,9 @@
     "feat4_desc": "شبكة متوسعة في مصر وفرنسا والجزائر والمغرب والسنغال",
     "cta_title": "تحتاج إلى نقل؟",
     "cta_sub": "سائقون متاحون الآن بالقرب منك",
-    "cta_btn": "احجز الآن"
+    "cta_btn": "احجز الآن",
+    "driver_cannot_book_transport": "بصفتك سائقاً نشطاً، لا يمكنك تقديم طلب نقل كعميل.",
+    "pro_cannot_book_own_category": "لا يمكنك حجز خدمة في فئة تعمل فيها كمزوّد خدمة."
   },
   "payment": {
     "title": "الدفع",

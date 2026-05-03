@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import {
   View,
@@ -25,6 +25,14 @@ import {
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { TransportRequest, STATUS_COLORS, TransportStatus } from '../../types/transport';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  Easing,
+} from 'react-native-reanimated';
 
 type Props = StackScreenProps<DriverStackParamList, 'DriverHome'>;
 type TemporalFilter = 'all' | 'today' | 'upcoming' | 'history';
@@ -42,8 +50,10 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
     pollingInterval: 8000,
     refetchOnMountOrArgChange: true,
   });
-  useRefetchOnFocus(refetch);
-  useRefetchOnFocus(refetchAvailable);
+  // Délai 450 ms pour laisser la transition de navigation se terminer avant
+  // de déclencher des re-renders (évite le clignotement au retour arrière).
+  useRefetchOnFocus(refetch, 450);
+  useRefetchOnFocus(refetchAvailable, 450);
   const [updateAvailability] = useUpdateDriverAvailabilityMutation();
   const driverProfile = useSelector((state: any) => state.auth.user?.driver);
   const [isAvailable, setIsAvailable] = useState<boolean>(driverProfile?.isAvailable ?? true);
@@ -54,6 +64,26 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   const [dateStart, setDateStart] = useState('');
   const [dateEnd, setDateEnd] = useState('');
   const [dateSingle, setDateSingle] = useState('');
+
+  // Animation percussive du banner (1 beat ≈ 600 ms, ~100 BPM)
+  const bannerScale = useSharedValue(1);
+  useEffect(() => {
+    if (availableRequests.length > 0) {
+      bannerScale.value = withRepeat(
+        withSequence(
+          withTiming(1.03, { duration: 60, easing: Easing.out(Easing.quad) }),
+          withTiming(1, { duration: 540, easing: Easing.in(Easing.quad) }),
+        ),
+        -1,
+        false,
+      );
+    } else {
+      bannerScale.value = 1;
+    }
+  }, [availableRequests.length, bannerScale]);
+  const bannerAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bannerScale.value }],
+  }));
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -258,22 +288,24 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
 
       {/* Bannière demandes disponibles */}
       {availableRequests.length > 0 && (
-        <TouchableOpacity
-          style={styles.availableBanner}
-          onPress={() => navigation.navigate('DriverAvailableRequests')}
-          activeOpacity={0.85}
-        >
-          <View style={styles.availableBannerLeft}>
-            <Icon name="bell-ring" size={22} color="#FFFFFF" />
-            <View>
-              <Text style={styles.availableBannerTitle}>
-                {t('driver.new_requests_available', { count: availableRequests.length })}
-              </Text>
-              <Text style={styles.availableBannerSub}>{t('driver.tap_to_see_requests')}</Text>
+        <Animated.View style={bannerAnimStyle}>
+          <TouchableOpacity
+            style={styles.availableBanner}
+            onPress={() => navigation.navigate('DriverAvailableRequests')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.availableBannerLeft}>
+              <Icon name="bell-ring" size={22} color="#FFFFFF" />
+              <View>
+                <Text style={styles.availableBannerTitle}>
+                  {t('driver.new_requests_available', { count: availableRequests.length })}
+                </Text>
+                <Text style={styles.availableBannerSub}>{t('driver.tap_to_see_requests')}</Text>
+              </View>
             </View>
-          </View>
-          <Icon name="chevron-right" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
+            <Icon name="chevron-right" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        </Animated.View>
       )}
 
       {/* Global Stats — déroulable */}

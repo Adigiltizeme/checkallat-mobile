@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
@@ -12,6 +12,7 @@ import { setCredentials, DEFAULT_ROLE_KEY, UserRole } from '../../store/slices/a
 import { colors } from '../../theme/colors';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
+import { LanguagePickerModal, LANGUAGE_PICKER_DISMISSED_KEY } from './LanguagePickerModal';
 
 interface LoginForm {
   identifier: string;
@@ -24,6 +25,13 @@ export const LoginScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
   const [login, { isLoading, error }] = useLoginMutation();
   const dispatch = useDispatch();
+  const [showLangPicker, setShowLangPicker] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem(LANGUAGE_PICKER_DISMISSED_KEY).then((dismissed) => {
+      if (!dismissed) setShowLangPicker(true);
+    });
+  }, []);
 
   const loginSchema = useMemo(() => z.object({
     identifier: z.string().min(1, t('auth.identifier_required')),
@@ -50,6 +58,10 @@ export const LoginScreen = ({ navigation }: Props) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <LanguagePickerModal
+        visible={showLangPicker}
+        onDismiss={() => setShowLangPicker(false)}
+      />
       <View style={styles.content}>
         <Text variant="displaySmall" style={styles.title}>
           {t('auth.login_title')}

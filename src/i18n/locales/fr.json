@@ -34,7 +34,8 @@
     "ground_floor": "RDC",
     "ok": "OK",
     "error_generic": "Une erreur est survenue. Veuillez réessayer.",
-    "details": "Détails"
+    "details": "Détails",
+    "access_denied": "Accès refusé"
   },
   "auth": {
     "login_title": "Bienvenue",
@@ -49,6 +50,9 @@
     "register_link": "S'inscrire",
     "forgot_password": "Mot de passe oublié ?",
     "login_failed": "Identifiants incorrects.",
+    "choose_language": "Choisissez votre langue",
+    "choose_language_hint": "Vous pourrez la modifier à tout moment dans votre profil.",
+    "language_dont_ask_again": "Ne plus demander",
     "register_title": "Créer un compte",
     "first_name": "Prénom",
     "last_name": "Nom",
@@ -241,6 +245,8 @@
     "afternoon": "Après-midi (12h-17h)",
     "evening": "Soir (17h-20h)",
     "flexible": "Flexible",
+    "immediate_order": "Commande immédiate",
+    "immediate_order_desc": "Chauffeur envoyé dès que possible",
     "payment_method": "Moyen de paiement",
     "pay_online": "Paiement en ligne (Carte)",
     "pay_cash": "Paiement en espèces",
@@ -285,6 +291,7 @@
     "cancellation_info": "Vous pouvez annuler gratuitement cette demande jusqu'à 2h avant le créneau prévu.",
     "confirm_delivery": "Confirmer la livraison",
     "validate_cash": "Valider le paiement cash",
+    "renew_order": "Renouveler cette commande",
     "back_to_list": "Retour à la liste",
     "back_to_details": "Retour aux détails",
     "cancel_request_title": "Annuler la demande",
@@ -777,7 +784,9 @@
     "feat4_desc": "Un réseau en expansion en Égypte, France, Algérie, Maroc et Sénégal",
     "cta_title": "Besoin d'un déménagement ?",
     "cta_sub": "Des chauffeurs disponibles maintenant près de vous",
-    "cta_btn": "Réserver maintenant"
+    "cta_btn": "Réserver maintenant",
+    "driver_cannot_book_transport": "En tant que chauffeur actif, vous ne pouvez pas passer une demande de transport en tant que client.",
+    "pro_cannot_book_own_category": "Vous ne pouvez pas réserver un service dans une catégorie dans laquelle vous êtes prestataire."
   },
   "payment": {
     "title": "Paiement",
