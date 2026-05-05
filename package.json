@@ -2,6 +2,13 @@
   "name": "checkallat-mobile",
   "version": "1.0.0",
   "main": "node_modules/expo/AppEntry.js",
+  "expo": {
+    "install": {
+      "exclude": [
+        "@types/react"
+      ]
+    }
+  },
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start",
     "android": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --android",
@@ -22,16 +29,17 @@
     "@rnmapbox/maps": "^10.3.0",
     "@stripe/stripe-react-native": "0.50.3",
     "axios": "^1.7.9",
-    "expo": "~54.0.0",
+    "expo": "~54.0.34",
+    "expo-av": "~16.0.8",
     "expo-build-properties": "~1.0.10",
     "expo-camera": "~17.0.10",
-    "expo-dev-client": "~6.0.20",
-    "expo-image-picker": "~17.0.10",
+    "expo-dev-client": "~6.0.21",
+    "expo-image-picker": "~17.0.11",
     "expo-localization": "~17.0.8",
     "expo-location": "~19.0.8",
-    "expo-notifications": "~0.32.16",
+    "expo-notifications": "~0.32.17",
     "expo-status-bar": "~3.0.9",
-    "expo-updates": "~29.0.16",
+    "expo-updates": "~29.0.17",
     "i18next": "^26.0.3",
     "react": "19.1.0",
     "react-hook-form": "^7.54.2",
@@ -52,7 +60,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@types/react": "~19.1.10",
+    "@types/react": "~18.3.0",
     "@types/react-native-vector-icons": "^6.4.18",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",

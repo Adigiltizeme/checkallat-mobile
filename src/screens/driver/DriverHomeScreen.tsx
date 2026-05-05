@@ -23,6 +23,7 @@ import {
   useUpdateDriverAvailabilityMutation,
 } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { useBeatSound } from '../../hooks/useBeatSound';
 import { TransportRequest, STATUS_COLORS, TransportStatus } from '../../types/transport';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, {
@@ -64,6 +65,9 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   const [dateStart, setDateStart] = useState('');
   const [dateEnd, setDateEnd] = useState('');
   const [dateSingle, setDateSingle] = useState('');
+
+  // Son percussif synchronisé avec l'animation (600 ms/beat)
+  useBeatSound(availableRequests.length > 0);
 
   // Animation percussive du banner (1 beat ≈ 600 ms, ~100 BPM)
   const bannerScale = useSharedValue(1);

@@ -3,6 +3,9 @@
 module.exports = ({ config }) => {
   return {
     ...config,
+    updates: {
+      enabled: false,
+    },
     plugins: [
       [
         'expo-location',
