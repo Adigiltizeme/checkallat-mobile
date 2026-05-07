@@ -910,6 +910,7 @@
     "status_pending_short": "قيد المراجعة — 24-48 ساعة",
     "status_rejected": "تم رفض الطلب",
     "status_rejected_desc": "لم يتم قبول طلبك. يمكنك إعادة التقديم أو التواصل مع الدعم.",
+    "rejection_reason_label": "سبب الرفض:",
     "status_rejected_short": "غير مقبول — أعد التقديم أو تواصل مع الدعم",
     "submitted_docs": "الوثائق المقدَّمة",
     "edit_docs": "تعديل وثائقي",

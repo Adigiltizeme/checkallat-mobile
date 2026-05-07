@@ -910,6 +910,7 @@
     "status_pending_short": "En cours d'examen — 24-48h",
     "status_rejected": "Candidature refusée",
     "status_rejected_desc": "Votre dossier n'a pas été retenu. Vous pouvez soumettre une nouvelle candidature ou contacter le support.",
+    "rejection_reason_label": "Motif du refus :",
     "status_rejected_short": "Non retenue — Resoumettre ou contacter le support",
     "submitted_docs": "Documents soumis",
     "edit_docs": "Modifier mes documents",

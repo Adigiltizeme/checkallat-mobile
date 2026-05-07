@@ -910,6 +910,7 @@
     "status_pending_short": "Under review — 24-48h",
     "status_rejected": "Application rejected",
     "status_rejected_desc": "Your application was not approved. You may resubmit or contact support.",
+    "rejection_reason_label": "Reason for rejection:",
     "status_rejected_short": "Not approved — Resubmit or contact support",
     "submitted_docs": "Submitted documents",
     "edit_docs": "Edit my documents",

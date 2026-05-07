@@ -91,6 +91,14 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
         </Text>
       </View>
 
+      {/* Motif du refus */}
+      {isRejected && driver?.rejectionReason ? (
+        <View style={styles.reasonCard}>
+          <Text style={styles.reasonLabel}>{t('driver_apply.rejection_reason_label')}</Text>
+          <Text style={styles.reasonText}>{driver.rejectionReason}</Text>
+        </View>
+      ) : null}
+
       {/* Documents soumis */}
       {isPending && (
         <View style={styles.docsCard}>
@@ -335,6 +343,14 @@ const styles = StyleSheet.create({
   statusTitlePending: { color: '#92400e' },
   statusTitleRejected: { color: '#991b1b' },
   statusDesc: { color: colors.gray, textAlign: 'center', lineHeight: 20 },
+
+  // Rejection reason card
+  reasonCard: {
+    backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa',
+    borderRadius: 10, padding: spacing.lg, marginBottom: spacing.lg,
+  },
+  reasonLabel: { fontSize: 12, fontWeight: '700', color: '#9a3412', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  reasonText: { fontSize: 14, color: '#7c2d12', lineHeight: 20 },
 
   // Docs card
   docsCard: {
