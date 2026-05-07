@@ -7,11 +7,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootState } from '../../store';
-import { logout, setActiveRole, clearDefaultRole, UserRole } from '../../store/slices/authSlice';
+import { logout, setActiveRole, clearDefaultRole } from '../../store/slices/authSlice';
 import { ProfileStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type ProfileNavProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -130,6 +129,30 @@ export const ProfileScreen = () => {
           left={(props) => <List.Icon {...props} icon="credit-card" color={colors.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => {}}
+        />
+      </View>
+
+      {/* Devenir chauffeur — uniquement pour les non-chauffeurs */}
+      {!isDriver && (
+        <View style={styles.section}>
+          <List.Item
+            title={t('driver_apply.become_driver')}
+            description={t('driver_apply.become_driver_desc')}
+            left={(props) => <List.Icon {...props} icon="truck-plus" color="#F59E0B" />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            onPress={() => navigation.navigate('DriverApplication')}
+          />
+        </View>
+      )}
+
+      {/* Sécurité */}
+      <View style={styles.section}>
+        <List.Item
+          title={t('profile.change_password')}
+          description={t('profile.change_password_desc')}
+          left={(props) => <List.Icon {...props} icon="lock-reset" color={colors.primary} />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('ChangePassword')}
         />
       </View>
 

@@ -9,6 +9,10 @@ import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { AddressesScreen } from '../screens/profile/AddressesScreen';
 import { LanguageScreen } from '../screens/profile/LanguageScreen';
 import { SupportScreen } from '../screens/profile/SupportScreen';
+import { ChangePasswordScreen } from '../screens/profile/ChangePasswordScreen';
+import { ChangePhoneScreen } from '../screens/profile/ChangePhoneScreen';
+import { DriverApplicationScreen } from '../screens/profile/DriverApplicationScreen';
+import { DriverDocumentsScreen } from '../screens/profile/DriverDocumentsScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -47,6 +51,26 @@ export const ProfileStack = () => {
         name="Support"
         component={SupportScreen}
         options={{ title: t('support.title') }}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{ title: t('profile.change_password') }}
+      />
+      <Stack.Screen
+        name="ChangePhone"
+        component={ChangePhoneScreen}
+        options={{ title: t('profile.change_phone') }}
+      />
+      <Stack.Screen
+        name="DriverApplication"
+        component={DriverApplicationScreen}
+        options={{ title: t('driver_apply.title') }}
+      />
+      <Stack.Screen
+        name="DriverDocuments"
+        component={DriverDocumentsScreen}
+        options={{ title: t('driver_docs.title') }}
       />
     </Stack.Navigator>
   );

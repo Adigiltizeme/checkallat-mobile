@@ -11,7 +11,6 @@ import { DriverTransportDetailsScreen } from '../screens/driver/DriverTransportD
 import { DriverDeliveryDetailsScreen } from '../screens/driver/DriverDeliveryDetailsScreen';
 import { DriverNavigationScreen } from '../screens/driver/DriverNavigationScreen';
 import { DriverProofPhotosScreen } from '../screens/driver/DriverProofPhotosScreen';
-import { DriverSignatureScreen } from '../screens/driver/DriverSignatureScreen';
 import { DriverEarningsScreen } from '../screens/driver/DriverEarningsScreen';
 import { DriverReviewsScreen } from '../screens/driver/DriverReviewsScreen';
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
@@ -64,11 +63,6 @@ export const DriverStack = () => {
         name="DriverProofPhotos"
         component={DriverProofPhotosScreen}
         options={{ title: t('driver.proof_photos_title') }}
-      />
-      <Stack.Screen
-        name="DriverSignature"
-        component={DriverSignatureScreen}
-        options={{ title: t('driver.signature_title') }}
       />
       <Stack.Screen
         name="DriverEarnings"

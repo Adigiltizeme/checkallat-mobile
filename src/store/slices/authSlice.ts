@@ -113,6 +113,21 @@ const authSlice = createSlice({
       state.user = { ...state.user, ...action.payload };
     },
 
+    refreshProfile: (state, action: PayloadAction<any>) => {
+      const user = action.payload;
+      state.user = user;
+      state.isDriver = !!user?.driver;
+      state.driverId = user?.driver?.id || null;
+
+      const roles = computeAvailableRoles(user);
+      state.availableRoles = roles;
+
+      // Si le rôle driver vient d'être débloqué et qu'on est encore en 'client'
+      if (roles.includes('driver') && state.activeRole === 'client') {
+        state.needsRoleSelection = true;
+      }
+    },
+
     setLanguage: (state, action: PayloadAction<string>) => {
       state.language = action.payload;
       AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, action.payload);
@@ -158,6 +173,7 @@ export const {
   setActiveRole,
   clearDefaultRole,
   updateUser,
+  refreshProfile,
   setLanguage,
   logout,
   restoreAuth,

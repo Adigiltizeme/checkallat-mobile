@@ -295,11 +295,35 @@ export const transportApi = createApi({
       }),
       invalidatesTags: ['TransportRequest'],
     }),
-    updateDriverProfile: builder.mutation({
-      query: (data: { vehicleType?: string; vehiclePlate?: string; vehicleCapacity?: number }) => ({
+    updateDriverProfile: builder.mutation<
+      any,
+      {
+        vehicleType?: string;
+        vehiclePlate?: string;
+        vehicleCapacity?: number;
+        vehiclePhotos?: string[];
+        drivingLicense?: string;
+        vehicleInsurance?: string;
+      }
+    >({
+      query: (data) => ({
         url: '/driver/profile',
         method: 'PATCH',
         body: data,
+      }),
+    }),
+
+    /**
+     * Candidature chauffeur
+     */
+    applyAsDriver: builder.mutation<
+      any,
+      { vehicleType: string; vehicleCapacity: number; vehiclePlate: string; vehiclePhotos: string[]; drivingLicense: string; vehicleInsurance: string }
+    >({
+      query: (body) => ({
+        url: '/driver/apply',
+        method: 'POST',
+        body,
       }),
     }),
 
@@ -405,4 +429,5 @@ export const {
   useRejectRequestMutation,
   useRegisterPushTokenMutation,
   useGetActivePricingQuery,
+  useApplyAsDriverMutation,
 } = transportApi;

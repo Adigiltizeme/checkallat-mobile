@@ -36,7 +36,6 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
   const [isConfirming, setIsConfirming] = useState(false);
 
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const [rating, setRating] = useState(0);
   const [punctualityRating, setPunctualityRating] = useState(0);
   const [qualityRating, setQualityRating] = useState(0);
   const [cleanlinessRating, setCleanlinessRating] = useState(0);
@@ -198,11 +197,6 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
 
         <Divider style={styles.divider} />
 
-        <Text style={styles.sectionTitle}>{t('transport.review_global_rating')}</Text>
-        {renderStars(rating, setRating)}
-
-        <Divider style={styles.divider} />
-
         <Text style={styles.sectionTitle}>{t('driver.punctuality')}</Text>
         {renderStars(punctualityRating, setPunctualityRating)}
 
@@ -233,7 +227,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
           mode="contained"
           onPress={handleSubmitReview}
           loading={isSubmittingReview}
-          disabled={isSubmittingReview || rating === 0}
+          disabled={isSubmittingReview || (!punctualityRating && !qualityRating && !cleanlinessRating && !courtesyRating)}
           style={styles.submitButton}
           buttonColor={colors.primary}
         >

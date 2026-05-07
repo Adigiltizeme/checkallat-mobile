@@ -28,10 +28,20 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   const panelAnim = useRef(new Animated.Value(PANEL_FULL)).current;
   const [collapsed, setCollapsed] = useState(false);
 
-  const { data: request, isLoading: requestLoading } = useGetTransportRequestQuery(requestId);
+  const { data: request, isLoading: requestLoading } = useGetTransportRequestQuery(requestId, {
+    pollingInterval: 5000,
+    refetchOnMountOrArgChange: true,
+  });
   const { data: trackingInfo } = useGetTrackingInfoQuery(requestId, {
     pollingInterval: 10000,
   });
+
+  // Rediriger vers TransportCompletion quand livraison terminée
+  useEffect(() => {
+    if (request?.status === 'completed' && !request?.clientConfirmedCompletion) {
+      navigation.replace('TransportCompletion', { requestId });
+    }
+  }, [request?.status]);
 
   useEffect(() => {
     if (!request || isExpoGo) return;

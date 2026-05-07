@@ -41,8 +41,11 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
   const handleStatusUpdate = async (newStatus: TransportStatus) => {
     try {
       await updateStatus({ requestId, status: newStatus }).unwrap();
-      await refetch();
-      Alert.alert(t('common.success'), t('driver.status_updated'));
+      if (newStatus === 'completed') {
+        navigation.navigate('TransportCompletion', { requestId });
+      } else {
+        await refetch();
+      }
     } catch (error: any) {
       Alert.alert(t('common.error'), error?.data?.message || t('driver.status_update_failed'));
     }
@@ -58,10 +61,6 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
 
   const handleProofPhotos = (type: 'before' | 'after', nextStatus: string) => {
     navigation.navigate('DriverProofPhotos', { requestId, type, nextStatus });
-  };
-
-  const handleSignature = () => {
-    navigation.navigate('DriverSignature', { requestId });
   };
 
   const getNextAction = () => {
@@ -385,26 +384,15 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
         )}
 
         {request.status === 'unloading' && (
-          <>
-            <Button
-              mode="outlined"
-              icon="camera"
-              onPress={() => handleProofPhotos('after', 'completed')}
-              style={styles.actionButton}
-              labelStyle={styles.actionButtonLabel}
-            >
-              {t('driver.photos_after_delivery')}
-            </Button>
-            <Button
-              mode="outlined"
-              icon="draw"
-              onPress={handleSignature}
-              style={styles.actionButton}
-              labelStyle={styles.actionButtonLabel}
-            >
-              {t('driver.client_signature')}
-            </Button>
-          </>
+          <Button
+            mode="outlined"
+            icon="camera"
+            onPress={() => handleProofPhotos('after', 'completed')}
+            style={styles.actionButton}
+            labelStyle={styles.actionButtonLabel}
+          >
+            {t('driver.photos_after_delivery')}
+          </Button>
         )}
 
         {nextAction && (

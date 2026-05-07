@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,6 +26,7 @@ export const LoginScreen = ({ navigation }: Props) => {
   const [login, { isLoading, error }] = useLoginMutation();
   const dispatch = useDispatch();
   const [showLangPicker, setShowLangPicker] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(LANGUAGE_PICKER_DISMISSED_KEY).then((dismissed) => {
@@ -62,7 +63,11 @@ export const LoginScreen = ({ navigation }: Props) => {
         visible={showLangPicker}
         onDismiss={() => setShowLangPicker(false)}
       />
-      <View style={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text variant="displaySmall" style={styles.title}>
           {t('auth.login_title')}
         </Text>
@@ -98,12 +103,19 @@ export const LoginScreen = ({ navigation }: Props) => {
               label={t('auth.password')}
               value={value}
               onChangeText={onChange}
-              secureTextEntry
+              secureTextEntry={!showPassword}
               error={!!errors.password}
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
               activeOutlineColor={colors.primary}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword(v => !v)}
+                  color={colors.gray}
+                />
+              }
             />
           )}
         />
@@ -134,7 +146,7 @@ export const LoginScreen = ({ navigation }: Props) => {
         >
           {t('auth.no_account')} {t('auth.register_link')}
         </Button>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };

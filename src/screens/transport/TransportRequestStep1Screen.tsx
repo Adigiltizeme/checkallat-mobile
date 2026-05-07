@@ -3,6 +3,8 @@ import {
   View,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   Alert,
   ActivityIndicator,
   TouchableOpacity,
@@ -117,7 +119,11 @@ export const TransportRequestStep1Screen = ({ navigation }: Props) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text variant="headlineSmall" style={styles.title}>
         {t('transport.what_to_transport')}
       </Text>
@@ -265,6 +271,7 @@ export const TransportRequestStep1Screen = ({ navigation }: Props) => {
         </Button>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

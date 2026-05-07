@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
   Alert,
   TouchableOpacity,
   TextInput as RNTextInput,
@@ -48,6 +49,9 @@ export const EditProfileScreen = ({ navigation }: any) => {
   // Driver fields
   const [vehicleType, setVehicleType] = useState<string>(user?.driver?.vehicleType ?? 'van');
   const [vehiclePlate, setVehiclePlate] = useState<string>(user?.driver?.vehiclePlate ?? '');
+  const [vehicleCapacity, setVehicleCapacity] = useState<string>(
+    user?.driver?.vehicleCapacity ? String(user.driver.vehicleCapacity) : ''
+  );
 
   const lastNameRef = useRef<RNTextInput>(null);
   const emailRef = useRef<RNTextInput>(null);
@@ -62,7 +66,8 @@ export const EditProfileScreen = ({ navigation }: any) => {
   const driverHasChanges =
     isDriver &&
     (vehicleType !== (user?.driver?.vehicleType ?? 'van') ||
-      vehiclePlate.trim() !== (user?.driver?.vehiclePlate ?? ''));
+      vehiclePlate.trim() !== (user?.driver?.vehiclePlate ?? '') ||
+      vehicleCapacity.trim() !== (user?.driver?.vehicleCapacity ? String(user.driver.vehicleCapacity) : ''));
 
   const hasChanges = profileHasChanges || driverHasChanges;
 
@@ -152,9 +157,11 @@ export const EditProfileScreen = ({ navigation }: any) => {
         if (vehicleType !== user?.driver?.vehicleType) driverBody.vehicleType = vehicleType;
         if (vehiclePlate.trim() !== user?.driver?.vehiclePlate)
           driverBody.vehiclePlate = vehiclePlate.trim();
+        const capacityNum = parseFloat(vehicleCapacity);
+        if (!isNaN(capacityNum) && capacityNum !== user?.driver?.vehicleCapacity)
+          driverBody.vehicleCapacity = capacityNum;
         if (Object.keys(driverBody).length > 0) {
           await updateDriverProfile(driverBody).unwrap();
-          // Update local driver state
           dispatch(updateUser({ driver: { ...user?.driver, ...driverBody } }));
         }
       }
@@ -183,6 +190,10 @@ export const EditProfileScreen = ({ navigation }: any) => {
     (firstName[0] || 'U').toUpperCase() + (lastName[0] || '').toUpperCase();
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       {/* Avatar */}
       <View style={styles.avatarSection}>
@@ -244,11 +255,16 @@ export const EditProfileScreen = ({ navigation }: any) => {
         />
 
         <Text variant="labelMedium" style={styles.label}>{t('profile.phone')}</Text>
-        <View style={styles.inputDisabled}>
-          <Text style={styles.inputDisabledText}>{user?.phone ?? ''}</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.phoneRow}
+          onPress={() => navigation.navigate('ChangePhone')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.phoneText}>{user?.phone ?? ''}</Text>
+          <Text style={styles.phoneChevron}>›</Text>
+        </TouchableOpacity>
         <Text variant="bodySmall" style={styles.hint}>
-          {t('profile.phone_hint')}
+          {t('profile.phone_hint_tap')}
         </Text>
       </View>
 
@@ -287,8 +303,33 @@ export const EditProfileScreen = ({ navigation }: any) => {
             placeholder={t('profile.plate_placeholder')}
             placeholderTextColor={colors.gray}
             autoCapitalize="characters"
-            returnKeyType="done"
+            returnKeyType="next"
+            onSubmitEditing={() => {}}
           />
+
+          <Text variant="labelMedium" style={styles.label}>{t('driver_apply.vehicle_capacity')}</Text>
+          <View style={styles.capacityRow}>
+            <RNTextInput
+              style={[styles.input, { flex: 1 }]}
+              value={vehicleCapacity}
+              onChangeText={setVehicleCapacity}
+              placeholder="Ex: 10"
+              placeholderTextColor={colors.gray}
+              keyboardType="decimal-pad"
+              returnKeyType="done"
+            />
+            <Text style={styles.capacityUnit}>m³</Text>
+          </View>
+
+          {/* Lien vers modification des photos et permis */}
+          <TouchableOpacity
+            style={styles.docsLink}
+            onPress={() => navigation.navigate('DriverDocuments')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.docsLinkText}>{t('driver_docs.edit_link')}</Text>
+            <Text style={styles.docsChevron}>›</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -306,6 +347,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
         )}
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -386,17 +428,26 @@ const styles = StyleSheet.create({
     color: colors.dark,
     backgroundColor: colors.white,
   },
-  inputDisabled: {
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.white,
   },
-  inputDisabledText: {
+  phoneText: {
     fontSize: 15,
-    color: colors.gray,
+    color: colors.dark,
+    flex: 1,
+  },
+  phoneChevron: {
+    fontSize: 20,
+    color: colors.primary,
+    fontWeight: '600',
   },
   hint: {
     color: colors.gray,
@@ -407,6 +458,38 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 4,
+  },
+  capacityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  capacityUnit: {
+    fontSize: 15,
+    color: colors.gray,
+    fontWeight: '600',
+  },
+  docsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+  },
+  docsLinkText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  docsChevron: {
+    fontSize: 20,
+    color: colors.primary,
+    fontWeight: '600',
   },
   radioBtn: {
     borderWidth: 1,

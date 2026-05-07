@@ -102,6 +102,27 @@ export const authApi = createApi({
         body,
       }),
     }),
+    sendOtpMe: builder.mutation<{ message: string; expiresIn: number }, { phone: string }>({
+      query: (body) => ({
+        url: '/auth/send-otp-me',
+        method: 'POST',
+        body,
+      }),
+    }),
+    changePassword: builder.mutation<{ message: string }, { otpCode: string; newPassword: string }>({
+      query: (body) => ({
+        url: '/auth/change-password',
+        method: 'PATCH',
+        body,
+      }),
+    }),
+    changePhone: builder.mutation<{ message: string }, { newPhone: string; otpCode: string }>({
+      query: (body) => ({
+        url: '/auth/change-phone',
+        method: 'PATCH',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -118,4 +139,7 @@ export const {
   useUpdateAddressMutation,
   useDeleteAddressMutation,
   useSendSupportContactMutation,
+  useSendOtpMeMutation,
+  useChangePasswordMutation,
+  useChangePhoneMutation,
 } = authApi;

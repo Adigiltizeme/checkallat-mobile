@@ -22,6 +22,10 @@ export type ProfileStackParamList = {
   Addresses: undefined;
   Language: undefined;
   Support: undefined;
+  ChangePassword: undefined;
+  ChangePhone: undefined;
+  DriverApplication: undefined;
+  DriverDocuments: undefined;
 };
 
 export type HomeStackParamList = {
@@ -83,7 +87,6 @@ export type DriverStackParamList = {
   DriverDeliveryDetails: { requestId: string };
   DriverNavigation: { requestId: string };
   DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string };
-  DriverSignature: { requestId: string };
   DriverEarnings: undefined;
   DriverReviews: { driverId?: string };
   TransportCompletion: { requestId: string };

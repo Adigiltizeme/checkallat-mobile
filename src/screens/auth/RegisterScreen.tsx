@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
@@ -24,6 +24,8 @@ type Props = StackScreenProps<AuthStackParamList, 'Register'>;
 export const RegisterScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
   const [register, { isLoading, error }] = useRegisterMutation();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const registerSchema = useMemo(() => z.object({
     phone: z.string().regex(/^\+\d{10,15}$/, t('auth.phone_invalid')),
@@ -64,7 +66,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text variant="headlineLarge" style={styles.title}>
           {t('auth.register_title')}
         </Text>
@@ -160,12 +162,19 @@ export const RegisterScreen = ({ navigation }: Props) => {
               label={t('auth.password')}
               value={value}
               onChangeText={onChange}
-              secureTextEntry
+              secureTextEntry={!showPassword}
               error={!!errors.password}
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
               activeOutlineColor={colors.primary}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowPassword(v => !v)}
+                  color={colors.gray}
+                />
+              }
             />
           )}
         />
@@ -186,12 +195,19 @@ export const RegisterScreen = ({ navigation }: Props) => {
               label={t('auth.confirm_password')}
               value={value}
               onChangeText={onChange}
-              secureTextEntry
+              secureTextEntry={!showConfirmPassword}
               error={!!errors.confirmPassword}
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
               activeOutlineColor={colors.primary}
+              right={
+                <TextInput.Icon
+                  icon={showConfirmPassword ? 'eye-off' : 'eye'}
+                  onPress={() => setShowConfirmPassword(v => !v)}
+                  color={colors.gray}
+                />
+              }
             />
           )}
         />
