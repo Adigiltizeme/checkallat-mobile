@@ -36,9 +36,9 @@ const initialState: AuthState = {
 
 function computeAvailableRoles(user: any): UserRole[] {
   const roles: UserRole[] = ['client'];
-  if (user?.driver) roles.push('driver');
-  if (user?.pro) roles.push('pro');
-  if (user?.marketplaceSeller) roles.push('seller');
+  if (user?.driver?.status === 'active') roles.push('driver');
+  if (user?.pro?.status === 'active') roles.push('pro');
+  if (user?.marketplaceSeller?.status === 'active') roles.push('seller');
   return roles;
 }
 
@@ -113,6 +113,14 @@ const authSlice = createSlice({
       state.user = { ...state.user, ...action.payload };
     },
 
+    clearDriverRecord: (state) => {
+      if (state.user) state.user = { ...state.user, driver: null };
+      state.isDriver = false;
+      state.driverId = null;
+      state.availableRoles = state.availableRoles.filter((r) => r !== 'driver');
+      if (state.activeRole === 'driver') state.activeRole = 'client';
+    },
+
     refreshProfile: (state, action: PayloadAction<any>) => {
       const user = action.payload;
       state.user = user;
@@ -173,6 +181,7 @@ export const {
   setActiveRole,
   clearDefaultRole,
   updateUser,
+  clearDriverRecord,
   refreshProfile,
   setLanguage,
   logout,

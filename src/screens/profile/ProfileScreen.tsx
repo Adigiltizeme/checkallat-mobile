@@ -132,16 +132,34 @@ export const ProfileScreen = () => {
         />
       </View>
 
-      {/* Devenir chauffeur — uniquement pour les non-chauffeurs */}
+      {/* Devenir chauffeur / suivi candidature */}
       {!isDriver && (
         <View style={styles.section}>
-          <List.Item
-            title={t('driver_apply.become_driver')}
-            description={t('driver_apply.become_driver_desc')}
-            left={(props) => <List.Icon {...props} icon="truck-plus" color="#F59E0B" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
-            onPress={() => navigation.navigate('DriverApplication')}
-          />
+          {user?.driver?.status === 'pending' ? (
+            <List.Item
+              title={t('driver_apply.status_pending')}
+              description={t('driver_apply.status_pending_short')}
+              left={(props) => <List.Icon {...props} icon="clock-outline" color="#F59E0B" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('DriverApplication')}
+            />
+          ) : user?.driver?.status === 'rejected' ? (
+            <List.Item
+              title={t('driver_apply.status_rejected')}
+              description={t('driver_apply.status_rejected_short')}
+              left={(props) => <List.Icon {...props} icon="alert-circle-outline" color={colors.error} />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('DriverApplication')}
+            />
+          ) : (
+            <List.Item
+              title={t('driver_apply.become_driver')}
+              description={t('driver_apply.become_driver_desc')}
+              left={(props) => <List.Icon {...props} icon="truck-plus" color="#F59E0B" />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('DriverApplication')}
+            />
+          )}
         </View>
       )}
 

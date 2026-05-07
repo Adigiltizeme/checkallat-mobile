@@ -327,6 +327,13 @@ export const transportApi = createApi({
       }),
     }),
 
+    cancelDriverApplication: builder.mutation<void, void>({
+      query: () => ({
+        url: '/driver/apply',
+        method: 'DELETE',
+      }),
+    }),
+
     /**
      * Créer un PaymentIntent pour payer la commission cash en attente
      */
@@ -430,4 +437,5 @@ export const {
   useRegisterPushTokenMutation,
   useGetActivePricingQuery,
   useApplyAsDriverMutation,
+  useCancelDriverApplicationMutation,
 } = transportApi;
