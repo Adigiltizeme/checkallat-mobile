@@ -11,8 +11,13 @@ import { LanguageScreen } from '../screens/profile/LanguageScreen';
 import { SupportScreen } from '../screens/profile/SupportScreen';
 import { ChangePasswordScreen } from '../screens/profile/ChangePasswordScreen';
 import { ChangePhoneScreen } from '../screens/profile/ChangePhoneScreen';
+import { AddActivityScreen } from '../screens/profile/AddActivityScreen';
 import { DriverApplicationScreen } from '../screens/profile/DriverApplicationScreen';
 import { DriverDocumentsScreen } from '../screens/profile/DriverDocumentsScreen';
+import { ProApplicationScreen } from '../screens/profile/ProApplicationScreen';
+import { MyProposalsScreen } from '../screens/pro/MyProposalsScreen';
+import { ProposalDetailScreen } from '../screens/pro/ProposalDetailScreen';
+import { SubmitProposalScreen } from '../screens/pro/SubmitProposalScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -63,6 +68,11 @@ export const ProfileStack = () => {
         options={{ title: t('profile.change_phone') }}
       />
       <Stack.Screen
+        name="AddActivity"
+        component={AddActivityScreen}
+        options={{ title: t('activity.page_title') }}
+      />
+      <Stack.Screen
         name="DriverApplication"
         component={DriverApplicationScreen}
         options={{ title: t('driver_apply.title') }}
@@ -71,6 +81,26 @@ export const ProfileStack = () => {
         name="DriverDocuments"
         component={DriverDocumentsScreen}
         options={{ title: t('driver_docs.title') }}
+      />
+      <Stack.Screen
+        name="ProApplication"
+        component={ProApplicationScreen}
+        options={{ title: t('pro_apply.title') }}
+      />
+      <Stack.Screen
+        name="MyProposals"
+        component={MyProposalsScreen}
+        options={{ title: t('proposal.my_proposals') }}
+      />
+      <Stack.Screen
+        name="ProposalDetail"
+        component={ProposalDetailScreen}
+        options={{ title: t('proposal.title') }}
+      />
+      <Stack.Screen
+        name="SubmitProposal"
+        component={SubmitProposalScreen}
+        options={{ title: t('proposal.title') }}
       />
     </Stack.Navigator>
   );

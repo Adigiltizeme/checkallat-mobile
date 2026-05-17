@@ -5,7 +5,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
 import { useRegisterMutation } from '../../store/api/authApi';
+import { setCredentials } from '../../store/slices/authSlice';
 import { colors } from '../../theme/colors';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
@@ -23,6 +25,7 @@ type Props = StackScreenProps<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen = ({ navigation }: Props) => {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const [register, { isLoading, error }] = useRegisterMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -51,11 +54,13 @@ export const RegisterScreen = ({ navigation }: Props) => {
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      // Extraire confirmPassword avant d'envoyer au backend
       const { confirmPassword, ...registerData } = data;
-      await register(registerData).unwrap();
-      // Navigate to OTP verification
-      navigation.navigate('OTP', { phone: data.phone });
+      const result = await register(registerData).unwrap();
+      dispatch(setCredentials({
+        user: result.user,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      }));
     } catch (err) {
       console.error('Registration failed:', err);
     }

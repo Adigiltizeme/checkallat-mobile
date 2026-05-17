@@ -57,10 +57,30 @@ export const reviewsApi = createApi({
     }),
 
     /**
+     * Créer un avis pour une réservation de service
+     */
+    createBookingReview: builder.mutation<Review, { bookingId: string; data: CreateReviewDto }>({
+      query: ({ bookingId, data }) => ({
+        url: `/booking/${bookingId}`,
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Review'],
+    }),
+
+    /**
      * Récupérer les avis d'un chauffeur
      */
     getDriverReviews: builder.query<{ reviews: Review[]; pagination: any }, { driverId: string; page?: number; limit?: number }>({
       query: ({ driverId, page = 1, limit = 10 }) => `/driver/${driverId}?page=${page}&limit=${limit}`,
+      providesTags: ['Review'],
+    }),
+
+    /**
+     * Récupérer les avis d'un pro
+     */
+    getProReviews: builder.query<{ reviews: Review[]; pagination: any }, { proId: string; page?: number; limit?: number }>({
+      query: ({ proId, page = 1, limit = 10 }) => `/pro/${proId}?page=${page}&limit=${limit}`,
       providesTags: ['Review'],
     }),
 
@@ -80,6 +100,8 @@ export const reviewsApi = createApi({
 
 export const {
   useCreateTransportReviewMutation,
+  useCreateBookingReviewMutation,
   useGetDriverReviewsQuery,
+  useGetProReviewsQuery,
   useRespondToReviewMutation,
 } = reviewsApi;

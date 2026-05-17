@@ -4,21 +4,29 @@ import { API_CONFIG, createBaseQuery } from '../../config/api';
 export const prosApi = createApi({
   reducerPath: 'prosApi',
   baseQuery: createBaseQuery(`${API_CONFIG.BASE_URL}/pros`),
+  tagTypes: ['Pro'],
   endpoints: (builder) => ({
     searchPros: builder.query({
       query: (params: {
-        userLat: number;
-        userLng: number;
+        userLat?: number;
+        userLng?: number;
         category?: string;
         minRating?: number;
         maxDistance?: number;
+        availableOnly?: boolean;
+        segment?: 'standard' | 'premium';
+        studyltizemeOnly?: boolean;
+        page?: number;
+        limit?: number;
       }) => ({
         url: '/search',
         params,
       }),
+      providesTags: ['Pro'],
     }),
     getProById: builder.query({
       query: (id: string) => `/${id}`,
+      providesTags: ['Pro'],
     }),
     createProProfile: builder.mutation({
       query: (body) => ({
@@ -70,6 +78,17 @@ export const prosApi = createApi({
     getProStats: builder.query({
       query: (id: string) => `/${id}/stats`,
     }),
+
+    /**
+     * Mettre à jour la disponibilité d'un pro
+     */
+    updateProAvailability: builder.mutation({
+      query: ({ id, isAvailable }: { id: string; isAvailable: boolean }) => ({
+        url: `/${id}/availability`,
+        method: 'PUT',
+        body: { isAvailable },
+      }),
+    }),
   }),
 });
 
@@ -81,4 +100,5 @@ export const {
   useDeleteProProfileMutation,
   useValidateProProfileMutation,
   useGetProStatsQuery,
+  useUpdateProAvailabilityMutation,
 } = prosApi;

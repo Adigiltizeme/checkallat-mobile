@@ -46,10 +46,10 @@ export const bookingsApi = createApi({
      * Mettre à jour le statut d'une réservation
      */
     updateBookingStatus: builder.mutation({
-      query: ({ id, status }: { id: string; status: string }) => ({
+      query: ({ id, status, role }: { id: string; status: string; role: 'client' | 'pro' }) => ({
         url: `/${id}/status`,
         method: 'PUT',
-        body: { status },
+        body: { status, role },
       }),
       invalidatesTags: ['Booking'],
     }),
@@ -58,10 +58,10 @@ export const bookingsApi = createApi({
      * Confirmer la complétion d'une réservation
      */
     confirmBookingCompletion: builder.mutation({
-      query: ({ id, role }: { id: string; role: 'client' | 'pro' }) => ({
+      query: ({ id, role, cashAmount }: { id: string; role: 'client' | 'pro'; cashAmount?: number }) => ({
         url: `/${id}/confirm-completion`,
         method: 'PUT',
-        body: { role },
+        body: { role, ...(cashAmount !== undefined ? { cashAmount } : {}) },
       }),
       invalidatesTags: ['Booking'],
     }),
@@ -95,6 +95,70 @@ export const bookingsApi = createApi({
         params: { role },
       }),
     }),
+
+    /**
+     * Pro marque son arrivée chez le client
+     */
+    markArrived: builder.mutation({
+      query: (id: string) => ({
+        url: `/${id}/arrived`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Booking'],
+    }),
+
+    /**
+     * Pro démarre le travail (pending → in_progress)
+     */
+    markStarted: builder.mutation({
+      query: (id: string) => ({
+        url: `/${id}/start-work`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Booking'],
+    }),
+
+    /**
+     * Pro se met en route vers le client
+     */
+    markEnRoute: builder.mutation({
+      query: (id: string) => ({
+        url: `/${id}/en-route`,
+        method: 'PUT',
+      }),
+      invalidatesTags: ['Booking'],
+    }),
+
+    /**
+     * Pro met à jour sa position GPS pendant la prestation
+     */
+    updateProLocation: builder.mutation({
+      query: ({ id, lat, lng }: { id: string; lat: number; lng: number }) => ({
+        url: `/${id}/location`,
+        method: 'PUT',
+        body: { lat, lng },
+      }),
+    }),
+
+    /**
+     * Suivi en temps réel d'une réservation (position du pro + jalons)
+     */
+    getBookingTracking: builder.query({
+      query: (id: string) => `/${id}/tracking`,
+      providesTags: (_result, _error, id) => [{ type: 'Booking', id: `tracking-${id}` }],
+    }),
+
+    /**
+     * Upload photos avant le travail (type='before') ou après (type='after')
+     */
+    uploadBookingPhotos: builder.mutation({
+      query: ({ id, type, photos }: { id: string; type: 'before' | 'after'; photos: string[] }) => ({
+        url: `/${id}/photos/${type}`,
+        method: 'POST',
+        body: { photos },
+      }),
+      invalidatesTags: ['Booking'],
+    }),
   }),
 });
 
@@ -107,4 +171,10 @@ export const {
   useConfirmBookingCompletionMutation,
   useCancelBookingMutation,
   useGetBookingStatsQuery,
+  useMarkArrivedMutation,
+  useMarkStartedMutation,
+  useMarkEnRouteMutation,
+  useUpdateProLocationMutation,
+  useGetBookingTrackingQuery,
+  useUploadBookingPhotosMutation,
 } = bookingsApi;

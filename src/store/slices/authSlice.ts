@@ -121,6 +121,12 @@ const authSlice = createSlice({
       if (state.activeRole === 'driver') state.activeRole = 'client';
     },
 
+    clearProRecord: (state) => {
+      if (state.user) state.user = { ...state.user, pro: null };
+      state.availableRoles = state.availableRoles.filter((r) => r !== 'pro');
+      if (state.activeRole === 'pro') state.activeRole = 'client';
+    },
+
     refreshProfile: (state, action: PayloadAction<any>) => {
       const user = action.payload;
       state.user = user;
@@ -182,6 +188,7 @@ export const {
   clearDefaultRole,
   updateUser,
   clearDriverRecord,
+  clearProRecord,
   refreshProfile,
   setLanguage,
   logout,

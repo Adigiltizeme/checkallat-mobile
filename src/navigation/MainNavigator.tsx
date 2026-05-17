@@ -5,12 +5,13 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { MainTabParamList } from './types';
-import { HomeScreen } from '../screens/home/HomeScreen';
+import { HomeStack } from './HomeStack';
 import { HistoryScreen } from '../screens/profile/HistoryScreen';
 import { ProfileStack } from './ProfileStack';
 import { PaymentStack } from './PaymentStack';
 import { TransportStack } from './TransportStack';
 import { DriverStack } from './DriverStack';
+import { ProStack } from './ProStack';
 import { colors } from '../theme/colors';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -21,6 +22,7 @@ export const MainNavigator = () => {
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
   const user = useSelector((state: RootState) => state.auth.user);
   const isDriver = activeRole === 'driver';
+  const isPro = activeRole === 'pro';
 
   const isActiveDriver = user?.driver?.status === 'active';
 
@@ -70,11 +72,44 @@ export const MainNavigator = () => {
             }}
           />
         </>
+      ) : isPro ? (
+        <>
+          <Tab.Screen
+            name="Pro"
+            component={ProStack}
+            options={{
+              title: t('pro_space.title'),
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="briefcase" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="History"
+            component={PaymentStack}
+            options={{
+              title: t('nav.payments'),
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="credit-card-outline" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Profile"
+            component={ProfileStack}
+            options={{
+              title: t('nav.profile'),
+              tabBarIcon: ({ color, size }) => (
+                <Icon name="account" size={size} color={color} />
+              ),
+            }}
+          />
+        </>
       ) : (
         <>
           <Tab.Screen
             name="Home"
-            component={HomeScreen}
+            component={HomeStack}
             options={{
               title: t('nav.home'),
               tabBarIcon: ({ color, size }) => (

@@ -21,6 +21,7 @@ export const colors = {
 
   lightGray: '#F5F5F5',
   lightBlue: '#E3F2FD',
+  proGreen: '#10B981',
 
   text: {
     primary: '#1A1A2E',

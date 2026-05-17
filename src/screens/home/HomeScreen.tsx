@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -7,8 +7,8 @@ import {
   Dimensions,
   FlatList,
   StatusBar,
-  Image,
   Alert,
+  PanResponder,
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -20,7 +20,6 @@ import Animated, {
   withRepeat,
   withSequence,
   withDelay,
-  interpolate,
   Easing,
   FadeInDown,
   FadeInRight,
@@ -30,6 +29,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useGetCategoriesQuery } from '../../store/api/servicesApi';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.72;
@@ -61,13 +61,23 @@ const HERO_SLIDES = [
 ];
 
 const SERVICES = [
-  { id: 'transport', icon: 'truck-fast',       color: '#F8B400', bgKey: 'home.service_transport' },
-  { id: 'electric',  icon: 'flash',            color: '#FFD700', bgKey: 'home.service_electric' },
-  { id: 'plumbing',  icon: 'water-pump',       color: '#3498DB', bgKey: 'home.service_plumbing' },
-  { id: 'painting',  icon: 'format-paint',     color: '#E74C3C', bgKey: 'home.service_painting' },
-  { id: 'cleaning',  icon: 'broom',            color: '#27AE60', bgKey: 'home.service_cleaning' },
-  { id: 'market',    icon: 'store',            color: '#8B5CF6', bgKey: 'home.service_market' },
+  { id: 'transport',    slug: 'transport',    icon: 'truck-fast',      color: '#F8B400', bgKey: 'home.service_transport',    nameFr: 'Transport',       nameEn: 'Transport',       nameAr: 'النقل' },
+  { id: 'electric',     slug: 'electricity',  icon: 'flash',           color: '#FFD700', bgKey: 'home.service_electric',     nameFr: 'Électricité',     nameEn: 'Electricity',     nameAr: 'كهرباء' },
+  { id: 'plumbing',     slug: 'plumbing',     icon: 'water-pump',      color: '#3498DB', bgKey: 'home.service_plumbing',     nameFr: 'Plomberie',       nameEn: 'Plumbing',        nameAr: 'سباكة' },
+  { id: 'painting',     slug: 'painting',     icon: 'format-paint',    color: '#E74C3C', bgKey: 'home.service_painting',     nameFr: 'Peinture',        nameEn: 'Painting',        nameAr: 'دهان' },
+  { id: 'cleaning',     slug: 'cleaning',     icon: 'broom',           color: '#27AE60', bgKey: 'home.service_cleaning',     nameFr: 'Ménage',          nameEn: 'Cleaning',        nameAr: 'تنظيف' },
+  { id: 'market',       slug: 'marketplace',  icon: 'store',           color: '#8B5CF6', bgKey: 'home.service_market',       nameFr: 'Marché',          nameEn: 'Market',          nameAr: 'السوق' },
+  { id: 'handyman',     slug: 'handyman',     icon: 'hammer',          color: '#FF9500', bgKey: 'home.service_handyman',     nameFr: 'Bricolage',       nameEn: 'Handyman',        nameAr: 'أعمال يدوية' },
+  { id: 'carpentry',    slug: 'carpentry',    icon: 'saw-blade',       color: '#8B4513', bgKey: 'home.service_carpentry',    nameFr: 'Menuiserie',      nameEn: 'Carpentry',       nameAr: 'نجارة' },
+  { id: 'air_condition',slug: 'air_condition',icon: 'air-conditioner', color: '#00BCD4', bgKey: 'home.service_air_condition',nameFr: 'Climatisation',   nameEn: 'Air Conditioning',nameAr: 'تكييف' },
 ];
+
+// Split into two rows for the marquee
+const ROW1 = SERVICES.slice(0, 5);
+const ROW2 = SERVICES.slice(5);
+// Triple each row so we can loop seamlessly
+const ROW1_LOOP = [...ROW1, ...ROW1, ...ROW1];
+const ROW2_LOOP = [...ROW2, ...ROW2, ...ROW2];
 
 const FEATURES = [
   { icon: 'shield-check',   color: '#27AE60', titleKey: 'home.feat1_title', descKey: 'home.feat1_desc' },
@@ -145,7 +155,14 @@ const HeroSlide = ({ item, index, t }: { item: typeof HERO_SLIDES[0]; index: num
   );
 };
 
-const ServiceChip = ({ item, t, onPress, index }: { item: typeof SERVICES[0]; t: any; onPress: () => void; index: number }) => {
+const CHIP_WIDTH = 88;
+const CHIP_MARGIN = 10;
+const CHIP_FULL = CHIP_WIDTH + CHIP_MARGIN * 2;
+// Width of one copy of a row in the loop
+const ROW1_COPY_WIDTH = ROW1.length * CHIP_FULL;
+const ROW2_COPY_WIDTH = ROW2.length * CHIP_FULL;
+
+const ServiceChip = ({ item, t, onPress }: { item: typeof SERVICES[0]; t: any; onPress: () => void }) => {
   const scale = useSharedValue(1);
   const handlePress = () => {
     scale.value = withSequence(withTiming(0.92, { duration: 80 }), withTiming(1, { duration: 120 }));
@@ -154,16 +171,96 @@ const ServiceChip = ({ item, t, onPress, index }: { item: typeof SERVICES[0]; t:
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   return (
-    <Animated.View entering={FadeInDown.delay(index * 60).springify()} style={style}>
+    <Animated.View style={[styles.serviceChipWrap, style]}>
       <TouchableOpacity onPress={handlePress} activeOpacity={0.85}>
         <View style={styles.serviceChip}>
           <View style={[styles.serviceChipIcon, { backgroundColor: item.color + '20' }]}>
-            <Icon name={item.icon} size={28} color={item.color} />
+            <Icon name={item.icon} size={26} color={item.color} />
           </View>
           <Text style={styles.serviceChipLabel}>{t(item.bgKey)}</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
+  );
+};
+
+const SCROLL_SPEED = 38; // px per second
+
+const MarqueeRow = ({
+  items,
+  copyWidth,
+  direction,
+  t,
+  onPress,
+}: {
+  items: typeof SERVICES;
+  copyWidth: number;
+  direction: 1 | -1; // 1 = scroll left, -1 = scroll right
+  t: any;
+  onPress: (id: string) => void;
+}) => {
+  const offset = useSharedValue(direction === 1 ? 0 : -copyWidth);
+  const dragDelta = useSharedValue(0);
+  const isPaused = useRef(false);
+  const rafRef = useRef<number | null>(null);
+  const lastTimestamp = useRef<number | null>(null);
+
+  useEffect(() => {
+    const tick = (timestamp: number) => {
+      if (!isPaused.current) {
+        const dt = lastTimestamp.current !== null ? timestamp - lastTimestamp.current : 0;
+        lastTimestamp.current = timestamp;
+        const delta = (SCROLL_SPEED * dt) / 1000;
+        offset.value = offset.value - direction * delta;
+        // Wrap: for direction=1 (scrolling left), reset when we've scrolled one full copy width
+        if (direction === 1 && offset.value <= -copyWidth) {
+          offset.value += copyWidth;
+        } else if (direction === -1 && offset.value >= 0) {
+          offset.value -= copyWidth;
+        }
+      } else {
+        lastTimestamp.current = null;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, []);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 6,
+      onPanResponderGrant: () => {
+        isPaused.current = true;
+        dragDelta.value = 0;
+      },
+      onPanResponderMove: (_, g) => {
+        const delta = g.dx - dragDelta.value;
+        dragDelta.value = g.dx;
+        offset.value = offset.value + delta;
+        // wrap during drag too
+        if (offset.value <= -copyWidth) offset.value += copyWidth;
+        if (offset.value >= 0) offset.value -= copyWidth;
+      },
+      onPanResponderRelease: () => {
+        isPaused.current = false;
+      },
+    })
+  ).current;
+
+  const rowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: offset.value }],
+  }));
+
+  return (
+    <View style={styles.marqueeRow} {...panResponder.panHandlers}>
+      <Animated.View style={[styles.marqueeInner, rowStyle]}>
+        {items.map((item, i) => (
+          <ServiceChip key={`${item.slug}-${i}`} item={item} t={t} onPress={() => onPress(item.slug)} />
+        ))}
+      </Animated.View>
+    </View>
   );
 };
 
@@ -196,10 +293,18 @@ const StatBadge = ({ value, labelKey, t, index }: { value: string; labelKey: str
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
+const KNOWN_SLUGS = new Set(SERVICES.map(s => s.slug));
+
 export const HomeScreen = ({ navigation }: any) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
   const [activeSlide, setActiveSlide] = useState(0);
+
+  const { data: dbCategories = [] } = useGetCategoriesQuery({ activeOnly: true });
+  const newCategories = useMemo(
+    () => dbCategories.filter((c: any) => !KNOWN_SLUGS.has(c.slug)),
+    [dbCategories],
+  );
   const flatListRef = useRef<FlatList>(null);
   const headerOpacity = useSharedValue(0);
   const headerY = useSharedValue(-20);
@@ -235,28 +340,38 @@ export const HomeScreen = ({ navigation }: any) => {
     navigation.navigate('Transport');
   };
 
-  const handleServicePress = (id: string) => {
-    if (id === 'transport') {
+  const handleServicePress = (slug: string) => {
+    if (slug === 'transport') {
       handleTransportPress();
       return;
     }
 
-    if (id === 'market') {
+    if (slug === 'marketplace') {
       navigation.navigate('MarketplaceHome');
       return;
     }
 
-    // Services classiques : un pro actif dans cette catégorie ne peut pas réserver
+    // Résoudre depuis la liste statique ou la liste DB
+    const staticEntry = SERVICES.find((s) => s.slug === slug || s.id === slug);
+    const dbEntry = dbCategories.find((c: any) => c.slug === slug);
+
+    const resolvedSlug = staticEntry?.slug ?? dbEntry?.slug ?? slug;
+    const resolvedNameFr = staticEntry?.nameFr ?? dbEntry?.nameFr ?? slug;
+    const resolvedNameEn = staticEntry?.nameEn ?? dbEntry?.nameEn ?? slug;
+    const resolvedNameAr = staticEntry?.nameAr ?? dbEntry?.nameAr ?? slug;
+
     const proSlugs: string[] = user?.pro?.serviceCategorySlugs ?? [];
-    if (user?.pro?.status === 'active' && proSlugs.includes(id)) {
-      Alert.alert(
-        t('common.access_denied'),
-        t('home.pro_cannot_book_own_category'),
-      );
+    if (user?.pro?.status === 'active' && proSlugs.includes(resolvedSlug)) {
+      Alert.alert(t('common.access_denied'), t('home.pro_cannot_book_own_category'));
       return;
     }
 
-    navigation.navigate('SearchPros', { category: id });
+    navigation.navigate('BookingRequestStep1', {
+      categorySlug: resolvedSlug,
+      categoryNameFr: resolvedNameFr,
+      categoryNameEn: resolvedNameEn,
+      categoryNameAr: resolvedNameAr,
+    });
   };
 
   return (
@@ -309,21 +424,61 @@ export const HomeScreen = ({ navigation }: any) => {
           ))}
         </Animated.View>
 
-        {/* ── Services grid ── */}
+        {/* ── Services marquee ── */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('home.services')}</Text>
-          <View style={styles.servicesGrid}>
-            {SERVICES.map((item, index) => (
-              <ServiceChip
-                key={item.id}
-                item={item}
-                t={t}
-                index={index}
-                onPress={() => handleServicePress(item.id)}
-              />
-            ))}
-          </View>
+          <MarqueeRow
+            items={ROW1_LOOP}
+            copyWidth={ROW1_COPY_WIDTH}
+            direction={1}
+            t={t}
+            onPress={handleServicePress}
+          />
+          <View style={{ height: 10 }} />
+          <MarqueeRow
+            items={ROW2_LOOP}
+            copyWidth={ROW2_COPY_WIDTH}
+            direction={-1}
+            t={t}
+            onPress={handleServicePress}
+          />
         </View>
+
+        {/* ── Nouvelles catégories depuis l'admin (dynamique) ── */}
+        {newCategories.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('home.new_services')}</Text>
+            <View style={styles.newCatGrid}>
+              {newCategories.map((cat: any) => {
+                const name = i18n.language === 'ar' ? cat.nameAr
+                  : i18n.language === 'en' ? cat.nameEn
+                  : cat.nameFr;
+                return (
+                  <TouchableOpacity
+                    key={cat.slug}
+                    style={styles.newCatCard}
+                    onPress={() => handleServicePress(cat.slug)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.newCatIcon}>{cat.icon}</Text>
+                    <Text style={styles.newCatLabel} numberOfLines={2}>{name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* ── My bookings shortcut ── */}
+        <TouchableOpacity
+          style={styles.myBookingsBtn}
+          onPress={() => navigation.navigate('MyBookings')}
+          activeOpacity={0.85}
+        >
+          <Icon name="calendar-check" size={20} color={colors.primary} />
+          <Text style={styles.myBookingsBtnText}>{t('booking.my_bookings')}</Text>
+          <Icon name="chevron-right" size={20} color={colors.gray} />
+        </TouchableOpacity>
 
         {/* ── Features ── */}
         <View style={styles.section}>
@@ -496,7 +651,8 @@ const styles = StyleSheet.create({
 
   /* Section */
   section: {
-    padding: spacing.lg,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
   sectionTitle: {
     fontSize: 18,
@@ -505,17 +661,25 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
-  /* Services grid */
-  servicesGrid: {
+  /* Services marquee — pleine largeur, sort du padding horizontal de la section */
+  marqueeRow: {
+    overflow: 'hidden',
+    width: SCREEN_WIDTH,
+    marginHorizontal: -spacing.lg,
+    paddingBottom: 6,   // laisse respirer l'ombre du bas des chips
+  },
+  marqueeInner: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+  },
+  serviceChipWrap: {
+    marginHorizontal: CHIP_MARGIN,
   },
   serviceChip: {
-    width: (SCREEN_WIDTH - spacing.lg * 2 - spacing.sm * 2) / 3,
+    width: CHIP_WIDTH,
     backgroundColor: colors.white,
     borderRadius: 16,
-    padding: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: 6,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -524,19 +688,19 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   serviceChipIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
+    width: 48,
+    height: 48,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xs,
   },
   serviceChipLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: colors.dark,
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 13,
   },
 
   /* Features horizontal scroll */
@@ -614,5 +778,32 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: 'bold',
     fontSize: 14,
+  },
+
+  /* My bookings shortcut */
+  myBookingsBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    backgroundColor: colors.white, marginHorizontal: spacing.lg,
+    marginBottom: spacing.md, borderRadius: 14, padding: spacing.md,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  myBookingsBtnText: {
+    flex: 1, fontSize: 14, fontWeight: '600', color: colors.dark,
+  },
+
+  /* New categories grid */
+  newCatGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingHorizontal: spacing.lg,
+  },
+  newCatCard: {
+    width: 80, alignItems: 'center', padding: spacing.sm,
+    backgroundColor: colors.white, borderRadius: 14,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  newCatIcon: {
+    fontSize: 28, marginBottom: 4,
+  },
+  newCatLabel: {
+    fontSize: 11, color: colors.dark, textAlign: 'center', fontWeight: '500',
   },
 });

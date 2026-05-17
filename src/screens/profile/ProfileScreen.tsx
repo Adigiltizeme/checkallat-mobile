@@ -26,6 +26,7 @@ export const ProfileScreen = () => {
   const availableRoles = useSelector((state: RootState) => state.auth.availableRoles);
   const defaultRole = useSelector((state: RootState) => state.auth.defaultRole);
   const isDriver = activeRole === 'driver';
+  const isPro = activeRole === 'pro';
   const currentLang = useSelector((state: RootState) => state.auth.language ?? 'fr');
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -70,6 +71,11 @@ export const ProfileScreen = () => {
         {isDriver && (
           <View style={styles.driverBadge}>
             <Text style={styles.driverBadgeText}>🚚 {t('profile.driver_badge')}</Text>
+          </View>
+        )}
+        {isPro && (
+          <View style={[styles.driverBadge, { backgroundColor: '#10B98120' }]}>
+            <Text style={[styles.driverBadgeText, { color: '#10B981' }]}>💼 {t('profile.pro_badge')}</Text>
           </View>
         )}
       </View>
@@ -132,36 +138,27 @@ export const ProfileScreen = () => {
         />
       </View>
 
-      {/* Devenir chauffeur / suivi candidature */}
-      {!isDriver && (
-        <View style={styles.section}>
-          {user?.driver?.status === 'pending' ? (
-            <List.Item
-              title={t('driver_apply.status_pending')}
-              description={t('driver_apply.status_pending_short')}
-              left={(props) => <List.Icon {...props} icon="clock-outline" color="#F59E0B" />}
-              right={(props) => <List.Icon {...props} icon="chevron-right" />}
-              onPress={() => navigation.navigate('DriverApplication')}
-            />
-          ) : user?.driver?.status === 'rejected' ? (
-            <List.Item
-              title={t('driver_apply.status_rejected')}
-              description={t('driver_apply.status_rejected_short')}
-              left={(props) => <List.Icon {...props} icon="alert-circle-outline" color={colors.error} />}
-              right={(props) => <List.Icon {...props} icon="chevron-right" />}
-              onPress={() => navigation.navigate('DriverApplication')}
-            />
-          ) : (
-            <List.Item
-              title={t('driver_apply.become_driver')}
-              description={t('driver_apply.become_driver_desc')}
-              left={(props) => <List.Icon {...props} icon="truck-plus" color="#F59E0B" />}
-              right={(props) => <List.Icon {...props} icon="chevron-right" />}
-              onPress={() => navigation.navigate('DriverApplication')}
-            />
-          )}
-        </View>
-      )}
+      {/* Mes activités / Ajouter une activité */}
+      <View style={styles.section}>
+        <List.Item
+          title={t('activity.my_activities')}
+          description={t('activity.my_activities_desc')}
+          left={(props) => <List.Icon {...props} icon="briefcase-plus-outline" color="#10B981" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('AddActivity')}
+        />
+      </View>
+
+      {/* Proposer un nouveau service */}
+      <View style={styles.section}>
+        <List.Item
+          title={t('proposal.my_proposals')}
+          description={t('proposal.subtitle')}
+          left={(props) => <List.Icon {...props} icon="lightbulb-outline" color="#7C3AED" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('MyProposals')}
+        />
+      </View>
 
       {/* Sécurité */}
       <View style={styles.section}>

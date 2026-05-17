@@ -97,8 +97,8 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   const [deliverySuggestions, setDeliverySuggestions] = useState<any[]>([]);
 
   // Refs pour les timeouts de debounce
-  const pickupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const deliveryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pickupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const deliveryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Détection du pays au montage (une seule fois par session)
   useEffect(() => {
