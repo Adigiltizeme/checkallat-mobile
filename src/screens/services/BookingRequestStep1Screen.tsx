@@ -1,20 +1,23 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import { Text, TextInput, Button, Chip } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import { HomeStackParamList } from '../../navigation/types';
 import { BookingStep1Data } from '../../types/booking';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { getLocalizedName } from '../../utils/localize';
+import { RootState } from '../../store';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep1'>;
 
@@ -116,6 +119,7 @@ const HAS_URGENCY = ['plumbing', 'electricity', 'handyman', 'air_condition'];
 export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   const { t, i18n } = useTranslation();
   const { categorySlug, categoryNameFr, categoryNameEn, categoryNameAr } = route.params;
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const categoryName = getLocalizedName(
     { nameFr: categoryNameFr, nameEn: categoryNameEn, nameAr: categoryNameAr },
@@ -124,6 +128,16 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('booking_request.step_of', { current: 1, total: 5 }) });
+  }, []);
+
+  // Guard : un pro actif ne peut pas réserver dans une catégorie qu'il propose lui-même
+  useEffect(() => {
+    const proSlugs: string[] = user?.pro?.serviceCategorySlugs ?? [];
+    if (user?.pro?.status === 'active' && proSlugs.includes(categorySlug)) {
+      Alert.alert(t('common.access_denied'), t('home.pro_cannot_book_own_category'), [
+        { text: t('common.ok'), onPress: () => navigation.goBack() },
+      ]);
+    }
   }, []);
 
   const fields = CATEGORY_FIELDS[categorySlug] ?? [];
