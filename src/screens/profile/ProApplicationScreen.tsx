@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,9 +14,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
 import { RootState } from '../../store';
-import { clearProRecord, updateUser } from '../../store/slices/authSlice';
+import { clearProRecord, updateUser, refreshProfile } from '../../store/slices/authSlice';
 import { useCreateProProfileMutation, useDeleteProProfileMutation } from '../../store/api/prosApi';
 import { useGetCategoriesQuery } from '../../store/api/servicesApi';
+import { useGetProfileQuery } from '../../store/api/authApi';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
@@ -31,6 +32,26 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
   const user = useSelector((state: RootState) => state.auth.user);
   const pro = user?.pro;
   const [deleteProProfile, { isLoading: isCancelling }] = useDeleteProProfileMutation();
+
+  // Polling du profil pour détecter l'acceptation/refus par l'admin sans redémarrer l'app
+  const prevStatusRef = useRef<string | null>(pro?.status ?? null);
+  const { data: freshProfile } = useGetProfileQuery(undefined, {
+    pollingInterval: 20_000,
+    refetchOnMountOrArgChange: true,
+  });
+  useEffect(() => {
+    if (!freshProfile) return;
+    const newStatus = freshProfile?.pro?.status;
+    if (newStatus && newStatus !== prevStatusRef.current) {
+      prevStatusRef.current = newStatus;
+      dispatch(refreshProfile(freshProfile));
+      if (newStatus === 'active') {
+        Alert.alert(t('pro_apply.accepted_title'), t('pro_apply.accepted_message'));
+      } else if (newStatus === 'rejected') {
+        Alert.alert(t('pro_apply.rejected_title'), t('pro_apply.rejected_message'));
+      }
+    }
+  }, [freshProfile?.pro?.status]);
 
   const status = pro?.status ?? 'pending';
   const isPending   = status === 'pending';
@@ -253,7 +274,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
         serviceAreaCenterLng: userLng ?? 0,
       }).unwrap();
 
-      dispatch(updateUser({ pro: result }));
+      dispatch(updateUser({ pro: { ...result, serviceCategorySlugs: selectedCategories } }));
 
       Alert.alert(t('pro_apply.success_title'), t('pro_apply.success_msg'));
     } catch {

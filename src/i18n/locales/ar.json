@@ -1054,7 +1054,15 @@
     "reapply": "تقديم طلب جديد",
     "reapply_confirm_title": "إعادة التقديم؟",
     "reapply_confirm_msg": "سيتم حذف طلبك السابق وستُحوَّل إلى النموذج.",
-    "reapply_confirm_yes": "متابعة"
+    "reapply_confirm_yes": "متابعة",
+    "status_active": "الملف الشخصي نشط ✅",
+    "status_active_desc": "أنت الآن مزود خدمة معتمد على CheckAll@t. يمكن للعملاء حجزك.",
+    "status_suspended": "الملف الشخصي معلّق ⏸️",
+    "status_suspended_desc": "ملفك الشخصي معلّق مؤقتاً. تواصل مع الدعم لمزيد من المعلومات.",
+    "accepted_title": "🎉 تم قبول طلبك!",
+    "accepted_message": "تهانينا! تم قبول طلبك. أنت الآن مزود خدمة معتمد على CheckAll@t.",
+    "rejected_title": "تم رفض طلبك",
+    "rejected_message": "لم يتم قبول طلبك. يمكنك تقديم طلب جديد بعد الاطلاع على سبب الرفض."
   },
   "pro_space": {
     "title": "فضائي المهني",
@@ -1253,6 +1261,7 @@
     "contact_client": "التواصل مع العميل",
     "no_location": "الموقع غير متاح",
     "location_updating": "جارٍ تحديث الموقع...",
+    "pro_location_unavailable": "لم يتم مشاركة موقع مقدّم الخدمة بعد",
     "tracking_unavailable": "التتبع غير متاح لهذه الحجز"
   },
   "pro_navigation": {

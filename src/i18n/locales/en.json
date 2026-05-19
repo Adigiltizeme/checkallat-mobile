@@ -1054,7 +1054,15 @@
     "reapply": "Submit a new application",
     "reapply_confirm_title": "Resubmit?",
     "reapply_confirm_msg": "Your previous application will be deleted. You will be redirected to the form.",
-    "reapply_confirm_yes": "Continue"
+    "reapply_confirm_yes": "Continue",
+    "status_active": "Active profile ✅",
+    "status_active_desc": "You are now a verified service provider on CheckAll@t. Clients can book you.",
+    "status_suspended": "Profile suspended ⏸️",
+    "status_suspended_desc": "Your profile is temporarily suspended. Contact support for more information.",
+    "accepted_title": "🎉 Application accepted!",
+    "accepted_message": "Congratulations! Your application has been accepted. You are now a verified professional on CheckAll@t.",
+    "rejected_title": "Application rejected",
+    "rejected_message": "Your application was not approved. You can submit a new one after reviewing the reason for rejection."
   },
   "pro_space": {
     "title": "My Pro Space",
@@ -1253,6 +1261,7 @@
     "contact_client": "Contact client",
     "no_location": "Location not available",
     "location_updating": "Updating location...",
+    "pro_location_unavailable": "Provider location not yet shared",
     "tracking_unavailable": "Tracking not available for this booking"
   },
   "pro_navigation": {

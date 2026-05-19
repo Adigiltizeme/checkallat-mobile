@@ -2,15 +2,15 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
+  Dimensions,
   TouchableOpacity,
   Linking,
-  Platform,
-  ActivityIndicator,
   Alert,
   Modal,
+  Animated,
 } from 'react-native';
-import { Text, Card, Button, Chip, TextInput } from 'react-native-paper';
+import { Text, Avatar, ActivityIndicator, IconButton, TextInput } from 'react-native-paper';
+import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { HomeStackParamList } from '../../navigation/types';
@@ -24,8 +24,17 @@ import {
   useConfirmBookingCompletionMutation,
 } from '../../store/api/bookingsApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+import RNMapView, { Marker } from 'react-native-maps';
+const isExpoGo = Constants.appOwnership === 'expo';
+const Mapbox = isExpoGo ? null : require('@rnmapbox/maps').default;
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingTracking'>;
+
+const { height } = Dimensions.get('window');
+const PANEL_FULL = height * 0.52;
+const PANEL_MINI = 72;
 
 const MILESTONES = [
   { key: 'accepted',    labelKey: 'milestone_accepted',    statusTrigger: 'accepted' },
@@ -35,19 +44,13 @@ const MILESTONES = [
   { key: 'completed',  labelKey: 'milestone_completed',   statusTrigger: 'completed' },
 ] as const;
 
-const isExpoGo = () => {
-  try {
-    return !!require('expo-constants').default?.executionEnvironment &&
-      require('expo-constants').default.executionEnvironment === 'storeClient';
-  } catch {
-    return false;
-  }
-};
-
 export const BookingTrackingScreen = ({ route, navigation }: Props) => {
   const { bookingId, role } = route.params;
   const { t, i18n } = useTranslation();
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cameraRef = useRef<any>(null);
+  const panelAnim = useRef(new Animated.Value(PANEL_FULL)).current;
+  const [collapsed, setCollapsed] = useState(false);
   const [showCashModal, setShowCashModal] = useState(false);
   const [cashAmountInput, setCashAmountInput] = useState('');
 
@@ -93,6 +96,28 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
     }
     return () => stopLocationSharing();
   }, [role, booking?.status]);
+
+  useEffect(() => {
+    if (!booking || isExpoGo || !cameraRef.current) return;
+    const clientLat = booking.addressLat;
+    const clientLng = booking.addressLng;
+    if (!clientLat || !clientLng) return;
+    const lats = [clientLat];
+    const lngs = [clientLng];
+    if (proLocation?.currentLat && proLocation?.currentLng) {
+      lats.push(proLocation.currentLat);
+      lngs.push(proLocation.currentLng);
+    }
+    const ne: [number, number] = [Math.max(...lngs), Math.max(...lats)];
+    const sw: [number, number] = [Math.min(...lngs), Math.min(...lats)];
+    cameraRef.current.fitBounds(ne, sw, [100, 50, collapsed ? 120 : 300, 50], 500);
+  }, [booking, proLocation, collapsed]);
+
+  const togglePanel = () => {
+    const toValue = collapsed ? PANEL_FULL : PANEL_MINI;
+    Animated.spring(panelAnim, { toValue, useNativeDriver: false, bounciness: 4 }).start();
+    setCollapsed(!collapsed);
+  };
 
   const handleEnRoute = async () => {
     await markEnRoute(bookingId);
@@ -141,7 +166,6 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
     }
   };
 
-
   const submitCashConfirmation = async () => {
     const cashAmount = parseFloat(cashAmountInput);
     setShowCashModal(false);
@@ -173,60 +197,22 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
     return currentIdx >= triggerIdx ? 'done' : 'pending';
   };
 
-  const renderMap = () => {
-    const clientLat = booking?.addressLat;
-    const clientLng = booking?.addressLng;
-    const proLat = proLocation?.currentLat;
-    const proLng = proLocation?.currentLng;
+  const statusBannerKey =
+    booking?.status === 'en_route'    ? 'pro_en_route' :
+    booking?.status === 'arrived'     ? 'pro_arrived'  :
+    booking?.status === 'in_progress' ? 'pro_working'  :
+    booking?.status === 'completed'   ? 'completed'    :
+    'waiting_pro';
 
-    if (!clientLat || !clientLng) return null;
-
-    if (isExpoGo()) {
-      const MapView = require('react-native-maps').default;
-      const { Marker } = require('react-native-maps');
-      return (
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            latitude: proLat ?? clientLat,
-            longitude: proLng ?? clientLng,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          }}
-        >
-          <Marker coordinate={{ latitude: clientLat, longitude: clientLng }} title={t('booking_tracking.your_address')} pinColor={colors.primary} />
-          {proLat && proLng && (
-            <Marker coordinate={{ latitude: proLat, longitude: proLng }} title={t('booking_tracking.pro_location')} pinColor={colors.success ?? '#4CAF50'} />
-          )}
-        </MapView>
-      );
-    }
-
-    const Mapbox = require('@rnmapbox/maps').default;
-    const MapboxCamera = require('@rnmapbox/maps').Camera;
-    const MapboxPointAnnotation = require('@rnmapbox/maps').PointAnnotation;
-    return (
-      <Mapbox.MapView style={styles.map}>
-        <MapboxCamera
-          centerCoordinate={[proLng ?? clientLng, proLat ?? clientLat]}
-          zoomLevel={13}
-          animationMode="flyTo"
-        />
-        <MapboxPointAnnotation id="client" coordinate={[clientLng, clientLat]}>
-          <View style={styles.markerClient} />
-        </MapboxPointAnnotation>
-        {proLat && proLng && (
-          <MapboxPointAnnotation id="pro" coordinate={[proLng, proLat]}>
-            <View style={styles.markerPro} />
-          </MapboxPointAnnotation>
-        )}
-      </Mapbox.MapView>
-    );
-  };
+  const statusColor =
+    booking?.status === 'completed'   ? colors.success :
+    booking?.status === 'in_progress' ? colors.primary :
+    booking?.status === 'cancelled'   ? colors.error   :
+    '#F59E0B';
 
   if (isLoading) {
     return (
-      <View style={styles.centered}>
+      <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -234,139 +220,267 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
 
   if (!booking) {
     return (
-      <View style={styles.centered}>
-        <Text>{t('booking_tracking.tracking_unavailable')}</Text>
+      <View style={styles.error}>
+        <Text variant="titleLarge">{t('booking_tracking.tracking_unavailable')}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorButton}>
+          <Text style={{ color: colors.primary }}>{t('common.back')}</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  const statusBannerKey =
-    booking.status === 'en_route'    ? 'pro_en_route' :
-    booking.status === 'arrived'     ? 'pro_arrived'  :
-    booking.status === 'in_progress' ? 'pro_working'  :
-    booking.status === 'completed'   ? 'completed'    :
-    'waiting_pro';
+  const clientLat = booking.addressLat;
+  const clientLng = booking.addressLng;
+  const proLat = proLocation?.currentLat;
+  const proLng = proLocation?.currentLng;
+  const hasProLocation = !!(proLat && proLng);
+
+  const renderMap = () => {
+    if (!clientLat || !clientLng) return <View style={StyleSheet.absoluteFill} />;
+
+    if (isExpoGo) {
+      return (
+        <RNMapView
+          style={StyleSheet.absoluteFill}
+          initialRegion={{
+            latitude: proLat ?? clientLat,
+            longitude: proLng ?? clientLng,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          }}
+        >
+          <Marker
+            coordinate={{ latitude: clientLat, longitude: clientLng }}
+            title={t('booking_tracking.your_address')}
+            pinColor={colors.primary}
+          />
+          {hasProLocation && (
+            <Marker
+              coordinate={{ latitude: proLat!, longitude: proLng! }}
+              title={t('booking_tracking.pro_location')}
+            >
+              <View style={styles.proMarker}><Text style={styles.markerText}>🔧</Text></View>
+            </Marker>
+          )}
+        </RNMapView>
+      );
+    }
+
+    const clientCoord: [number, number] = [clientLng, clientLat];
+    const proCoord: [number, number] | null = hasProLocation ? [proLng!, proLat!] : null;
+
+    return (
+      <Mapbox.MapView style={StyleSheet.absoluteFill}>
+        <Mapbox.Camera
+          ref={cameraRef}
+          defaultSettings={{ centerCoordinate: clientCoord, zoomLevel: 13 }}
+        />
+        <Mapbox.PointAnnotation id="client" coordinate={clientCoord}>
+          <View style={[styles.markerContainer, { backgroundColor: colors.primary }]}>
+            <Text style={styles.markerText}>📍</Text>
+          </View>
+          <Mapbox.Callout title={t('booking_tracking.your_address')} />
+        </Mapbox.PointAnnotation>
+        {proCoord && (
+          <Mapbox.PointAnnotation id="pro" coordinate={proCoord}>
+            <View style={[styles.markerContainer, { backgroundColor: colors.success }]}>
+              <Text style={styles.markerText}>🔧</Text>
+            </View>
+            <Mapbox.Callout title={proLocation?.proName || t('booking_tracking.pro_location')} />
+          </Mapbox.PointAnnotation>
+        )}
+      </Mapbox.MapView>
+    );
+  };
+
+  const contactPhone = role === 'client' ? proLocation?.phone : booking.client?.phone;
+  const contactLabel = role === 'client' ? t('booking_tracking.contact_pro') : t('booking_tracking.contact_client');
+  const proName = proLocation?.proName || proLocation?.phone;
+
+  const clientConfirmed = !!(booking as any).clientConfirmedCompletion;
+  const proConfirmed = !!(booking as any).proConfirmedCompletion;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Status banner */}
-      <Card style={[styles.bannerCard, { backgroundColor: booking.status === 'completed' ? '#E8F5E9' : colors.lightBlue ?? '#EBF4FF' }]}>
-        <Card.Content>
-          <Text style={styles.bannerText}>{t(`booking_tracking.${statusBannerKey}`)}</Text>
+    <View style={styles.container}>
+      {/* Carte plein écran */}
+      {renderMap()}
+
+      {/* Boutons flottants */}
+      <View style={styles.topActions}>
+        <IconButton
+          icon="arrow-left"
+          size={22}
+          iconColor={colors.dark}
+          style={styles.fab}
+          onPress={() => navigation.goBack()}
+        />
+      </View>
+
+      {/* Panneau inférieur escamotable */}
+      <Animated.View style={[styles.bottomSheet, { height: panelAnim }]}>
+        {/* Poignée + toggle */}
+        <TouchableOpacity style={styles.handleRow} onPress={togglePanel} activeOpacity={0.7}>
+          <View style={styles.handle} />
+          <Icon
+            name={collapsed ? 'chevron-up' : 'chevron-down'}
+            size={20}
+            color={colors.gray}
+            style={styles.chevronIcon}
+          />
+        </TouchableOpacity>
+
+        {/* Statut — toujours visible */}
+        <View style={[styles.statusBanner, { backgroundColor: statusColor }]}>
+          <Text variant="titleMedium" style={styles.statusBannerText}>
+            {t(`booking_tracking.${statusBannerKey}`)}
+          </Text>
           {proLocation?.lastLocationUpdate && (
-            <Text style={styles.lastUpdate}>
-              {t('booking_tracking.last_update', {
-                time: new Date(proLocation.lastLocationUpdate).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' }),
+            <Text variant="bodySmall" style={styles.etaText}>
+              ⏱️{' '}
+              {new Date(proLocation.lastLocationUpdate).toLocaleTimeString(i18n.language, {
+                hour: '2-digit', minute: '2-digit',
               })}
             </Text>
           )}
-        </Card.Content>
-      </Card>
+        </View>
 
-      {/* Map */}
-      {renderMap()}
-
-      {/* Milestone timeline */}
-      <Card style={styles.card}>
-        <Card.Content>
-          {MILESTONES.map((m, idx) => {
-            const state = getMilestoneState(m);
-            return (
-              <View key={m.key} style={styles.milestone}>
-                <View style={[styles.milestoneCircle, state === 'done' && styles.milestoneDone]} />
-                {idx < MILESTONES.length - 1 && (
-                  <View style={[styles.milestoneLine, state === 'done' && styles.milestoneLineDone]} />
-                )}
-                <Text style={[styles.milestoneLabel, state === 'done' && styles.milestoneLabelDone]}>
-                  {t(`booking_tracking.${m.labelKey}`)}
-                </Text>
-                {'timestampField' in m && (booking as any)[m.timestampField] && (
-                  <Text style={styles.milestoneTime}>
-                    {new Date((booking as any)[m.timestampField]).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
+        {/* Contenu étendu */}
+        {!collapsed && (
+          <View style={styles.panelContent}>
+            {/* Info pro avec bouton appel */}
+            {(proName || contactPhone) && (
+              <View style={styles.proHeader}>
+                <Avatar.Icon size={48} icon="account-hard-hat" style={styles.proAvatar} />
+                <View style={styles.proInfo}>
+                  {proName && (
+                    <Text variant="titleMedium" style={styles.proName}>{proName}</Text>
+                  )}
+                  {contactPhone && (
+                    <Text variant="bodySmall" style={styles.proDetails}>📞 {contactPhone}</Text>
+                  )}
+                </View>
+                {contactPhone && (
+                  <IconButton
+                    icon="phone"
+                    size={22}
+                    iconColor={colors.white}
+                    containerColor={colors.success}
+                    onPress={() => callPhone(contactPhone)}
+                  />
                 )}
               </View>
-            );
-          })}
-        </Card.Content>
-      </Card>
+            )}
 
-      {/* Pro action buttons (role = pro) */}
-      {role === 'pro' && (
-        <Card style={styles.card}>
-          <Card.Content style={styles.actionRow}>
-            {booking.status === 'accepted' && (
-              <Button mode="contained" onPress={handleEnRoute} loading={isEnRouteLoading} style={styles.actionBtn}>
-                {t('booking_tracking.btn_en_route')}
-              </Button>
+            {/* Localisation indisponible */}
+            {!hasProLocation && booking.status !== 'accepted' && (
+              <View style={styles.infoCard}>
+                <Icon name="map-marker-off" size={24} color={colors.warning} />
+                <Text variant="bodySmall" style={styles.infoText}>
+                  {t('booking_tracking.pro_location_unavailable')}
+                </Text>
+              </View>
             )}
-            {booking.status === 'en_route' && (
-              <Button mode="contained" onPress={handleArrived} loading={isArrivedLoading} style={styles.actionBtn}>
-                {t('booking_tracking.btn_arrived')}
-              </Button>
-            )}
-            {booking.status === 'arrived' && (
-              <Button mode="contained" onPress={handleStartWork} style={styles.actionBtn}>
-                {t('booking_tracking.btn_start_work')}
-              </Button>
-            )}
-            {booking.status === 'in_progress' && !(booking as any).proConfirmedCompletion && (
-              <Button mode="contained" onPress={handleProComplete} style={styles.actionBtn}>
-                {t('booking_tracking.btn_complete')}
-              </Button>
-            )}
-            {booking.status === 'in_progress' && !!(booking as any).proConfirmedCompletion && (
-              <Text style={{ fontSize: 13, color: colors.gray, textAlign: 'center', flex: 1 }}>
-                {t('booking.waiting_client_confirm')}
-              </Text>
-            )}
-          </Card.Content>
-        </Card>
-      )}
 
-      {/* Client confirm completion */}
-      {role === 'client' && booking.status === 'in_progress' && (() => {
-        const clientConfirmed = !!(booking as any).clientConfirmedCompletion;
-        if (clientConfirmed) {
-          return (
-            <Card style={[styles.card, { borderColor: '#F59E0B40' }]}>
-              <Card.Content style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={{ fontSize: 16 }}>⏳</Text>
-                <Text style={{ fontSize: 13, color: '#92400E', flex: 1 }}>{t('booking.waiting_pro_confirm')}</Text>
-              </Card.Content>
-            </Card>
-          );
-        }
-        return (
-          <Card style={styles.card}>
-            <Card.Content>
-              <Button mode="contained" onPress={handleClientConfirm} loading={isCompletingLoading} style={styles.actionBtn}>
-                {t('booking_tracking.btn_confirm_completion')}
-              </Button>
-            </Card.Content>
-          </Card>
-        );
-      })()}
+            {/* Timeline milestones */}
+            <View style={styles.milestoneSection}>
+              {MILESTONES.map((m, idx) => {
+                const state = getMilestoneState(m);
+                return (
+                  <View key={m.key} style={styles.milestone}>
+                    <View style={styles.milestoneLeft}>
+                      <View style={[styles.milestoneCircle, state === 'done' && styles.milestoneDone]} />
+                      {idx < MILESTONES.length - 1 && (
+                        <View style={[styles.milestoneLine, state === 'done' && styles.milestoneLineDone]} />
+                      )}
+                    </View>
+                    <View style={styles.milestoneRight}>
+                      <Text style={[styles.milestoneLabel, state === 'done' && styles.milestoneLabelDone]}>
+                        {t(`booking_tracking.${m.labelKey}`)}
+                      </Text>
+                      {'timestampField' in m && (booking as any)[m.timestampField] && (
+                        <Text style={styles.milestoneTime}>
+                          {new Date((booking as any)[m.timestampField]).toLocaleTimeString(i18n.language, {
+                            hour: '2-digit', minute: '2-digit',
+                          })}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
 
-      {/* Contact card */}
-      {(proLocation?.phone || booking.client?.phone) && (
-        <Card style={styles.card}>
-          <Card.Content>
-            <TouchableOpacity
-              style={styles.contactRow}
-              onPress={() => callPhone(role === 'client' ? proLocation?.phone : booking.client?.phone)}
-            >
-              <Text style={styles.contactLabel}>
-                {role === 'client' ? t('booking_tracking.contact_pro') : t('booking_tracking.contact_client')}
-              </Text>
-              <Chip icon="phone" style={styles.phoneChip}>
-                {role === 'client' ? proLocation?.phone : booking.client?.phone}
-              </Chip>
-            </TouchableOpacity>
-          </Card.Content>
-        </Card>
-      )}
-      {/* Modal saisie montant cash (client + pro) */}
+            {/* Boutons action pro */}
+            {role === 'pro' && (
+              <View style={styles.actionRow}>
+                {booking.status === 'accepted' && (
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={handleEnRoute}
+                    disabled={isEnRouteLoading}
+                  >
+                    {isEnRouteLoading
+                      ? <ActivityIndicator size="small" color={colors.white} />
+                      : <Text style={styles.actionBtnText}>{t('booking_tracking.btn_en_route')}</Text>
+                    }
+                  </TouchableOpacity>
+                )}
+                {booking.status === 'en_route' && (
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={handleArrived}
+                    disabled={isArrivedLoading}
+                  >
+                    {isArrivedLoading
+                      ? <ActivityIndicator size="small" color={colors.white} />
+                      : <Text style={styles.actionBtnText}>{t('booking_tracking.btn_arrived')}</Text>
+                    }
+                  </TouchableOpacity>
+                )}
+                {booking.status === 'arrived' && (
+                  <TouchableOpacity style={styles.actionBtn} onPress={handleStartWork}>
+                    <Text style={styles.actionBtnText}>{t('booking_tracking.btn_start_work')}</Text>
+                  </TouchableOpacity>
+                )}
+                {booking.status === 'in_progress' && !proConfirmed && (
+                  <TouchableOpacity style={styles.actionBtn} onPress={handleProComplete}>
+                    <Text style={styles.actionBtnText}>{t('booking_tracking.btn_complete')}</Text>
+                  </TouchableOpacity>
+                )}
+                {booking.status === 'in_progress' && proConfirmed && (
+                  <View style={styles.waitingBadge}>
+                    <Text style={styles.waitingText}>{t('booking.waiting_client_confirm')}</Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Bouton confirmation client */}
+            {role === 'client' && booking.status === 'in_progress' && (
+              <View style={styles.actionRow}>
+                {clientConfirmed ? (
+                  <View style={styles.waitingBadge}>
+                    <Text style={styles.waitingText}>⏳ {t('booking.waiting_pro_confirm')}</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={handleClientConfirm}
+                    disabled={isCompletingLoading}
+                  >
+                    {isCompletingLoading
+                      ? <ActivityIndicator size="small" color={colors.white} />
+                      : <Text style={styles.actionBtnText}>{t('booking_tracking.btn_confirm_completion')}</Text>
+                    }
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+      </Animated.View>
+
+      {/* Modal saisie montant cash */}
       <Modal visible={showCashModal} transparent animationType="fade" onRequestClose={() => setShowCashModal(false)}>
         <View style={styles.cashModalOverlay}>
           <View style={styles.cashModalBox}>
@@ -402,35 +516,132 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
           </View>
         </View>
       </Modal>
-
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, paddingBottom: spacing.xl },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  bannerCard: { borderRadius: 12, marginBottom: spacing.sm },
-  bannerText: { fontSize: 16, fontWeight: '700', color: colors.dark, textAlign: 'center' },
-  lastUpdate: { fontSize: 11, color: colors.gray, textAlign: 'center', marginTop: 4 },
-  map: { height: 220, borderRadius: 12, marginBottom: spacing.sm, overflow: 'hidden' },
-  markerClient: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.white },
-  markerPro: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#4CAF50', borderWidth: 2, borderColor: colors.white },
-  card: { borderRadius: 12, marginBottom: spacing.sm, elevation: 2 },
-  milestone: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs, position: 'relative' },
-  milestoneCircle: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: colors.border, backgroundColor: colors.white, marginRight: spacing.sm },
+  container: { flex: 1, backgroundColor: '#000' },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  error: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+  errorButton: { marginTop: spacing.lg },
+
+  markerContainer: {
+    width: 36, height: 36, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: colors.white, elevation: 4,
+  },
+  proMarker: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: colors.success,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: colors.white, elevation: 4,
+  },
+  markerText: { fontSize: 18 },
+
+  topActions: {
+    position: 'absolute',
+    top: spacing.xl + 8,
+    left: spacing.sm,
+    right: spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  fab: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    elevation: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    overflow: 'hidden',
+  },
+
+  handleRow: { alignItems: 'center', paddingVertical: 10 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB' },
+  chevronIcon: { marginTop: 2 },
+
+  statusBanner: {
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  statusBannerText: { color: colors.white, fontWeight: '700' },
+  etaText: { color: 'rgba(255,255,255,0.9)', marginTop: 2, fontSize: 12 },
+
+  panelContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.md },
+
+  proHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  proAvatar: { backgroundColor: colors.primary },
+  proInfo: { flex: 1 },
+  proName: { color: colors.dark, fontWeight: '600' },
+  proDetails: { color: colors.gray, marginTop: 2 },
+
+  infoCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
+    backgroundColor: '#FFF3CD', borderRadius: 8,
+    padding: spacing.sm, marginBottom: spacing.sm,
+  },
+  infoText: { flex: 1, color: colors.dark, lineHeight: 18 },
+
+  milestoneSection: {
+    borderTopWidth: 1, borderTopColor: colors.border,
+    paddingTop: spacing.sm, marginBottom: spacing.sm,
+  },
+  milestone: {
+    flexDirection: 'row', alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  milestoneLeft: { width: 20, alignItems: 'center', marginRight: spacing.sm },
+  milestoneCircle: {
+    width: 14, height: 14, borderRadius: 7,
+    borderWidth: 2, borderColor: colors.border, backgroundColor: colors.white,
+  },
   milestoneDone: { backgroundColor: colors.primary, borderColor: colors.primary },
-  milestoneLine: { position: 'absolute', left: 7, top: 16, width: 2, height: 20, backgroundColor: colors.border },
+  milestoneLine: { width: 2, flex: 1, backgroundColor: colors.border, marginTop: 2, minHeight: 16 },
   milestoneLineDone: { backgroundColor: colors.primary },
-  milestoneLabel: { flex: 1, fontSize: 14, color: colors.gray },
+  milestoneRight: { flex: 1, paddingBottom: 8 },
+  milestoneLabel: { fontSize: 13, color: colors.gray },
   milestoneLabelDone: { color: colors.dark, fontWeight: '600' },
-  milestoneTime: { fontSize: 12, color: colors.gray },
-  actionRow: { gap: spacing.sm },
-  actionBtn: { backgroundColor: colors.primary, borderRadius: 8 },
-  contactRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  contactLabel: { fontSize: 14, color: colors.dark },
-  phoneChip: { backgroundColor: colors.lightBlue ?? '#EBF4FF' },
+  milestoneTime: { fontSize: 11, color: colors.gray, marginTop: 1 },
+
+  actionRow: { marginTop: spacing.xs },
+  actionBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  actionBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+
+  waitingBadge: {
+    backgroundColor: '#FFF3CD',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+  },
+  waitingText: { color: '#92400E', fontSize: 13, fontWeight: '500' },
+
   cashModalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center', alignItems: 'center', padding: spacing.lg,

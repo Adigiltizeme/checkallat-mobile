@@ -1054,7 +1054,15 @@
     "reapply": "Soumettre une nouvelle candidature",
     "reapply_confirm_title": "Resoumettre ?",
     "reapply_confirm_msg": "Votre candidature précédente sera supprimée. Vous serez redirigé vers le formulaire.",
-    "reapply_confirm_yes": "Continuer"
+    "reapply_confirm_yes": "Continuer",
+    "status_active": "Profil actif ✅",
+    "status_active_desc": "Vous êtes désormais prestataire vérifié sur CheckAll@t. Les clients peuvent vous réserver.",
+    "status_suspended": "Profil suspendu ⏸️",
+    "status_suspended_desc": "Votre profil est temporairement suspendu. Contactez le support pour plus d'informations.",
+    "accepted_title": "🎉 Candidature acceptée !",
+    "accepted_message": "Félicitations ! Votre candidature a été acceptée. Vous êtes maintenant prestataire vérifié sur CheckAll@t.",
+    "rejected_title": "Candidature refusée",
+    "rejected_message": "Votre candidature n'a pas été retenue. Vous pouvez en soumettre une nouvelle en consultant le motif de refus."
   },
   "pro_space": {
     "title": "Mon Espace Pro",
@@ -1253,6 +1261,7 @@
     "contact_client": "Contacter le client",
     "no_location": "Position non disponible",
     "location_updating": "Mise à jour de la position...",
+    "pro_location_unavailable": "La position du prestataire n'est pas encore partagée",
     "tracking_unavailable": "Suivi non disponible pour cette prestation"
   },
   "pro_navigation": {
