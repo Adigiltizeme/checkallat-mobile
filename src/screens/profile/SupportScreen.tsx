@@ -18,7 +18,7 @@ import { spacing } from '../../theme/spacing';
 import { API_CONFIG } from '../../config/api';
 import { useSendSupportContactMutation } from '../../store/api/authApi';
 
-const CATEGORIES = ['transport', 'payment', 'account', 'driver', 'other'] as const;
+const CATEGORIES = ['transport', 'services', 'marketplace', 'payment', 'account', 'other'] as const;
 
 type Tab = 'written' | 'immediate';
 
