@@ -18,6 +18,8 @@ import { ProApplicationScreen } from '../screens/profile/ProApplicationScreen';
 import { MyProposalsScreen } from '../screens/pro/MyProposalsScreen';
 import { ProposalDetailScreen } from '../screens/pro/ProposalDetailScreen';
 import { SubmitProposalScreen } from '../screens/pro/SubmitProposalScreen';
+import { PayoutAccountsScreen } from '../screens/profile/PayoutAccountsScreen';
+import { PayoutAccountFormScreen } from '../screens/profile/PayoutAccountFormScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -101,6 +103,20 @@ export const ProfileStack = () => {
         name="SubmitProposal"
         component={SubmitProposalScreen}
         options={{ title: t('proposal.title') }}
+      />
+      <Stack.Screen
+        name="PayoutAccounts"
+        component={PayoutAccountsScreen}
+        options={{ title: t('payout_accounts.title') }}
+      />
+      <Stack.Screen
+        name="PayoutAccountForm"
+        component={PayoutAccountFormScreen}
+        options={({ route }) => ({
+          title: (route.params as any)?.accountId
+            ? t('payout_accounts.edit_title')
+            : t('payout_accounts.add_title'),
+        })}
       />
     </Stack.Navigator>
   );

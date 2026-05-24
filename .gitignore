@@ -53,3 +53,5 @@ xcuserdata/
 DerivedData
 *.hmap
 *.ipa
+
+.env.local

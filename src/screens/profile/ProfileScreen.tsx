@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, Switch, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, Switch, Image, Linking } from 'react-native';
 import { List, Button, Divider, Text } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -134,7 +134,7 @@ export const ProfileScreen = () => {
           title={t('profile.payment_methods')}
           left={(props) => <List.Icon {...props} icon="credit-card" color={colors.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => {}}
+          onPress={() => navigation.navigate('PayoutAccounts')}
         />
       </View>
 
@@ -209,14 +209,14 @@ export const ProfileScreen = () => {
           title={t('profile.terms')}
           left={(props) => <List.Icon {...props} icon="file-document" color={colors.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => {}}
+          onPress={() => Linking.openURL('https://checkallat.com/terms')}
         />
         <Divider />
         <List.Item
           title={t('profile.privacy')}
           left={(props) => <List.Icon {...props} icon="shield-lock" color={colors.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => {}}
+          onPress={() => Linking.openURL('https://checkallat.com/privacy')}
         />
       </View>
 

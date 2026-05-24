@@ -25,6 +25,7 @@ module.exports = ({ config }) => {
       ],
       '@rnmapbox/maps',
       '@react-native-community/datetimepicker',
+      "@sentry/react-native"
     ],
   };
 };

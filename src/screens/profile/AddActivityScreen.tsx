@@ -70,6 +70,10 @@ export const AddActivityScreen = ({ navigation }: Props) => {
         const isActive = status === 'active';
         const badge = status ? STATUS_BADGE[status] : null;
 
+        // Pour les prestataires actifs : permettre d'ajouter d'autres catégories
+        const canNavigateWhenActive = activity.key === 'pro';
+        const isDisabled = !activity.screen || (isActive && !canNavigateWhenActive);
+
         return (
           <TouchableOpacity
             key={activity.key}
@@ -80,7 +84,7 @@ export const AddActivityScreen = ({ navigation }: Props) => {
               }
             }}
             activeOpacity={activity.screen ? 0.85 : 1}
-            disabled={!activity.screen || isActive}
+            disabled={isDisabled}
           >
             <View style={[styles.activityIcon, { backgroundColor: activity.color + '20' }]}>
               <Icon name={activity.icon} size={28} color={activity.color} />
@@ -99,6 +103,12 @@ export const AddActivityScreen = ({ navigation }: Props) => {
                 </View>
               )}
 
+              {isActive && canNavigateWhenActive && (
+                <Text style={[styles.addMoreText, { color: activity.color }]}>
+                  {t('activity.add_more_categories')}
+                </Text>
+              )}
+
               {!activity.screen && (
                 <View style={styles.comingSoonBadge}>
                   <Text style={styles.comingSoonText}>{t('activity.coming_soon')}</Text>
@@ -106,10 +116,14 @@ export const AddActivityScreen = ({ navigation }: Props) => {
               )}
             </View>
 
-            {activity.screen && !isActive && (
-              <Icon name="chevron-right" size={22} color={colors.border} />
+            {activity.screen && (!isActive || canNavigateWhenActive) && (
+              <Icon
+                name={isActive && canNavigateWhenActive ? 'plus-circle-outline' : 'chevron-right'}
+                size={22}
+                color={isActive ? activity.color : colors.border}
+              />
             )}
-            {isActive && (
+            {isActive && !canNavigateWhenActive && (
               <Icon name="check-circle" size={22} color={activity.color} />
             )}
           </TouchableOpacity>
@@ -150,6 +164,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start', marginTop: spacing.xs,
   },
   statusText: { fontSize: 11, fontWeight: '700' },
+
+  addMoreText: {
+    fontSize: 12, fontWeight: '600', marginTop: 4,
+  },
 
   comingSoonBadge: {
     backgroundColor: colors.border + '80', borderRadius: 8,

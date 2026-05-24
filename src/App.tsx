@@ -7,18 +7,36 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import * as Sentry from '@sentry/react-native';
 import { store } from './store';
-import { setCredentials, restoreAuth, restoreLanguage, setLanguage, LANGUAGE_STORAGE_KEY } from './store/slices/authSlice';
+import { setCredentials, restoreAuth, restoreLanguage, LANGUAGE_STORAGE_KEY } from './store/slices/authSlice';
 import { RootNavigator } from './navigation/RootNavigator';
-import { DevDebugPanel } from './components/DevDebugPanel';
 import { colors } from './theme/colors';
 import { API_CONFIG } from './config/api';
 import { setCurrencyConfig } from './config/currency';
+import { identifyUser as sentryIdentifyUser } from './config/sentry';
+import { identifyAnalyticsUser } from './hooks/useAnalytics';
 import i18n, { isRTL } from './i18n';
 import { I18nextProvider } from 'react-i18next';
 
-// expo-notifications and @rnmapbox/maps crash at import time in Expo Go (native modules unavailable).
-// We lazy-load them only in real builds.
+// ── Sentry init (DSN injecté par le plugin @sentry/react-native/expo au build) ──
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? '',
+  environment: __DEV__ ? 'development' : 'production',
+  enabled: !__DEV__,
+  tracesSampleRate: 0.2,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  integrations: [
+    Sentry.mobileReplayIntegration(),
+    Sentry.feedbackIntegration(),
+  ],
+  _experiments: {
+    enableLogs: true,
+  },
+});
+
+// ── Expo Go guard — native modules unavailable in Expo Go ──
 const isExpoGo = Constants.appOwnership === 'expo';
 
 if (!isExpoGo) {
@@ -28,7 +46,6 @@ if (!isExpoGo) {
 }
 
 if (!isExpoGo) {
-  // Dynamic require so the module never loads in Expo Go
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const Notifications = require('expo-notifications');
   Notifications.setNotificationHandler({
@@ -40,7 +57,6 @@ if (!isExpoGo) {
       shouldSetBadge: true,
     }),
   });
-  // Android requires a notification channel to play sound
   Notifications.setNotificationChannelAsync('default', {
     name: 'Notifications',
     importance: Notifications.AndroidImportance.MAX,
@@ -52,21 +68,16 @@ if (!isExpoGo) {
 
 async function registerDriverPushToken(accessToken: string): Promise<void> {
   try {
-    if (isExpoGo) return; // Remote push not supported in Expo Go (SDK 53+)
-
+    if (isExpoGo) return;
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const Notifications = require('expo-notifications');
-
     const { status: existing } = await Notifications.getPermissionsAsync();
     const { status } =
       existing === 'granted'
         ? { status: existing }
         : await Notifications.requestPermissionsAsync();
     if (status !== 'granted') return;
-
     const tokenData = await Notifications.getExpoPushTokenAsync();
-    const pushToken = tokenData.data;
-
     await fetch(`${API_CONFIG.BASE_URL}/transport/driver/push-token`, {
       method: 'PUT',
       headers: {
@@ -74,10 +85,10 @@ async function registerDriverPushToken(accessToken: string): Promise<void> {
         'Content-Type': 'application/json',
         'ngrok-skip-browser-warning': 'true',
       },
-      body: JSON.stringify({ pushToken }),
+      body: JSON.stringify({ pushToken: tokenData.data }),
     });
   } catch {
-    // Non-blocking — push notifications are a best-effort feature
+    // Non-blocking
   }
 }
 
@@ -113,13 +124,13 @@ function AppContent() {
     };
 
     const initialize = async () => {
-      // 1. Restore local language first (fast AsyncStorage read)
+      // 1. Restore local language
       try {
         const saved = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
         await applyLanguage(saved || 'fr');
       } catch {}
 
-      // 2. Restore auth and let server language override if user has a preference
+      // 2. Restore auth
       try {
         const accessToken = await AsyncStorage.getItem('accessToken');
         const refreshToken = await AsyncStorage.getItem('refreshToken');
@@ -137,21 +148,18 @@ function AppContent() {
 
             if (response.ok) {
               const user = await response.json();
-              console.log('[APP] User profile restored:', {
-                id: user.id,
-                email: user.email,
+              store.dispatch(setCredentials({ user, accessToken, refreshToken }));
+
+              // Identifier dans Sentry et Analytics
+              sentryIdentifyUser(user.id, user.email);
+              identifyAnalyticsUser(user.id, {
                 isDriver: !!user.driver,
                 isPro: !!user.pro,
                 isSeller: !!user.marketplaceSeller,
               });
-              store.dispatch(setCredentials({ user, accessToken, refreshToken }));
 
-              // Register push token for drivers (fire-and-forget)
-              if (user.driver) {
-                registerDriverPushToken(accessToken);
-              }
+              if (user.driver) registerDriverPushToken(accessToken);
 
-              // Sync i18n with server language preference and persist locally
               if (user.preferredLanguage && user.preferredLanguage !== i18n.language) {
                 await applyLanguage(user.preferredLanguage);
                 AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, user.preferredLanguage);
@@ -165,14 +173,12 @@ function AppContent() {
         console.error('Failed to restore auth state:', error);
       }
 
-      // 3. Load platform settings (fire and forget — non-blocking)
+      // 3. Platform settings (non-blocking)
       fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`, {
         headers: { 'ngrok-skip-browser-warning': 'true' },
       })
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
         .then((settings) => {
-          console.log('[APP] Platform settings loaded:', settings);
-          // Déterminer la devise selon le pays sélectionné ou détecté, en lisant les serviceZones
           const locationState = store.getState().location;
           const activeCountryCode = locationState.selectedCountryCode ?? locationState.detectedCountryCode;
           const zones: Array<{ countryCode?: string; currency: string; enabled: boolean }> =
@@ -180,8 +186,7 @@ function AppContent() {
           const matchedZone = activeCountryCode
             ? zones.find((z) => z.enabled && z.countryCode?.toLowerCase() === activeCountryCode.toLowerCase())
             : undefined;
-          const currencyCode = matchedZone?.currency ?? settings.currency ?? 'EGP';
-          setCurrencyConfig(currencyCode);
+          setCurrencyConfig(matchedZone?.currency ?? settings.currency ?? 'EGP');
         })
         .catch((error) => console.error('Failed to load platform settings:', error));
     };
@@ -193,18 +198,17 @@ function AppContent() {
     <>
       <StatusBar style="auto" />
       <RootNavigator />
-      {/* <DevDebugPanel /> */}
     </>
   );
 }
 
-export default function App() {
+export default Sentry.wrap(function App() {
   return (
     <I18nextProvider i18n={i18n}>
       <ReduxProvider store={store}>
         <StripeProvider
           publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''}
-          merchantIdentifier="merchant.com.checkallat"
+          merchantIdentifier="merchant.com.digiltizeme.checkallat"
         >
           <PaperProvider theme={theme}>
             <SafeAreaProvider>
@@ -215,4 +219,4 @@ export default function App() {
       </ReduxProvider>
     </I18nextProvider>
   );
-}
+});

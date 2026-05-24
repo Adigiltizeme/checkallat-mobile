@@ -40,14 +40,14 @@ const PRO_GREEN = '#10B981';
 const ACTIVE_STATUSES = ['accepted', 'en_route', 'arrived', 'in_progress'];
 
 const STATUS_COLORS: Record<string, string> = {
-  pending:     '#F59E0B',
-  accepted:    '#3B82F6',
-  en_route:    '#4F46E5',
-  arrived:     '#7C3AED',
+  pending: '#F59E0B',
+  accepted: '#3B82F6',
+  en_route: '#4F46E5',
+  arrived: '#7C3AED',
   in_progress: '#6366F1',
-  completed:   '#10B981',
-  cancelled:   '#EF4444',
-  rejected:    '#9CA3AF',
+  completed: '#10B981',
+  cancelled: '#EF4444',
+  rejected: '#9CA3AF',
 };
 
 const toDay = (d: string) => (d ? new Date(d).toLocaleDateString('en-CA') : '');

@@ -5,7 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#00B8A9"
     },
@@ -18,13 +20,18 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.digiltizeme.checkallat",
+      "icon": "./assets/icon.png",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "CheckAll@t uses your camera to take before/after photos for service orders.",
+        "NSPhotoLibraryUsageDescription": "CheckAll@t accesses your photos to upload profile pictures and proof photos.",
+        "NSPhotoLibraryAddUsageDescription": "CheckAll@t saves photos to your library."
       }
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#00B8A9"
       },
       "package": "com.digiltizeme.checkallat",
@@ -44,7 +51,30 @@
           "locationAlwaysAndWhenInUsePermission": "Allow CheckAll@t to use your location for nearby pros."
         }
       ],
-      "expo-localization"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#00B8A9",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "CheckAll@t accesses your photos to upload profile pictures and proof photos.",
+          "cameraPermission": "CheckAll@t uses your camera to take before/after photos for service orders."
+        }
+      ],
+      "expo-localization",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "digiltizeme"
+        }
+      ]
     ],
     "extra": {
       "eas": {

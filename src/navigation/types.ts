@@ -32,6 +32,8 @@ export type ProfileStackParamList = {
   MyProposals: undefined;
   ProposalDetail: { proposalId: string };
   SubmitProposal: undefined;
+  PayoutAccounts: undefined;
+  PayoutAccountForm: { accountId?: string } | undefined;
 };
 
 export type ProStackParamList = {
@@ -115,6 +117,7 @@ export type DriverStackParamList = {
   DriverDeliveryDetails: { requestId: string };
   DriverNavigation: { requestId: string };
   DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string };
+  DriverSignature: { requestId: string };
   DriverEarnings: undefined;
   DriverReviews: { driverId?: string };
   TransportCompletion: { requestId: string };
