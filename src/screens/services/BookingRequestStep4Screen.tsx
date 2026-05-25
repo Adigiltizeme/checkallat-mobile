@@ -15,7 +15,6 @@ import { HomeStackParamList } from '../../navigation/types';
 import { BookingStep4Data, AssignmentType } from '../../types/booking';
 import { ModePickerCard } from '../../components/shared/ModePickerCard';
 import { useSearchProsQuery } from '../../store/api/prosApi';
-import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
@@ -57,7 +56,7 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
   const addressLat = step2Data.address.lat;
   const addressLng = step2Data.address.lng;
 
-  const { data: prosData, isLoading, isFetching, refetch } = useSearchProsQuery(
+  const { data: prosData, isLoading, isFetching } = useSearchProsQuery(
     {
       category: categorySlug,
       userLat: addressLat,
@@ -72,7 +71,6 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
       pollingInterval: 8000,
     },
   );
-  useRefetchOnFocus(refetch);
 
   const rawPros: any[] = prosData?.pros ?? (Array.isArray(prosData) ? prosData : []);
   const pros = rawPros.map(flattenPro);
