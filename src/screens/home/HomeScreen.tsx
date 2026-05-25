@@ -337,7 +337,7 @@ export const HomeScreen = ({ navigation }: any) => {
       );
       return;
     }
-    navigation.navigate('Transport');
+    navigation.navigate('TransportRequestStep1');
   };
 
   const handleServicePress = (slug: string) => {

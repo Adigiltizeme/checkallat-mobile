@@ -1,54 +1,44 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import { DriverStackParamList } from './types';
 import { colors } from '../theme/colors';
 
-// Import screens
-import { DriverHomeScreen } from '../screens/driver/DriverHomeScreen';
-import { DriverAvailableRequestsScreen } from '../screens/driver/DriverAvailableRequestsScreen';
-import { DriverTransportDetailsScreen } from '../screens/driver/DriverTransportDetailsScreen';
+import { DriverAgendaScreen } from '../screens/driver/DriverAgendaScreen';
 import { DriverDeliveryDetailsScreen } from '../screens/driver/DriverDeliveryDetailsScreen';
 import { DriverNavigationScreen } from '../screens/driver/DriverNavigationScreen';
 import { DriverProofPhotosScreen } from '../screens/driver/DriverProofPhotosScreen';
-import { DriverEarningsScreen } from '../screens/driver/DriverEarningsScreen';
-import { DriverReviewsScreen } from '../screens/driver/DriverReviewsScreen';
+import { DriverSignatureScreen } from '../screens/driver/DriverSignatureScreen';
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
 import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
-import { PaymentDetailsScreen } from '../screens/payment/PaymentDetailsScreen';
-import { SupportScreen } from '../screens/profile/SupportScreen';
 import { BookingChatScreen } from '../screens/services/BookingChatScreen';
 
-const Stack = createStackNavigator<DriverStackParamList>();
+export type DriverAgendaStackParamList = {
+  DriverAgendaHome: undefined;
+  DriverDeliveryDetails: { requestId: string };
+  DriverNavigation: { requestId: string };
+  DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string };
+  DriverSignature: { requestId: string };
+  TransportCompletion: { requestId: string };
+  CashValidation: { requestId: string; totalPrice: number };
+  BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
+};
 
-export const DriverStack = () => {
+const Stack = createStackNavigator<DriverAgendaStackParamList>();
+
+export const DriverAgendaStack = () => {
   const { t } = useTranslation();
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.primary,
-        },
+        headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.white,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
       <Stack.Screen
-        name="DriverHome"
-        component={DriverHomeScreen}
-        options={{ title: t('driver.home_title') }}
-      />
-      <Stack.Screen
-        name="DriverAvailableRequests"
-        component={DriverAvailableRequestsScreen}
-        options={{ title: t('driver.available_requests_title') }}
-      />
-      <Stack.Screen
-        name="DriverTransportDetails"
-        component={DriverTransportDetailsScreen}
-        options={{ title: t('driver.transport_details_title') }}
+        name="DriverAgendaHome"
+        component={DriverAgendaScreen}
+        options={{ title: t('nav.agenda') }}
       />
       <Stack.Screen
         name="DriverDeliveryDetails"
@@ -66,14 +56,9 @@ export const DriverStack = () => {
         options={{ title: t('driver.proof_photos_title') }}
       />
       <Stack.Screen
-        name="DriverEarnings"
-        component={DriverEarningsScreen}
-        options={{ title: t('driver.earnings_title') }}
-      />
-      <Stack.Screen
-        name="DriverReviews"
-        component={DriverReviewsScreen}
-        options={{ title: t('driver.reviews_title') }}
+        name="DriverSignature"
+        component={DriverSignatureScreen}
+        options={{ title: t('driver.signature_title') }}
       />
       <Stack.Screen
         name="TransportCompletion"
@@ -84,16 +69,6 @@ export const DriverStack = () => {
         name="CashValidation"
         component={CashValidationScreen}
         options={{ title: t('driver.cash_validation_title') }}
-      />
-      <Stack.Screen
-        name="PaymentDetails"
-        component={PaymentDetailsScreen}
-        options={{ title: t('payment.details_title') }}
-      />
-      <Stack.Screen
-        name="Support"
-        component={SupportScreen}
-        options={{ title: t('support.title') }}
       />
       <Stack.Screen
         name="BookingChat"

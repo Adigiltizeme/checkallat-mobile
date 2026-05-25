@@ -159,6 +159,24 @@ export const bookingsApi = createApi({
       }),
       invalidatesTags: ['Booking'],
     }),
+
+    openBookingDispute: builder.mutation<void, { id: string; category: string; description: string }>({
+      query: ({ id, category, description }) => ({
+        url: `/${id}/dispute`,
+        method: 'POST',
+        body: { category, description },
+      }),
+    }),
+
+    getProDemandes: builder.query<any[], void>({
+      query: () => '/pro/me/demandes',
+      providesTags: ['Booking'],
+    }),
+
+    getProAgenda: builder.query<any[], void>({
+      query: () => '/pro/me/agenda',
+      providesTags: ['Booking'],
+    }),
   }),
 });
 
@@ -177,4 +195,7 @@ export const {
   useUpdateProLocationMutation,
   useGetBookingTrackingQuery,
   useUploadBookingPhotosMutation,
+  useOpenBookingDisputeMutation,
+  useGetProDemandesQuery,
+  useGetProAgendaQuery,
 } = bookingsApi;

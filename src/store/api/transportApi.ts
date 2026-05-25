@@ -404,6 +404,10 @@ export const transportApi = createApi({
     }, string | void>({
       query: (countryCode) => countryCode ? `/pricing/active?countryCode=${countryCode}` : '/pricing/active',
     }),
+
+    getDriverAgenda: builder.query<any[], void>({
+      query: () => '/driver/agenda',
+    }),
   }),
 });
 
@@ -438,4 +442,5 @@ export const {
   useGetActivePricingQuery,
   useApplyAsDriverMutation,
   useCancelDriverApplicationMutation,
+  useGetDriverAgendaQuery,
 } = transportApi;

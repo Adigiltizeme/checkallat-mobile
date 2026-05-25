@@ -14,9 +14,10 @@ type Props = StackScreenProps<any, 'TransportRequestStep3'>;
 
 export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
   const { t } = useTranslation();
-  const { step1Data, step2Data } = route.params as {
+  const { step1Data, step2Data, step3Prefill } = route.params as {
     step1Data: Step1Data;
     step2Data: Step2Data;
+    step3Prefill?: Step3Data;
   };
 
   const countryCode = useSelector((state: RootState) =>
@@ -26,11 +27,11 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
   const { data: pricing } = useGetActivePricingQuery(countryCode);
   const cur = pricing?.currency || 'EGP';
 
-  const [needHelpers, setNeedHelpers] = useState(false);
-  const [helpersCount, setHelpersCount] = useState(1);
-  const [needDisassembly, setNeedDisassembly] = useState(false);
-  const [needReassembly, setNeedReassembly] = useState(false);
-  const [needPacking, setNeedPacking] = useState(false);
+  const [needHelpers, setNeedHelpers] = useState(step3Prefill?.needHelpers ?? false);
+  const [helpersCount, setHelpersCount] = useState(step3Prefill?.helpersCount ?? 1);
+  const [needDisassembly, setNeedDisassembly] = useState(step3Prefill?.needDisassembly ?? false);
+  const [needReassembly, setNeedReassembly] = useState(step3Prefill?.needReassembly ?? false);
+  const [needPacking, setNeedPacking] = useState(step3Prefill?.needPacking ?? false);
 
   const handleNext = () => {
     const step3Data: Step3Data = {

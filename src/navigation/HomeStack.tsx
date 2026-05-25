@@ -16,7 +16,18 @@ import { BookingRequestStep3Screen } from '../screens/services/BookingRequestSte
 import { BookingRequestStep4Screen } from '../screens/services/BookingRequestStep4Screen';
 import { BookingRequestStep5Screen } from '../screens/services/BookingRequestStep5Screen';
 import { BookingTrackingScreen } from '../screens/services/BookingTrackingScreen';
+import { BookingChatScreen } from '../screens/services/BookingChatScreen';
+import { BookingDisputeScreen } from '../screens/services/BookingDisputeScreen';
 import { ProProofPhotosScreen } from '../screens/pro/ProProofPhotosScreen';
+import { TransportRequestStep1Screen } from '../screens/transport/TransportRequestStep1Screen';
+import { TransportRequestStep2Screen } from '../screens/transport/TransportRequestStep2Screen';
+import { TransportRequestStep3Screen } from '../screens/transport/TransportRequestStep3Screen';
+import { TransportRequestStep4Screen } from '../screens/transport/TransportRequestStep4Screen';
+import { TransportRequestStep5Screen } from '../screens/transport/TransportRequestStep5Screen';
+import { TransportTrackingScreen } from '../screens/transport/TransportTrackingScreen';
+import { TransportDetailsScreen } from '../screens/transport/TransportDetailsScreen';
+import { StripePaymentScreen } from '../screens/transport/StripePaymentScreen';
+import { DisputeScreen } from '../screens/transport/DisputeScreen';
 
 const Stack = createStackNavigator<HomeStackParamList>();
 
@@ -93,9 +104,64 @@ export const HomeStack = () => {
         options={{ title: t('booking_tracking.title') }}
       />
       <Stack.Screen
+        name="BookingChat"
+        component={BookingChatScreen}
+        options={({ route }) => ({ title: route.params.otherPartyName })}
+      />
+      <Stack.Screen
         name="ProProofPhotos"
         component={ProProofPhotosScreen}
         options={{ title: t('pro_space.proof_photos_title') }}
+      />
+      <Stack.Screen
+        name="BookingDispute"
+        component={BookingDisputeScreen}
+        options={{ title: t('dispute.title') }}
+      />
+      <Stack.Screen
+        name="TransportRequestStep1"
+        component={TransportRequestStep1Screen}
+        options={{ title: t('transport.step1_title') }}
+      />
+      <Stack.Screen
+        name="TransportRequestStep2"
+        component={TransportRequestStep2Screen}
+        options={{ title: t('transport.step2_title') }}
+      />
+      <Stack.Screen
+        name="TransportRequestStep3"
+        component={TransportRequestStep3Screen}
+        options={{ title: t('transport.step3_title') }}
+      />
+      <Stack.Screen
+        name="TransportRequestStep4"
+        component={TransportRequestStep4Screen}
+        options={{ title: t('transport.step4_title') }}
+      />
+      <Stack.Screen
+        name="TransportRequestStep5"
+        component={TransportRequestStep5Screen}
+        options={{ title: t('transport.step5_title') }}
+      />
+      <Stack.Screen
+        name="TransportTracking"
+        component={TransportTrackingScreen}
+        options={{ title: t('transport.tracking_title'), headerShown: false }}
+      />
+      <Stack.Screen
+        name="TransportDetails"
+        component={TransportDetailsScreen}
+        options={{ title: t('transport.details_title') }}
+      />
+      <Stack.Screen
+        name="StripePayment"
+        component={StripePaymentScreen}
+        options={{ title: t('payment.title') }}
+      />
+      <Stack.Screen
+        name="Dispute"
+        component={DisputeScreen}
+        options={{ title: t('dispute.title') }}
       />
     </Stack.Navigator>
   );

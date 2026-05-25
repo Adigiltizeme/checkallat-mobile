@@ -3,21 +3,19 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  Image,
   Alert,
 } from 'react-native';
 import { Text, TextInput, Button, Chip } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import * as ImagePicker from 'expo-image-picker';
 import { HomeStackParamList } from '../../navigation/types';
 import { BookingStep1Data } from '../../types/booking';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { getLocalizedName } from '../../utils/localize';
 import { RootState } from '../../store';
+import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep1'>;
 
@@ -118,7 +116,7 @@ const HAS_URGENCY = ['plumbing', 'electricity', 'handyman', 'air_condition'];
 
 export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   const { t, i18n } = useTranslation();
-  const { categorySlug, categoryNameFr, categoryNameEn, categoryNameAr } = route.params;
+  const { categorySlug, categoryNameFr, categoryNameEn, categoryNameAr, prefill, step2Prefill } = route.params as any;
   const user = useSelector((state: RootState) => state.auth.user);
 
   const categoryName = getLocalizedName(
@@ -143,25 +141,11 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   const fields = CATEGORY_FIELDS[categorySlug] ?? [];
   const showUrgency = HAS_URGENCY.includes(categorySlug);
 
-  const [selections, setSelections] = useState<Record<string, string[]>>({});
-  const [urgency, setUrgency] = useState<'normal' | 'urgent'>('normal');
-  const [description, setDescription] = useState('');
+  const [selections, setSelections] = useState<Record<string, string[]>>(prefill?.categoryData ?? {});
+  const [urgency, setUrgency] = useState<'normal' | 'urgent'>(prefill?.urgency ?? 'normal');
+  const [description, setDescription] = useState(prefill?.clientDescription ?? '');
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
-
-  const pickPhoto = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-      allowsMultipleSelection: true,
-    });
-    if (!result.canceled) {
-      const uris = result.assets.map(a => a.uri);
-      setPhotos(prev => [...prev, ...uris].slice(0, 5));
-    }
-  };
 
   const toggleSelection = (fieldKey: string, value: string) => {
     setSelections(prev => {
@@ -195,7 +179,7 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
       clientPhotos: photos,
       categoryData: { ...selections, urgency },
     };
-    navigation.navigate('BookingRequestStep2', { categorySlug, step1Data });
+    navigation.navigate('BookingRequestStep2', { categorySlug, step1Data, step2Prefill });
   };
 
   return (
@@ -279,18 +263,11 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
       {/* Photos */}
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>{t('booking_request.photos_label')}</Text>
-        <View style={styles.photosRow}>
-          {photos.map((uri, i) => (
-            <TouchableOpacity key={i} onPress={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}>
-              <Image source={{ uri }} style={styles.photoThumb} />
-            </TouchableOpacity>
-          ))}
-          {photos.length < 5 && (
-            <TouchableOpacity style={styles.addPhotoBtn} onPress={pickPhoto}>
-              <Text style={styles.addPhotoText}>+</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        <PhotoPickerGrid
+          photos={photos}
+          onPhotosChange={setPhotos}
+          maxPhotos={5}
+        />
       </View>
 
       <Button
@@ -317,20 +294,6 @@ const styles = StyleSheet.create({
   chipSelected: { backgroundColor: colors.primary },
   chipTextSelected: { color: colors.white },
   textarea: { backgroundColor: colors.white, maxHeight: 120 },
-  photosRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  photoThumb: { width: 72, height: 72, borderRadius: 8, backgroundColor: colors.lightGray },
-  addPhotoBtn: {
-    width: 72,
-    height: 72,
-    borderRadius: 8,
-    backgroundColor: colors.lightGray,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addPhotoText: { fontSize: 28, color: colors.gray },
   nextBtn: { marginTop: spacing.md, borderRadius: 8, backgroundColor: colors.primary },
   nextBtnLabel: { fontSize: 16, paddingVertical: 4 },
   errorText: { fontSize: 12, color: colors.error, marginTop: 4 },

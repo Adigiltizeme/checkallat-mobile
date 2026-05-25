@@ -6,12 +6,17 @@ import { useTranslation } from 'react-i18next';
 import { RootState } from '../store';
 import { MainTabParamList } from './types';
 import { HomeStack } from './HomeStack';
-import { HistoryScreen } from '../screens/profile/HistoryScreen';
+import { SearchStack } from './SearchStack';
+import { CommandesStack } from './CommandesStack';
+import { MessagesStack } from './MessagesStack';
 import { ProfileStack } from './ProfileStack';
-import { PaymentStack } from './PaymentStack';
 import { TransportStack } from './TransportStack';
 import { DriverStack } from './DriverStack';
+import { DriverAvailablesStack } from './DriverAvailablesStack';
+import { DriverAgendaStack } from './DriverAgendaStack';
 import { ProStack } from './ProStack';
+import { ProDemandesStack } from './ProDemandesStack';
+import { ProAgendaStack } from './ProAgendaStack';
 import { colors } from '../theme/colors';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -26,39 +31,51 @@ export const MainNavigator = () => {
 
   const isActiveDriver = user?.driver?.status === 'active';
 
+  const tabScreenOptions = {
+    tabBarActiveTintColor: colors.primary,
+    tabBarInactiveTintColor: colors.gray,
+    tabBarStyle: {
+      backgroundColor: colors.white,
+      borderTopColor: colors.border,
+      borderTopWidth: 1,
+    },
+    headerShown: false,
+  };
+
   return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.gray,
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-        },
-        headerShown: false,
-      }}
-    >
+    <Tab.Navigator screenOptions={tabScreenOptions}>
       {isDriver ? (
         <>
           <Tab.Screen
             name="Transport"
             component={DriverStack}
             options={{
-              title: t('nav.deliveries'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="truck-delivery" size={size} color={color} />
-              ),
+              title: t('nav.home'),
+              tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
             }}
           />
           <Tab.Screen
-            name="History"
-            component={HistoryScreen}
+            name="DriverAvailables"
+            component={DriverAvailablesStack}
             options={{
-              title: t('nav.history'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="history" size={size} color={color} />
-              ),
+              title: t('nav.disponibles'),
+              tabBarIcon: ({ color, size }) => <Icon name="truck-delivery" size={size} color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="DriverAgenda"
+            component={DriverAgendaStack}
+            options={{
+              title: t('nav.agenda'),
+              tabBarIcon: ({ color, size }) => <Icon name="calendar-check" size={size} color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="DriverMessages"
+            component={MessagesStack}
+            options={{
+              title: t('nav.messages'),
+              tabBarIcon: ({ color, size }) => <Icon name="message-outline" size={size} color={color} />,
             }}
           />
           <Tab.Screen
@@ -66,9 +83,7 @@ export const MainNavigator = () => {
             component={ProfileStack}
             options={{
               title: t('nav.profile'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="account" size={size} color={color} />
-              ),
+              tabBarIcon: ({ color, size }) => <Icon name="account" size={size} color={color} />,
             }}
           />
         </>
@@ -78,20 +93,32 @@ export const MainNavigator = () => {
             name="Pro"
             component={ProStack}
             options={{
-              title: t('pro_space.title'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="briefcase" size={size} color={color} />
-              ),
+              title: t('nav.home'),
+              tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
             }}
           />
           <Tab.Screen
-            name="History"
-            component={PaymentStack}
+            name="ProDemandes"
+            component={ProDemandesStack}
             options={{
-              title: t('nav.payments'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="credit-card-outline" size={size} color={color} />
-              ),
+              title: t('nav.demandes'),
+              tabBarIcon: ({ color, size }) => <Icon name="clipboard-list" size={size} color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="ProAgenda"
+            component={ProAgendaStack}
+            options={{
+              title: t('nav.agenda'),
+              tabBarIcon: ({ color, size }) => <Icon name="calendar-check" size={size} color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="ProMessages"
+            component={MessagesStack}
+            options={{
+              title: t('nav.messages'),
+              tabBarIcon: ({ color, size }) => <Icon name="message-outline" size={size} color={color} />,
             }}
           />
           <Tab.Screen
@@ -99,9 +126,7 @@ export const MainNavigator = () => {
             component={ProfileStack}
             options={{
               title: t('nav.profile'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="account" size={size} color={color} />
-              ),
+              tabBarIcon: ({ color, size }) => <Icon name="account" size={size} color={color} />,
             }}
           />
         </>
@@ -112,28 +137,21 @@ export const MainNavigator = () => {
             component={HomeStack}
             options={{
               title: t('nav.home'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="home" size={size} color={color} />
-              ),
+              tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
             }}
           />
           <Tab.Screen
-            name="Transport"
-            component={TransportStack}
+            name="Search"
+            component={SearchStack}
             options={{
-              title: t('nav.transport'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="truck-fast" size={size} color={color} />
-              ),
+              title: t('nav.search'),
+              tabBarIcon: ({ color, size }) => <Icon name="magnify" size={size} color={color} />,
               tabBarButton: isActiveDriver
                 ? (props) => (
                     <TouchableOpacity
                       {...props}
                       onPress={() =>
-                        Alert.alert(
-                          t('common.access_denied'),
-                          t('home.driver_cannot_book_transport'),
-                        )
+                        Alert.alert(t('common.access_denied'), t('home.driver_cannot_book_transport'))
                       }
                     />
                   )
@@ -141,13 +159,19 @@ export const MainNavigator = () => {
             }}
           />
           <Tab.Screen
-            name="History"
-            component={PaymentStack}
+            name="Commandes"
+            component={CommandesStack}
             options={{
-              title: t('nav.payments'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="credit-card-outline" size={size} color={color} />
-              ),
+              title: t('nav.commandes'),
+              tabBarIcon: ({ color, size }) => <Icon name="clipboard-list-outline" size={size} color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="Messages"
+            component={MessagesStack}
+            options={{
+              title: t('nav.messages'),
+              tabBarIcon: ({ color, size }) => <Icon name="message-outline" size={size} color={color} />,
             }}
           />
           <Tab.Screen
@@ -155,9 +179,7 @@ export const MainNavigator = () => {
             component={ProfileStack}
             options={{
               title: t('nav.profile'),
-              tabBarIcon: ({ color, size }) => (
-                <Icon name="account" size={size} color={color} />
-              ),
+              tabBarIcon: ({ color, size }) => <Icon name="account" size={size} color={color} />,
             }}
           />
         </>

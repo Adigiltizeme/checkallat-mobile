@@ -28,6 +28,7 @@
     "period": "فترة زمنية",
     "single_date": "تاريخ محدد",
     "optional": "اختياري",
+    "date_tbd": "التاريخ غير محدد",
     "required": "مطلوب",
     "version": "الإصدار {{version}}",
     "date_placeholder": "YYYY-MM-DD",
@@ -111,6 +112,12 @@
     "home": "الرئيسية",
     "transport": "النقل",
     "deliveries": "التوصيلات",
+    "search": "بحث",
+    "commandes": "طلباتي",
+    "messages": "رسائل",
+    "demandes": "طلبات",
+    "agenda": "جدول",
+    "disponibles": "المتاحة",
     "history": "السجل",
     "profile": "الملف الشخصي",
     "payments": "المدفوعات"
@@ -451,7 +458,11 @@
     "review_no_rating_error": "يرجى تقديم تقييم واحد على الأقل",
     "review_success_title": "شكراً!",
     "review_success_msg": "تم حفظ تقييمك بنجاح",
-    "review_error_msg": "تعذر حفظ تقييمك"
+    "review_error_msg": "تعذر حفظ تقييمك",
+    "call_driver": "اتصل بالسائق",
+    "message_driver": "رسالة",
+    "call_client": "اتصل بالعميل",
+    "message_client": "رسالة"
   },
   "history": {
     "title": "السجل",
@@ -487,6 +498,7 @@
     "stats_rating": "التقييم",
     "search_placeholder": "البحث عن عميل، عنوان...",
     "no_deliveries": "لا توجد توصيلات",
+    "no_agenda": "لا توجد توصيلات نشطة",
     "no_deliveries_hint": "ستظهر الطلبات الجديدة هنا.",
     "accept": "قبول",
     "decline": "رفض",
@@ -708,7 +720,10 @@
     "submitting": "جارٍ الإرسال...",
     "submitted_title": "تم فتح النزاع!",
     "submitted_msg": "سيراجع فريقنا طلبك وسيتواصل معك في أقرب وقت ممكن.",
-    "already_open": "يوجد بالفعل نزاع مفتوح لهذا التوصيل. فريقنا يدرسه حالياً."
+    "already_open": "يوجد بالفعل نزاع مفتوح لهذا التوصيل. فريقنا يدرسه حالياً.",
+    "info_note": "سيراجع فريقنا طلبك وسيتواصل معك خلال 48 ساعة.",
+    "chars_min": "حرف كحد أدنى",
+    "description_too_short": "يجب أن يكون الوصف 20 حرفاً على الأقل."
   },
   "status": {
     "pending": "في الانتظار",
@@ -1018,7 +1033,19 @@
     "cash_declared_client": "أعلن العميل",
     "cash_declared_pro": "أعلن المحترف",
     "confirm_required_banner": "مطلوب تأكيد الإتمام",
-    "cash_amount_required": "يرجى إدخال المبلغ النقدي المستلم."
+    "cash_amount_required": "يرجى إدخال المبلغ النقدي المستلم.",
+    "photos_before_work": "صور قبل التدخل",
+    "photos_after_work": "صور بعد التدخل",
+    "call_pro": "الاتصال بالمحترف",
+    "message_pro": "رسالة",
+    "masked_call_note": "رقمك يبقى خاصاً",
+    "renew_order": "تجديد هذا الحجز",
+    "back_to_list": "العودة إلى القائمة"
+  },
+  "chat": {
+    "empty": "لا توجد رسائل بعد. ابدأ المحادثة!",
+    "type_message": "اكتب رسالة...",
+    "title": "الرسائل"
   },
   "pro_apply": {
     "title": "كن محترفاً",
@@ -1110,6 +1137,12 @@
     "full_history": "السجل الكامل",
     "stats_completed": "المهام المنجزة",
     "proof_photos_title": "صور إثباتية",
+    "demandes_title": "الطلبات",
+    "agenda_title": "جدول المواعيد",
+    "no_demandes": "لا توجد حجوزات معلقة أو مقبولة",
+    "demandes_pending": "في الانتظار",
+    "demandes_accepted": "مقبولة",
+    "no_agenda": "لا توجد تدخلات نشطة",
     "photos_before_title": "صور قبل العمل",
     "photos_after_title": "صور بعد العمل",
     "photos_before_done_msg": "تم حفظ الصور. العمل جارٍ الآن.",
@@ -1190,6 +1223,13 @@
     "assign_auto_desc": "سنجد أفضل مقدّم خدمة متاح",
     "no_pros_found": "لا يوجد مقدّمو خدمات متاحون",
     "no_pros_hint": "جرّب نطاقاً أوسع أو استخدم التعيين التلقائي",
+    "radius_label": "نطاق البحث",
+    "expand_radius": "توسيع المنطقة",
+    "radius_10": "قريب",
+    "radius_20": "متوسط",
+    "radius_50": "واسع",
+    "radius_100": "الأقصى",
+    "searching_pros": "جارٍ البحث عن مقدّمي الخدمات…",
     "pro_distance": "{{distance}} كم",
     "pro_eta": "~{{minutes}} دقيقة",
     "pro_select": "اختيار",
@@ -1222,7 +1262,7 @@
     "cat_handyman_task": "نوع المهمة",
     "urgency_label": "الأولوية",
     "urgency_normal": "عادي",
-    "urgency_urgent": "عاجل (+{{pct}}%)",
+    "urgency_urgent": "عاجل",
     "immediate_hint_short": "مقدّم خدمة يأتي في أقرب وقت",
     "scheduled_hint_short": "اختر تاريخاً وفترة زمنية",
     "date_hint": "استخدم الأسهم لتغيير التاريخ",
@@ -1380,5 +1420,24 @@
     "slide3_sub": "اطلب شاحنة أو سائقاً، تابع في الوقت الفعلي، وادفع بأمان.",
     "next": "التالي",
     "get_started": "ابدأ الآن"
+  },
+  "messages": {
+    "title": "الرسائل",
+    "empty": "لا توجد محادثات نشطة"
+  },
+  "search": {
+    "title": "بحث",
+    "placeholder": "ابحث عن خدمة…",
+    "categories": "الفئات"
+  },
+  "commandes": {
+    "title": "طلباتي",
+    "tab_transport": "النقل",
+    "tab_services": "الخدمات",
+    "tab_marketplace": "السوق",
+    "empty_transport": "لا توجد طلبات نقل",
+    "empty_services": "لا توجد حجوزات خدمات",
+    "empty_marketplace": "لا توجد طلبات من السوق",
+    "order_label": "طلب"
   }
 }

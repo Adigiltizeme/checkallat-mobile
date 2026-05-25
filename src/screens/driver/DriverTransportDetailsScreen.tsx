@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Pressable, Image, Modal, FlatList, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Pressable, Image, Modal, FlatList, Dimensions, TouchableOpacity, Linking } from 'react-native';
 import { Text, Card, Button, Divider, useTheme, ActivityIndicator, IconButton } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,7 @@ import {
   useUpdateTransportStatusMutation,
   useCancelTransportMutation,
 } from '../../store/api/transportApi';
+import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { StatusTimeline } from '../../components/transport/StatusTimeline';
 import { DriverActionButton } from '../../components/transport/DriverActionButton';
@@ -35,6 +36,14 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
   const [fullScreenPhoto, setFullScreenPhoto] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+
+  const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
+  const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && request.client);
+  const clientName = request?.client ? `${request.client.firstName} ${request.client.lastName}` : '';
+  const { data: callRelay } = useGetCallRelayNumberQuery(
+    { entityType: 'transport', entityId: requestId },
+    { skip: !canContact },
+  );
 
   const handleStatusChange = async (newStatus: TransportStatus) => {
     // Avant de passer à in_transit, imposer les photos de chargement
@@ -210,12 +219,24 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
                 {request.client?.firstName} {request.client?.lastName}
               </Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text variant="bodyMedium" style={styles.infoLabel}>{t('driver.phone_label')}</Text>
-              <Text variant="bodyMedium" style={styles.infoValue}>
-                {request.client?.phone}
-              </Text>
-            </View>
+            {canContact && (
+              <View style={styles.contactRow}>
+                <TouchableOpacity
+                  style={styles.contactBtn}
+                  onPress={() => { if (callRelay?.relayNumber) Linking.openURL(`tel:${callRelay.relayNumber}`); }}
+                >
+                  <Icon name="phone" size={16} color={colors.white} />
+                  <Text style={styles.contactBtnText}>{t('transport.call_client')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.contactBtn, styles.contactBtnMessage]}
+                  onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: clientName })}
+                >
+                  <Icon name="message-text" size={16} color={colors.primary} />
+                  <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('transport.message_client')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </Card.Content>
         </Card>
 
@@ -581,6 +602,33 @@ const styles = StyleSheet.create({
   infoValue: {
     flex: 1,
     textAlign: 'right',
+  },
+  contactRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  contactBtnMessage: {
+    backgroundColor: `${colors.primary}15`,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  contactBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  contactBtnMessageText: {
+    color: colors.primary,
   },
   divider: {
     marginVertical: 12,

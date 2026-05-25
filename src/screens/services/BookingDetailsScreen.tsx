@@ -8,18 +8,21 @@ import {
   Image,
   Modal,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { Text, TextInput, IconButton } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
+import { BookingStep1Data, BookingStep2Data } from '../../types/booking';
 import { HomeStackParamList } from '../../navigation/types';
 import {
   useGetBookingByIdQuery,
   useCancelBookingMutation,
   useConfirmBookingCompletionMutation,
 } from '../../store/api/bookingsApi';
+import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -58,33 +61,40 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
   const [confirmCompletion, { isLoading: isConfirming }] = useConfirmBookingCompletionMutation();
 
+  const CALL_ACTIVE_STATUSES = ['accepted', 'en_route', 'arrived', 'in_progress'];
+  const bookingStatus = (booking as any)?.status ?? '';
+  const canContact = CALL_ACTIVE_STATUSES.includes(bookingStatus) && !!(booking as any)?.proId;
+  const { data: callRelay } = useGetCallRelayNumberQuery({ entityType: 'booking', entityId: bookingId }, { skip: !canContact });
+
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [showCashModal, setShowCashModal] = useState(false);
   const [cashAmountInput, setCashAmountInput] = useState('');
-  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  const [viewerPhotos, setViewerPhotos] = useState<string[]>([]);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
 
-  const openPhotoViewer = (index: number) => {
-    setSelectedPhotoIndex(index);
+  const openPhotoViewer = (photos: string[], index: number) => {
+    setViewerPhotos(photos);
+    setViewerIndex(index);
     setPhotoModalVisible(true);
   };
 
   const closePhotoViewer = () => {
     setPhotoModalVisible(false);
-    setSelectedPhotoIndex(null);
+    setViewerIndex(null);
+    setViewerPhotos([]);
   };
 
   const goToNextPhoto = () => {
-    const photos: string[] = (booking as any)?.clientPhotos ?? [];
-    if (selectedPhotoIndex !== null && selectedPhotoIndex < photos.length - 1) {
-      setSelectedPhotoIndex(selectedPhotoIndex + 1);
+    if (viewerIndex !== null && viewerIndex < viewerPhotos.length - 1) {
+      setViewerIndex(viewerIndex + 1);
     }
   };
 
   const goToPreviousPhoto = () => {
-    if (selectedPhotoIndex !== null && selectedPhotoIndex > 0) {
-      setSelectedPhotoIndex(selectedPhotoIndex - 1);
+    if (viewerIndex !== null && viewerIndex > 0) {
+      setViewerIndex(viewerIndex - 1);
     }
   };
 
@@ -116,6 +126,8 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
 
   const scheduledAt = booking.scheduledAt ? new Date(booking.scheduledAt) : null;
   const clientPhotos: string[] = (booking as any).clientPhotos ?? [];
+  const photosBeforeWork: string[] = (booking as any).photosBeforeWork ?? [];
+  const photosAfterWork: string[] = (booking as any).photosAfterWork ?? [];
   const payment = (booking as any).payment;
 
   const handleCancel = async () => {
@@ -171,6 +183,37 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     }
   };
 
+  const handleRenew = () => {
+    const b = booking as any;
+    const cat = b.category;
+    if (!cat) return;
+
+    navigation.navigate('BookingRequestStep1', {
+      categorySlug:   cat.slug,
+      categoryNameFr: cat.nameFr,
+      categoryNameEn: cat.nameEn,
+      categoryNameAr: cat.nameAr,
+      prefill: {
+        clientDescription: b.clientDescription ?? '',
+        categoryData:      b.categoryData ?? {},
+        urgency:           b.categoryData?.urgency ?? 'normal',
+        // clientPhotos intentionally omitted — user must take new ones
+      },
+      step2Prefill: {
+        address: {
+          address:     b.address ?? '',
+          lat:         b.addressLat ?? 0,
+          lng:         b.addressLng ?? 0,
+          floor:       b.addressFloor ?? 0,
+          hasElevator: b.addressHasElevator ?? false,
+          instructions: b.addressInstructions ?? '',
+        },
+      },
+    });
+  };
+
+  const isTerminal = status === 'completed' || status === 'cancelled' || status === 'rejected';
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
@@ -197,6 +240,36 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
               ) : null}
             </View>
           </View>
+        </View>
+      )}
+
+      {/* Boutons de contact masqués (numéros jamais affichés) */}
+      {canContact && (
+        <View style={styles.contactRow}>
+          <TouchableOpacity
+            style={styles.contactBtn}
+            onPress={() => {
+              if (callRelay?.relayNumber) {
+                Linking.openURL(`tel:${callRelay.relayNumber}`);
+              }
+            }}
+            activeOpacity={0.8}
+          >
+            <Icon name="phone" size={18} color={colors.white} />
+            <Text style={styles.contactBtnText}>{t('booking.call_pro')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.contactBtn, styles.contactBtnMessage]}
+            onPress={() => navigation.navigate('BookingChat', {
+              entityType: 'booking',
+              entityId: bookingId,
+              otherPartyName: proName,
+            })}
+            activeOpacity={0.8}
+          >
+            <Icon name="message-text" size={18} color={colors.primary} />
+            <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('booking.message_pro')}</Text>
+          </TouchableOpacity>
         </View>
       )}
 
@@ -267,7 +340,43 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
               <TouchableOpacity
                 key={index}
                 style={styles.photoThumbnail}
-                onPress={() => openPhotoViewer(index)}
+                onPress={() => openPhotoViewer(clientPhotos, index)}
+              >
+                <Image source={{ uri: photo }} style={styles.thumbnailImage} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Photos avant intervention (pro) */}
+      {photosBeforeWork.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('booking.photos_before_work')}</Text>
+          <View style={styles.photosGrid}>
+            {photosBeforeWork.map((photo, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.photoThumbnail}
+                onPress={() => openPhotoViewer(photosBeforeWork, index)}
+              >
+                <Image source={{ uri: photo }} style={styles.thumbnailImage} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Photos après intervention (pro) */}
+      {photosAfterWork.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('booking.photos_after_work')}</Text>
+          <View style={styles.photosGrid}>
+            {photosAfterWork.map((photo, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.photoThumbnail}
+                onPress={() => openPhotoViewer(photosAfterWork, index)}
               >
                 <Image source={{ uri: photo }} style={styles.thumbnailImage} />
               </TouchableOpacity>
@@ -439,6 +548,35 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         </View>
       )}
 
+      {/* Signaler un problème + Renouveler — visible une fois terminé ou annulé */}
+      {isTerminal && (
+        <TouchableOpacity
+          style={styles.disputeBtn}
+          onPress={() => navigation.navigate('BookingDispute', { bookingId })}
+          activeOpacity={0.8}
+        >
+          <Icon name="flag" size={18} color={colors.error} />
+          <Text style={styles.disputeBtnText}>{t('dispute.open_btn')}</Text>
+        </TouchableOpacity>
+      )}
+
+      {isTerminal && !!(booking as any).category && (
+        <TouchableOpacity
+          style={styles.renewBtn}
+          onPress={handleRenew}
+          activeOpacity={0.8}
+        >
+          <Icon name="refresh" size={18} color={colors.primary} />
+          <Text style={styles.renewBtnText}>{t('booking.renew_order')}</Text>
+        </TouchableOpacity>
+      )}
+
+      {isTerminal && (
+        <TouchableOpacity onPress={() => navigation.navigate('MyBookings')} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>{t('booking.back_to_list')}</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Modal saisie montant cash */}
       <Modal visible={showCashModal} transparent animationType="fade" onRequestClose={() => setShowCashModal(false)}>
         <View style={styles.cashModalOverlay}>
@@ -477,58 +615,56 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         </View>
       </Modal>
 
-      {/* Photo viewer modal */}
-      {clientPhotos.length > 0 && (
-        <Modal
-          visible={photoModalVisible}
-          transparent
-          animationType="fade"
-          onRequestClose={closePhotoViewer}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {t('transport.photo_counter', {
-                  current: (selectedPhotoIndex ?? 0) + 1,
-                  total: clientPhotos.length,
-                })}
-              </Text>
-              <IconButton icon="close" iconColor={colors.white} size={24} onPress={closePhotoViewer} />
-            </View>
+      {/* Photo viewer modal (client + before/after) */}
+      <Modal
+        visible={photoModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closePhotoViewer}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>
+              {t('transport.photo_counter', {
+                current: (viewerIndex ?? 0) + 1,
+                total: viewerPhotos.length,
+              })}
+            </Text>
+            <IconButton icon="close" iconColor={colors.white} size={24} onPress={closePhotoViewer} />
+          </View>
 
-            <View style={styles.modalImageContainer}>
-              {selectedPhotoIndex !== null && (
-                <Image
-                  source={{ uri: clientPhotos[selectedPhotoIndex] }}
-                  style={styles.modalImage}
-                  resizeMode="contain"
-                />
-              )}
-            </View>
-
-            {clientPhotos.length > 1 && (
-              <View style={styles.modalNavigation}>
-                <IconButton
-                  icon="chevron-left"
-                  iconColor={colors.white}
-                  size={40}
-                  onPress={goToPreviousPhoto}
-                  disabled={selectedPhotoIndex === 0}
-                  style={[styles.navButton, selectedPhotoIndex === 0 && styles.navButtonDisabled]}
-                />
-                <IconButton
-                  icon="chevron-right"
-                  iconColor={colors.white}
-                  size={40}
-                  onPress={goToNextPhoto}
-                  disabled={selectedPhotoIndex === clientPhotos.length - 1}
-                  style={[styles.navButton, selectedPhotoIndex === clientPhotos.length - 1 && styles.navButtonDisabled]}
-                />
-              </View>
+          <View style={styles.modalImageContainer}>
+            {viewerIndex !== null && viewerPhotos[viewerIndex] && (
+              <Image
+                source={{ uri: viewerPhotos[viewerIndex] }}
+                style={styles.modalImage}
+                resizeMode="contain"
+              />
             )}
           </View>
-        </Modal>
-      )}
+
+          {viewerPhotos.length > 1 && (
+            <View style={styles.modalNavigation}>
+              <IconButton
+                icon="chevron-left"
+                iconColor={colors.white}
+                size={40}
+                onPress={goToPreviousPhoto}
+                disabled={viewerIndex === 0}
+                style={[styles.navButton, viewerIndex === 0 && styles.navButtonDisabled]}
+              />
+              <IconButton
+                icon="chevron-right"
+                iconColor={colors.white}
+                size={40}
+                onPress={goToNextPhoto}
+                disabled={viewerIndex === viewerPhotos.length - 1}
+                style={[styles.navButton, viewerIndex === viewerPhotos.length - 1 && styles.navButtonDisabled]}
+              />
+            </View>
+          )}
+        </View>
+      </Modal>
 
     </ScrollView>
   );
@@ -577,6 +713,20 @@ const styles = StyleSheet.create({
     overflow: 'hidden', borderWidth: 1, borderColor: colors.border,
   },
   thumbnailImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+
+  contactRow: {
+    flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md,
+  },
+  contactBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderRadius: 12, paddingVertical: 12,
+    backgroundColor: colors.primary,
+  },
+  contactBtnMessage: {
+    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.primary,
+  },
+  contactBtnText: { fontSize: 14, fontWeight: '700', color: colors.white },
+  contactBtnMessageText: { color: colors.primary },
 
   escrowCard: { borderColor: colors.primary + '40' },
   escrowStatus: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
@@ -636,6 +786,27 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#F59E0B40',
   },
   waitingText: { fontSize: 14, fontWeight: '600', color: colors.warning },
+
+  disputeBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, borderRadius: 14, paddingVertical: 14,
+    backgroundColor: `${colors.error}10`, marginBottom: spacing.sm,
+    borderWidth: 1, borderColor: `${colors.error}30`,
+  },
+  disputeBtnText: { fontSize: 14, fontWeight: '700', color: colors.error },
+
+  renewBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, borderRadius: 14, paddingVertical: 14,
+    backgroundColor: colors.white, marginBottom: spacing.sm,
+    borderWidth: 1.5, borderColor: colors.primary,
+  },
+  renewBtnText: { fontSize: 14, fontWeight: '700', color: colors.primary },
+
+  backBtn: {
+    alignItems: 'center', paddingVertical: 10, marginBottom: spacing.sm,
+  },
+  backBtnText: { fontSize: 14, color: colors.gray },
 
   cashModalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',

@@ -64,27 +64,25 @@ const getSuggestionIcon = (types?: string[], featureType?: string): string => {
 
 export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   const { t, i18n } = useTranslation();
-  const { step1Data } = route.params as { step1Data: Step1Data };
+  const { step1Data, step2Prefill, step3Prefill } = route.params as {
+    step1Data: Step1Data;
+    step2Prefill?: Step2Data;
+    step3Prefill?: any;
+  };
   const dispatch = useDispatch();
   const locationState = useSelector((state: RootState) => state.location);
 
-  const [pickup, setPickup] = useState<Partial<AddressData>>({
-    address: '',
-    lat: undefined,
-    lng: undefined,
-    floor: 0,
-    hasElevator: false,
-    instructions: '',
-  });
+  const [pickup, setPickup] = useState<Partial<AddressData>>(
+    step2Prefill?.pickup
+      ? { ...step2Prefill.pickup }
+      : { address: '', lat: undefined, lng: undefined, floor: 0, hasElevator: false, instructions: '' },
+  );
 
-  const [delivery, setDelivery] = useState<Partial<AddressData>>({
-    address: '',
-    lat: undefined,
-    lng: undefined,
-    floor: 0,
-    hasElevator: false,
-    instructions: '',
-  });
+  const [delivery, setDelivery] = useState<Partial<AddressData>>(
+    step2Prefill?.delivery
+      ? { ...step2Prefill.delivery }
+      : { address: '', lat: undefined, lng: undefined, floor: 0, hasElevator: false, instructions: '' },
+  );
 
   const [isGeocodingPickup, setIsGeocodingPickup] = useState(false);
   const [isGeocodingDelivery, setIsGeocodingDelivery] = useState(false);
@@ -397,7 +395,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
       estimatedDuration: result.duration,
     };
 
-    navigation.navigate('TransportRequestStep3', { step1Data, step2Data });
+    navigation.navigate('TransportRequestStep3', { step1Data, step2Data, step3Prefill });
   };
 
   const handleBack = () => {

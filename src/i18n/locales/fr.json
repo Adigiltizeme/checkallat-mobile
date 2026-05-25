@@ -28,6 +28,7 @@
     "period": "Période",
     "single_date": "Date unique",
     "optional": "optionnel",
+    "date_tbd": "Date à définir",
     "required": "obligatoire",
     "version": "Version {{version}}",
     "date_placeholder": "AAAA-MM-JJ",
@@ -111,6 +112,12 @@
     "home": "Accueil",
     "transport": "Transport",
     "deliveries": "Livraisons",
+    "search": "Rechercher",
+    "commandes": "Commandes",
+    "messages": "Messages",
+    "demandes": "Demandes",
+    "agenda": "Agenda",
+    "disponibles": "Disponibles",
     "history": "Historique",
     "profile": "Profil",
     "payments": "Paiements"
@@ -451,7 +458,11 @@
     "review_no_rating_error": "Veuillez donner au moins une note",
     "review_success_title": "Merci !",
     "review_success_msg": "Votre avis a été enregistré avec succès",
-    "review_error_msg": "Impossible d'enregistrer votre avis"
+    "review_error_msg": "Impossible d'enregistrer votre avis",
+    "call_driver": "Appeler le chauffeur",
+    "message_driver": "Message",
+    "call_client": "Appeler le client",
+    "message_client": "Message"
   },
   "history": {
     "title": "Historique",
@@ -487,6 +498,7 @@
     "stats_rating": "Note",
     "search_placeholder": "Rechercher client, adresse...",
     "no_deliveries": "Aucune livraison",
+    "no_agenda": "Aucune livraison en cours",
     "no_deliveries_hint": "Les nouvelles demandes apparaîtront ici.",
     "accept": "Accepter",
     "decline": "Refuser",
@@ -708,7 +720,10 @@
     "submitting": "Envoi en cours...",
     "submitted_title": "Litige ouvert !",
     "submitted_msg": "Notre équipe examinera votre demande et vous contactera dans les plus brefs délais.",
-    "already_open": "Un litige est déjà ouvert pour cette livraison. Notre équipe est en train de l'examiner."
+    "already_open": "Un litige est déjà ouvert pour cette livraison. Notre équipe est en train de l'examiner.",
+    "info_note": "Notre équipe examinera votre demande et vous contactera sous 48h.",
+    "chars_min": "caractères minimum",
+    "description_too_short": "La description doit comporter au moins 20 caractères."
   },
   "status": {
     "pending": "En attente",
@@ -1018,7 +1033,19 @@
     "cash_declared_client": "Déclaré par le client",
     "cash_declared_pro": "Déclaré par le pro",
     "confirm_required_banner": "Confirmation de fin requise",
-    "cash_amount_required": "Veuillez saisir le montant cash reçu."
+    "cash_amount_required": "Veuillez saisir le montant cash reçu.",
+    "photos_before_work": "Photos avant intervention",
+    "photos_after_work": "Photos après intervention",
+    "call_pro": "Appeler le pro",
+    "message_pro": "Message",
+    "masked_call_note": "Votre numéro reste privé",
+    "renew_order": "Renouveler cette réservation",
+    "back_to_list": "Retour à la liste"
+  },
+  "chat": {
+    "empty": "Aucun message. Lancez la conversation !",
+    "type_message": "Écrire un message...",
+    "title": "Messages"
   },
   "pro_apply": {
     "title": "Devenir Professionnel",
@@ -1110,6 +1137,12 @@
     "full_history": "Historique complet",
     "stats_completed": "Missions terminées",
     "proof_photos_title": "Photos justificatives",
+    "demandes_title": "Demandes",
+    "agenda_title": "Agenda",
+    "no_demandes": "Aucune réservation en attente ou acceptée",
+    "demandes_pending": "En attente",
+    "demandes_accepted": "Acceptées",
+    "no_agenda": "Aucune intervention en cours",
     "photos_before_title": "Photos avant le travail",
     "photos_after_title": "Photos après le travail",
     "photos_before_done_msg": "Photos enregistrées. Le travail est maintenant en cours.",
@@ -1190,6 +1223,13 @@
     "assign_auto_desc": "Nous trouverons le meilleur prestataire disponible",
     "no_pros_found": "Aucun prestataire disponible",
     "no_pros_hint": "Essayez une zone plus large ou l'attribution automatique",
+    "radius_label": "Rayon de recherche",
+    "expand_radius": "Élargir la zone",
+    "radius_10": "Proche",
+    "radius_20": "Standard",
+    "radius_50": "Large",
+    "radius_100": "Max",
+    "searching_pros": "Recherche de prestataires…",
     "pro_distance": "{{distance}} km",
     "pro_eta": "~{{minutes}} min",
     "pro_select": "Sélectionner",
@@ -1222,7 +1262,7 @@
     "cat_handyman_task": "Type de tâche",
     "urgency_label": "Urgence",
     "urgency_normal": "Normal",
-    "urgency_urgent": "Urgent (+{{pct}}%)",
+    "urgency_urgent": "Urgent",
     "immediate_hint_short": "Un pro vient dès que possible",
     "scheduled_hint_short": "Choisissez une date et un créneau",
     "date_hint": "Utilisez les flèches pour changer de date",
@@ -1380,5 +1420,24 @@
     "slide3_sub": "Commandez un camion ou un chauffeur, suivez en temps réel et payez en toute sécurité.",
     "next": "Suivant",
     "get_started": "C'est parti !"
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "Aucune conversation active"
+  },
+  "search": {
+    "title": "Rechercher",
+    "placeholder": "Rechercher un service…",
+    "categories": "Catégories"
+  },
+  "commandes": {
+    "title": "Mes commandes",
+    "tab_transport": "Transport",
+    "tab_services": "Services",
+    "tab_marketplace": "Marketplace",
+    "empty_transport": "Aucune demande de transport",
+    "empty_services": "Aucune réservation de service",
+    "empty_marketplace": "Aucune commande marketplace",
+    "order_label": "Commande"
   }
 }

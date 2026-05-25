@@ -27,12 +27,17 @@ import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
 
 type Props = StackScreenProps<any, 'TransportRequestStep1'>;
 
-export const TransportRequestStep1Screen = ({ navigation }: Props) => {
+export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
   const { t } = useTranslation();
-  const [objectTypes, setObjectTypes] = useState<TransportObjectType[]>(['furniture']);
-  const [description, setDescription] = useState('');
+  const { prefill, step2Prefill, step3Prefill } = (route.params ?? {}) as {
+    prefill?: { objectTypes: string[]; description: string; estimatedVolume: number };
+    step2Prefill?: any;
+    step3Prefill?: any;
+  };
+  const [objectTypes, setObjectTypes] = useState<TransportObjectType[]>((prefill?.objectTypes as TransportObjectType[]) ?? ['furniture']);
+  const [description, setDescription] = useState(prefill?.description ?? '');
   const [photos, setPhotos] = useState<string[]>([]);
-  const [estimatedVolume, setEstimatedVolume] = useState(0);
+  const [estimatedVolume, setEstimatedVolume] = useState(prefill?.estimatedVolume ?? 0);
   const [showVolumeHelp, setShowVolumeHelp] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState('');
@@ -115,7 +120,7 @@ export const TransportRequestStep1Screen = ({ navigation }: Props) => {
       estimatedVolume,
     };
 
-    navigation.navigate('TransportRequestStep2', { step1Data });
+    navigation.navigate('TransportRequestStep2', { step1Data, step2Prefill, step3Prefill });
   };
 
   return (

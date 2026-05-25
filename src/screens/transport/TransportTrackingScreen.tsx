@@ -6,6 +6,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useGetTrackingInfoQuery, useGetTransportRequestQuery } from '../../store/api/transportApi';
+import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useTranslation } from 'react-i18next';
 import { STATUS_COLORS, TransportStatus } from '../../types/transport';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -63,7 +64,13 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
     setCollapsed(!collapsed);
   };
 
-  const handleCall = (phone: string) => Linking.openURL(`tel:${phone}`);
+  const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
+  const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && request.driverId);
+  const driverName = trackingInfo?.driverName || '';
+  const { data: callRelay } = useGetCallRelayNumberQuery(
+    { entityType: 'transport', entityId: requestId },
+    { skip: !canContact },
+  );
 
   const handleShare = async () => {
     if (!request) return;
@@ -236,16 +243,22 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
                 <Avatar.Icon size={48} icon="account" style={styles.driverAvatar} />
                 <View style={styles.driverInfo}>
                   <Text variant="titleMedium" style={styles.driverName}>{trackingInfo.driverName}</Text>
-                  {trackingInfo.driverPhone && (
-                    <Text variant="bodySmall" style={styles.driverDetails}>
-                      📞 {trackingInfo.driverPhone}
-                    </Text>
-                  )}
                 </View>
-                {trackingInfo.driverPhone && (
-                  <IconButton icon="phone" size={22} iconColor={colors.white}
-                    containerColor={colors.success}
-                    onPress={() => handleCall(trackingInfo.driverPhone!)} />
+                {canContact && (
+                  <View style={styles.trackingContactBtns}>
+                    <TouchableOpacity
+                      style={styles.trackingCallBtn}
+                      onPress={() => { if (callRelay?.relayNumber) Linking.openURL(`tel:${callRelay.relayNumber}`); }}
+                    >
+                      <Icon name="phone" size={18} color={colors.white} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.trackingMsgBtn}
+                      onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: driverName })}
+                    >
+                      <Icon name="message-text" size={18} color={colors.primary} />
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             )}
@@ -383,6 +396,18 @@ const styles = StyleSheet.create({
   driverInfo: { flex: 1 },
   driverName: { color: colors.dark, fontWeight: '600' },
   driverDetails: { color: colors.gray, marginTop: 2 },
+  trackingContactBtns: { flexDirection: 'row', gap: 8, marginLeft: 4 },
+  trackingCallBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: colors.success,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  trackingMsgBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: `${colors.primary}20`,
+    borderWidth: 1, borderColor: colors.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   infoCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,

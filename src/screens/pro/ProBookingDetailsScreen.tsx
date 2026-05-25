@@ -8,6 +8,7 @@ import {
   Image,
   Modal,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { Text, TextInput, IconButton } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -24,6 +25,7 @@ import {
   useMarkStartedMutation,
   useMarkEnRouteMutation,
 } from '../../store/api/bookingsApi';
+import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -65,6 +67,14 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   const [markArrived, { isLoading: isArrivedLoading }] = useMarkArrivedMutation();
   const [markStarted, { isLoading: isStartedLoading }] = useMarkStartedMutation();
   const [markEnRoute, { isLoading: isEnRouteLoading }] = useMarkEnRouteMutation();
+
+  const CALL_ACTIVE_STATUSES = ['accepted', 'en_route', 'arrived', 'in_progress'];
+  const bookingStatus = (booking as any)?.status ?? '';
+  const canContact = CALL_ACTIVE_STATUSES.includes(bookingStatus);
+  const { data: callRelay } = useGetCallRelayNumberQuery(
+    { entityType: 'booking', entityId: bookingId },
+    { skip: !canContact },
+  );
 
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -112,6 +122,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   const isArrived    = status === 'arrived';
   const isInProgress = status === 'in_progress';
   const isCash       = (booking as any).paymentMethod === 'cash';
+  const isTerminal   = status === 'completed' || status === 'cancelled' || status === 'rejected';
 
   const clientName = (booking as any).client?.firstName
     ? `${(booking as any).client.firstName} ${(booking as any).client.lastName ?? ''}`
@@ -229,13 +240,40 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
               {((booking as any).client?.firstName ?? '?').charAt(0).toUpperCase()}
             </Text>
           </View>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.clientName}>{clientName}</Text>
-            {(booking as any).client?.phone && (
-              <Text style={styles.clientPhone}>{(booking as any).client.phone}</Text>
-            )}
           </View>
         </View>
+
+        {/* Boutons de contact masqués */}
+        {canContact && (
+          <View style={styles.contactRow}>
+            <TouchableOpacity
+              style={styles.contactBtn}
+              onPress={() => {
+                if (callRelay?.relayNumber) {
+                  Linking.openURL(`tel:${callRelay.relayNumber}`);
+                }
+              }}
+              activeOpacity={0.8}
+            >
+              <Icon name="phone" size={16} color={colors.white} />
+              <Text style={styles.contactBtnText}>{t('booking.call_pro')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.contactBtn, styles.contactBtnMessage]}
+              onPress={() => navigation.navigate('BookingChat', {
+                entityType: 'booking',
+                entityId: bookingId,
+                otherPartyName: clientName,
+              })}
+              activeOpacity={0.8}
+            >
+              <Icon name="message-text" size={16} color={colors.primary} />
+              <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('booking.message_pro')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Service */}
@@ -645,6 +683,18 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
         </Modal>
       )}
 
+      {/* Signaler un problème — visible une fois terminé ou annulé */}
+      {isTerminal && (
+        <TouchableOpacity
+          style={styles.disputeBtn}
+          onPress={() => navigation.navigate('BookingDispute', { bookingId })}
+          activeOpacity={0.8}
+        >
+          <Icon name="flag" size={18} color={colors.error} />
+          <Text style={styles.disputeBtnText}>{t('dispute.open_btn')}</Text>
+        </TouchableOpacity>
+      )}
+
     </ScrollView>
   );
 };
@@ -677,7 +727,16 @@ const styles = StyleSheet.create({
   },
   clientAvatarLetter: { fontSize: 18, fontWeight: '700', color: colors.primary },
   clientName: { fontSize: 15, fontWeight: '700', color: colors.dark },
-  clientPhone: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  contactRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  contactBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderRadius: 10, paddingVertical: 10, backgroundColor: colors.primary,
+  },
+  contactBtnMessage: {
+    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.primary,
+  },
+  contactBtnText: { fontSize: 13, fontWeight: '700', color: colors.white },
+  contactBtnMessageText: { color: colors.primary },
 
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 5 },
   detailText: { fontSize: 14, color: colors.dark, flex: 1 },
@@ -764,4 +823,12 @@ const styles = StyleSheet.create({
   },
   navButton: { backgroundColor: 'rgba(255,255,255,0.2)' },
   navButtonDisabled: { opacity: 0.3 },
+
+  disputeBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, borderRadius: 14, paddingVertical: 14,
+    backgroundColor: `${colors.error}10`, marginTop: spacing.sm,
+    borderWidth: 1, borderColor: `${colors.error}30`,
+  },
+  disputeBtnText: { fontSize: 14, fontWeight: '700', color: colors.error },
 });

@@ -18,6 +18,7 @@ import {
   useGetTransportRequestQuery,
   useUpdateTransportStatusMutation,
 } from '../../store/api/transportApi';
+import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import {
   STATUS_COLORS,
@@ -51,9 +52,13 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
     }
   };
 
-  const handleCall = (phone: string) => {
-    Linking.openURL(`tel:${phone}`);
-  };
+  const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
+  const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && request.client);
+  const clientName = request?.client ? `${request.client.firstName} ${request.client.lastName}` : '';
+  const { data: callRelay } = useGetCallRelayNumberQuery(
+    { entityType: 'transport', entityId: requestId },
+    { skip: !canContact },
+  );
 
   const handleNavigate = () => {
     navigation.navigate('DriverNavigation', { requestId });
@@ -171,16 +176,23 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
               <Text variant="bodyLarge" style={styles.clientName}>
                 {request.client?.firstName} {request.client?.lastName}
               </Text>
-              <Text variant="bodyMedium" style={styles.clientPhone}>
-                {request.client?.phone}
-              </Text>
             </View>
-            <TouchableOpacity
-              style={styles.callButton}
-              onPress={() => handleCall(request.client?.phone || '')}
-            >
-              <Icon name="phone" size={24} color={colors.white} />
-            </TouchableOpacity>
+            {canContact && (
+              <View style={styles.contactBtns}>
+                <TouchableOpacity
+                  style={styles.callButton}
+                  onPress={() => { if (callRelay?.relayNumber) Linking.openURL(`tel:${callRelay.relayNumber}`); }}
+                >
+                  <Icon name="phone" size={22} color={colors.white} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.msgButton}
+                  onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: clientName })}
+                >
+                  <Icon name="message-text" size={22} color={colors.primary} />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </Card.Content>
       </Card>
@@ -460,11 +472,25 @@ const styles = StyleSheet.create({
     color: colors.gray,
     marginTop: spacing.xs,
   },
+  contactBtns: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   callButton: {
     backgroundColor: colors.success,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  msgButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: `${colors.primary}15`,
+    borderWidth: 1,
+    borderColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },

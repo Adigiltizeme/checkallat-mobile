@@ -10,9 +10,22 @@ export type AuthStackParamList = {
 };
 
 export type MainTabParamList = {
+  // Client tabs
   Home: undefined;
-  Transport: undefined;
+  Search: undefined;
+  Commandes: undefined;
+  Messages: undefined;
+  // Pro tabs
   Pro: undefined;
+  ProDemandes: undefined;
+  ProAgenda: undefined;
+  ProMessages: undefined;
+  // Driver tabs
+  Transport: undefined;
+  DriverAvailables: undefined;
+  DriverAgenda: undefined;
+  DriverMessages: undefined;
+  // Shared
   History: undefined;
   Profile: undefined;
 };
@@ -45,7 +58,9 @@ export type ProStackParamList = {
   ProReviews: { proId?: string };
   Support: undefined;
   BookingTracking: { bookingId: string; role: 'client' | 'pro' };
+  BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
   ProProofPhotos: { bookingId: string; type: 'before' | 'after'; nextAction: 'start' | 'complete'; isCash?: boolean };
+  BookingDispute: { bookingId: string };
 };
 
 export type HomeStackParamList = {
@@ -55,18 +70,28 @@ export type HomeStackParamList = {
   CreateBooking: { proId: string; offeringId?: string };
   BookingDetails: { bookingId: string };
   MyBookings: undefined;
-  CreateTransport: undefined;
   MarketplaceHome: undefined;
   ProductDetail: { productId: string };
   Cart: undefined;
   Checkout: undefined;
-  BookingRequestStep1: { categorySlug: string; categoryNameFr: string; categoryNameEn: string; categoryNameAr: string };
-  BookingRequestStep2: { categorySlug: string; step1Data: BookingStep1Data };
+  BookingRequestStep1: { categorySlug: string; categoryNameFr: string; categoryNameEn: string; categoryNameAr: string; prefill?: { clientDescription: string; categoryData: Record<string, string[]>; urgency?: 'normal' | 'urgent' }; step2Prefill?: BookingStep2Data };
+  BookingRequestStep2: { categorySlug: string; step1Data: BookingStep1Data; step2Prefill?: BookingStep2Data };
   BookingRequestStep3: { categorySlug: string; step1Data: BookingStep1Data; step2Data: BookingStep2Data };
   BookingRequestStep4: { categorySlug: string; step1Data: BookingStep1Data; step2Data: BookingStep2Data; step3Data: BookingStep3Data };
   BookingRequestStep5: { categorySlug: string; step1Data: BookingStep1Data; step2Data: BookingStep2Data; step3Data: BookingStep3Data; step4Data: BookingStep4Data };
   BookingTracking: { bookingId: string; role: 'client' | 'pro' };
+  BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
   ProProofPhotos: { bookingId: string; type: 'before' | 'after'; nextAction: 'start' | 'complete'; isCash?: boolean };
+  BookingDispute: { bookingId: string };
+  TransportRequestStep1: { prefill?: { objectTypes: string[]; description: string; estimatedVolume: number }; step2Prefill?: Step2Data; step3Prefill?: Step3Data } | undefined;
+  TransportRequestStep2: { step1Data: Step1Data; step2Prefill?: Step2Data; step3Prefill?: Step3Data };
+  TransportRequestStep3: { step1Data: Step1Data; step2Data: Step2Data; step3Prefill?: Step3Data };
+  TransportRequestStep4: { step1Data: Step1Data; step2Data: Step2Data; step3Data: Step3Data };
+  TransportRequestStep5: { step1Data: Step1Data; step2Data: Step2Data; step3Data: Step3Data; step4Data: Step4Data };
+  TransportTracking: { requestId: string };
+  TransportDetails: { requestId: string };
+  StripePayment: { requestId: string; amount: number; type: 'transport' | 'booking' | 'marketplace' };
+  Dispute: { requestId: string };
 };
 
 // Import types for Transport
@@ -101,6 +126,7 @@ export type TransportStackParamList = {
   PaymentHistory: undefined;
   PaymentDetails: { paymentId?: string; requestId?: string };
   Dispute: { requestId: string };
+  BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
 };
 
 
@@ -124,4 +150,5 @@ export type DriverStackParamList = {
   CashValidation: { requestId: string; totalPrice: number };
   PaymentDetails: { paymentId?: string; requestId?: string };
   Support: undefined;
+  BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
 };

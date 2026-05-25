@@ -56,7 +56,7 @@ const formatDistance = (meters?: number): string | null => {
 
 export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   const { t, i18n } = useTranslation();
-  const { categorySlug, step1Data } = route.params;
+  const { categorySlug, step1Data, step2Prefill } = route.params as any;
   const dispatch = useDispatch();
   const locationState = useSelector((state: RootState) => state.location);
 
@@ -64,14 +64,11 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
     navigation.setOptions({ title: t('booking_request.step_of', { current: 2, total: 5 }) });
   }, []);
 
-  const [address, setAddress] = useState<Partial<BookingAddressData>>({
-    address: '',
-    lat: undefined,
-    lng: undefined,
-    floor: 0,
-    hasElevator: false,
-    instructions: '',
-  });
+  const [address, setAddress] = useState<Partial<BookingAddressData>>(
+    step2Prefill?.address
+      ? { ...step2Prefill.address }
+      : { address: '', lat: undefined, lng: undefined, floor: 0, hasElevator: false, instructions: '' },
+  );
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showUnsupportedModal, setShowUnsupportedModal] = useState(false);

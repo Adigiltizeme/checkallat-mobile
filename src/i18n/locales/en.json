@@ -28,6 +28,7 @@
     "period": "Period",
     "single_date": "Single date",
     "optional": "optional",
+    "date_tbd": "Date TBD",
     "required": "required",
     "version": "Version {{version}}",
     "date_placeholder": "YYYY-MM-DD",
@@ -111,6 +112,12 @@
     "home": "Home",
     "transport": "Transport",
     "deliveries": "Deliveries",
+    "search": "Search",
+    "commandes": "Orders",
+    "messages": "Messages",
+    "demandes": "Requests",
+    "agenda": "Agenda",
+    "disponibles": "Available",
     "history": "History",
     "profile": "Profile",
     "payments": "Payments"
@@ -451,7 +458,11 @@
     "review_no_rating_error": "Please give at least one rating",
     "review_success_title": "Thank you!",
     "review_success_msg": "Your review has been saved successfully",
-    "review_error_msg": "Unable to save your review"
+    "review_error_msg": "Unable to save your review",
+    "call_driver": "Call driver",
+    "message_driver": "Message",
+    "call_client": "Call client",
+    "message_client": "Message"
   },
   "history": {
     "title": "History",
@@ -487,6 +498,7 @@
     "stats_rating": "Rating",
     "search_placeholder": "Search client, address...",
     "no_deliveries": "No deliveries",
+    "no_agenda": "No active deliveries",
     "no_deliveries_hint": "New requests will appear here.",
     "accept": "Accept",
     "decline": "Decline",
@@ -708,7 +720,10 @@
     "submitting": "Submitting...",
     "submitted_title": "Dispute opened!",
     "submitted_msg": "Our team will review your request and contact you as soon as possible.",
-    "already_open": "A dispute is already open for this delivery. Our team is reviewing it."
+    "already_open": "A dispute is already open for this delivery. Our team is reviewing it.",
+    "info_note": "Our team will review your request and contact you within 48 hours.",
+    "chars_min": "characters minimum",
+    "description_too_short": "Description must be at least 20 characters."
   },
   "status": {
     "pending": "Pending",
@@ -1018,7 +1033,19 @@
     "cash_declared_client": "Declared by client",
     "cash_declared_pro": "Declared by pro",
     "confirm_required_banner": "Completion confirmation required",
-    "cash_amount_required": "Please enter the cash amount received."
+    "cash_amount_required": "Please enter the cash amount received.",
+    "photos_before_work": "Photos before work",
+    "photos_after_work": "Photos after work",
+    "call_pro": "Call pro",
+    "message_pro": "Message",
+    "masked_call_note": "Your number remains private",
+    "renew_order": "Renew this booking",
+    "back_to_list": "Back to list"
+  },
+  "chat": {
+    "empty": "No messages yet. Start the conversation!",
+    "type_message": "Type a message...",
+    "title": "Messages"
   },
   "pro_apply": {
     "title": "Become a Professional",
@@ -1110,6 +1137,12 @@
     "full_history": "Full history",
     "stats_completed": "Completed assignments",
     "proof_photos_title": "Proof photos",
+    "demandes_title": "Requests",
+    "agenda_title": "Agenda",
+    "no_demandes": "No pending or accepted bookings",
+    "demandes_pending": "Pending",
+    "demandes_accepted": "Accepted",
+    "no_agenda": "No active bookings",
     "photos_before_title": "Photos before work",
     "photos_after_title": "Photos after work",
     "photos_before_done_msg": "Photos saved. Work is now in progress.",
@@ -1190,6 +1223,13 @@
     "assign_auto_desc": "We'll find the best available pro",
     "no_pros_found": "No pros available",
     "no_pros_hint": "Try a wider area or use auto-assign",
+    "radius_label": "Search radius",
+    "expand_radius": "Expand search area",
+    "radius_10": "Nearby",
+    "radius_20": "Standard",
+    "radius_50": "Wide",
+    "radius_100": "Max",
+    "searching_pros": "Searching for pros…",
     "pro_distance": "{{distance}} km",
     "pro_eta": "~{{minutes}} min",
     "pro_select": "Select",
@@ -1222,7 +1262,7 @@
     "cat_handyman_task": "Task type",
     "urgency_label": "Urgency",
     "urgency_normal": "Normal",
-    "urgency_urgent": "Urgent (+{{pct}}%)",
+    "urgency_urgent": "Urgent",
     "immediate_hint_short": "A pro comes ASAP",
     "scheduled_hint_short": "Choose a date & slot",
     "date_hint": "Use arrows to change the date",
@@ -1380,5 +1420,24 @@
     "slide3_sub": "Request a truck or driver, track in real time, and pay securely.",
     "next": "Next",
     "get_started": "Get started"
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "No active conversations"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search a service…",
+    "categories": "Categories"
+  },
+  "commandes": {
+    "title": "My Orders",
+    "tab_transport": "Transport",
+    "tab_services": "Services",
+    "tab_marketplace": "Marketplace",
+    "empty_transport": "No transport requests",
+    "empty_services": "No service bookings",
+    "empty_marketplace": "No marketplace orders",
+    "order_label": "Order"
   }
 }

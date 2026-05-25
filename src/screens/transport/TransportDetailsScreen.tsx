@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, Modal, Dimensions, Linking } from 'react-native';
 import { Text, Card, Button, Divider, ActivityIndicator, Chip, IconButton } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
@@ -10,8 +10,10 @@ import {
   useGetTransportRequestQuery,
   useCancelTransportMutation,
 } from '../../store/api/transportApi';
+import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {
   STATUS_COLORS,
   TransportStatus,
@@ -33,6 +35,16 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   useRefetchOnFocus(refetch);
   const [cancelRequest, { isLoading: isCancelling }] = useCancelTransportMutation();
   const isDriver = useSelector((state: RootState) => state.auth.isDriver);
+
+  const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
+  const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && (request as any).driver);
+  const driverName = (request as any)?.driver?.user
+    ? `${(request as any).driver.user.firstName} ${(request as any).driver.user.lastName}`
+    : '';
+  const { data: callRelay } = useGetCallRelayNumberQuery(
+    { entityType: 'transport', entityId: requestId },
+    { skip: !canContact },
+  );
 
   // État pour la modal de visualisation des photos
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
@@ -130,41 +142,41 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
 
   const handleRenew = () => {
     const r = request as any;
-    const step1Data: Step1Data = {
-      objectType: request.objectType,
-      objectTypes: r.objectTypes ?? [request.objectType],
-      description: request.description,
-      photos: request.photos ?? [],
-      estimatedVolume: request.estimatedVolume,
-    };
-    const step2Data: Step2Data = {
-      pickup: {
-        address: request.pickup.address,
-        lat: r.pickup?.lat ?? 0,
-        lng: r.pickup?.lng ?? 0,
-        floor: request.pickup.floor ?? 0,
-        hasElevator: request.pickup.hasElevator ?? false,
-        instructions: request.pickup.instructions,
+    navigation.navigate('TransportRequestStep1', {
+      prefill: {
+        objectTypes: r.objectTypes ?? [request.objectType],
+        description: request.description,
+        estimatedVolume: request.estimatedVolume,
+        // photos intentionally omitted — user must take new ones
       },
-      delivery: {
-        address: request.delivery.address,
-        lat: r.delivery?.lat ?? 0,
-        lng: r.delivery?.lng ?? 0,
-        floor: request.delivery.floor ?? 0,
-        hasElevator: request.delivery.hasElevator ?? false,
-        instructions: request.delivery.instructions,
+      step2Prefill: {
+        pickup: {
+          address: request.pickup.address,
+          lat: r.pickup?.lat ?? 0,
+          lng: r.pickup?.lng ?? 0,
+          floor: request.pickup.floor ?? 0,
+          hasElevator: request.pickup.hasElevator ?? false,
+          instructions: request.pickup.instructions ?? '',
+        },
+        delivery: {
+          address: request.delivery.address,
+          lat: r.delivery?.lat ?? 0,
+          lng: r.delivery?.lng ?? 0,
+          floor: request.delivery.floor ?? 0,
+          hasElevator: request.delivery.hasElevator ?? false,
+          instructions: request.delivery.instructions ?? '',
+        },
+        distance: request.distance,
+        estimatedDuration: r.estimatedDuration ?? Math.round(request.distance * 2),
       },
-      distance: request.distance,
-      estimatedDuration: r.estimatedDuration ?? Math.round(request.distance * 2),
-    };
-    const step3Data: Step3Data = {
-      needHelpers: request.needHelpers,
-      helpersCount: request.helpersCount ?? 1,
-      needDisassembly: request.needDisassembly,
-      needReassembly: request.needReassembly,
-      needPacking: request.needPacking,
-    };
-    navigation.navigate('TransportRequestStep4', { step1Data, step2Data, step3Data });
+      step3Prefill: {
+        needHelpers: request.needHelpers,
+        helpersCount: request.helpersCount ?? 1,
+        needDisassembly: request.needDisassembly,
+        needReassembly: request.needReassembly,
+        needPacking: request.needPacking,
+      },
+    });
   };
 
   if (isLoading) {
@@ -276,9 +288,24 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                 <Text variant="titleMedium" style={styles.driverName}>
                   {(request as any).driver.user?.firstName} {(request as any).driver.user?.lastName}
                 </Text>
-                <Text variant="bodySmall" style={styles.driverDetail}>
-                  📞 {(request as any).driver.user?.phone}
-                </Text>
+                {canContact && (
+                  <View style={styles.contactRow}>
+                    <TouchableOpacity
+                      style={styles.contactBtn}
+                      onPress={() => { if (callRelay?.relayNumber) Linking.openURL(`tel:${callRelay.relayNumber}`); }}
+                    >
+                      <Icon name="phone" size={16} color={colors.white} />
+                      <Text style={styles.contactBtnText}>{t('transport.call_driver')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.contactBtn, styles.contactBtnMessage]}
+                      onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: driverName })}
+                    >
+                      <Icon name="message-text" size={16} color={colors.primary} />
+                      <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('transport.message_driver')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
                 <Text variant="bodySmall" style={styles.driverDetail}>
                   🚛 {t('transport.vehicle_' + (request as any).driver.vehicleType)}
                   {'  ·  '}
@@ -987,6 +1014,33 @@ const styles = StyleSheet.create({
   },
   driverDetail: {
     color: colors.gray,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  contactBtnMessage: {
+    backgroundColor: `${colors.primary}15`,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  contactBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  contactBtnMessageText: {
+    color: colors.primary,
   },
   chipsContainer: {
     flexDirection: 'row',
