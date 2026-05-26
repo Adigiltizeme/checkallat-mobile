@@ -166,7 +166,15 @@
     "first_name_required": "Le prénom et le nom sont obligatoires.",
     "gallery_permission": "Autorisez l'accès à la galerie dans les paramètres.",
     "photo_upload_error": "Impossible d'uploader la photo. Réessayez.",
-    "pro_badge": "Professionnel"
+    "pro_badge": "Professionnel",
+    "portfolio_section": "Ma vitrine",
+    "portfolio_photos": "Photos d'activité",
+    "portfolio_photos_hint": "Ajoutez jusqu'à 3 photos pour présenter votre activité.",
+    "activity_description": "Description de l'activité",
+    "activity_description_placeholder": "Décrivez votre activité, votre expérience...",
+    "bio": "Bio / Présentation",
+    "bio_placeholder": "Présentez votre activité et votre expérience...",
+    "portfolio_disclaimer": "Attention : toute transaction ou prise de contact en dehors de CheckAll@t est strictement interdite. Ne partagez jamais vos coordonnées personnelles."
   },
   "addresses": {
     "title": "Mes adresses",
@@ -926,7 +934,7 @@
     "license_hint": "Photo claire et lisible de votre permis de conduire en cours de validité.",
     "license_required": "Le permis de conduire est obligatoire",
     "insurance_label": "Document du véhicule",
-    "insurance_hint": "Photo de la carte grise (certificat d'immatriculation) du véhicule.",
+    "insurance_hint": "Photo du certificat d'immatriculation du véhicule.",
     "insurance_required": "Le document du véhicule est obligatoire",
     "status_pending": "Candidature en attente",
     "status_pending_desc": "Votre dossier est en cours d'examen par notre équipe (24-48h).",

@@ -166,7 +166,15 @@
     "first_name_required": "First name and last name are required.",
     "gallery_permission": "Please allow gallery access in settings.",
     "photo_upload_error": "Unable to upload photo. Please try again.",
-    "pro_badge": "Professional"
+    "pro_badge": "Professional",
+    "portfolio_section": "My showcase",
+    "portfolio_photos": "Activity photos",
+    "portfolio_photos_hint": "Add up to 3 photos to showcase your work.",
+    "activity_description": "Activity description",
+    "activity_description_placeholder": "Describe your activity, experience...",
+    "bio": "Bio / Introduction",
+    "bio_placeholder": "Introduce your activity and experience...",
+    "portfolio_disclaimer": "Warning: any transaction or contact outside CheckAll@t is strictly forbidden. Never share your personal contact details."
   },
   "addresses": {
     "title": "My addresses",
@@ -926,7 +934,7 @@
     "license_hint": "Clear, readable photo of your valid driving licence.",
     "license_required": "Driving licence is required",
     "insurance_label": "Vehicle document",
-    "insurance_hint": "Photo of the vehicle registration document (logbook / registration certificate).",
+    "insurance_hint": "Photo of the vehicle registration document (registration certificate).",
     "insurance_required": "Vehicle document is required",
     "status_pending": "Application pending",
     "status_pending_desc": "Your application is being reviewed by our team (24-48h).",

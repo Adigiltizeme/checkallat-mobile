@@ -209,14 +209,14 @@ export const ProfileScreen = () => {
           title={t('profile.terms')}
           left={(props) => <List.Icon {...props} icon="file-document" color={colors.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => Linking.openURL('https://checkallat.com/terms')}
+          onPress={() => Linking.openURL('https://checkallat-web-admin.vercel.app/terms')}
         />
         <Divider />
         <List.Item
           title={t('profile.privacy')}
           left={(props) => <List.Icon {...props} icon="shield-lock" color={colors.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => Linking.openURL('https://checkallat.com/privacy')}
+          onPress={() => Linking.openURL('https://checkallat-web-admin.vercel.app/privacy')}
         />
       </View>
 

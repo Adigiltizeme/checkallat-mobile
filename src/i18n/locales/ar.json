@@ -166,7 +166,15 @@
     "first_name_required": "الاسم الأول واسم العائلة مطلوبان.",
     "gallery_permission": "يرجى السماح بالوصول إلى المعرض في الإعدادات.",
     "photo_upload_error": "تعذّر رفع الصورة. حاول مجدداً.",
-    "pro_badge": "محترف"
+    "pro_badge": "محترف",
+    "portfolio_section": "واجهتي",
+    "portfolio_photos": "صور النشاط",
+    "portfolio_photos_hint": "أضف حتى 3 صور لعرض نشاطك.",
+    "activity_description": "وصف النشاط",
+    "activity_description_placeholder": "صف نشاطك وخبرتك...",
+    "bio": "السيرة الذاتية",
+    "bio_placeholder": "قدّم نشاطك وخبرتك...",
+    "portfolio_disclaimer": "تحذير: أي معاملة أو تواصل خارج CheckAll@t محظور تمامًا. لا تشارك أبدًا معلوماتك الشخصية."
   },
   "addresses": {
     "title": "عناويني",
@@ -926,7 +934,7 @@
     "license_hint": "صورة واضحة ومقروءة لرخصة القيادة الصالحة الخاصة بك.",
     "license_required": "رخصة القيادة مطلوبة",
     "insurance_label": "وثيقة المركبة",
-    "insurance_hint": "صورة بطاقة تسجيل المركبة (بطاقة الرمادية).",
+    "insurance_hint": "صورة وثيقة تسجيل المركبة (شهادة التسجيل / رخصة المركبة).",
     "insurance_required": "وثيقة المركبة مطلوبة",
     "status_pending": "الطلب قيد الانتظار",
     "status_pending_desc": "يتم مراجعة ملفك من قِبل فريقنا (24-48 ساعة).",
