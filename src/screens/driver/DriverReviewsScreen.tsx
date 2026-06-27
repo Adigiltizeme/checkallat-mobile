@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useGetDriverReviewsQuery } from '../../store/api/reviewsApi';
 import { ReviewCard } from '../../components/ReviewCard';
@@ -13,6 +14,72 @@ import { RootState } from '../../store';
 type Props = StackScreenProps<any, 'DriverReviews'>;
 
 export const DriverReviewsScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.light,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.xl,
+    },
+    emptyText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text.primary,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: colors.text.secondary,
+      textAlign: 'center',
+    },
+    statsHeader: {
+      flexDirection: 'row',
+      backgroundColor: colors.white,
+      padding: spacing.lg,
+      elevation: 2,
+      marginBottom: spacing.md,
+    },
+    statBox: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    statDivider: {
+      width: 1,
+      backgroundColor: colors.border,
+      marginHorizontal: spacing.md,
+    },
+    statValue: {
+      fontSize: 32,
+      fontWeight: 'bold',
+      color: tokens.primary,
+    },
+    statLabel: {
+      fontSize: 14,
+      color: colors.text.secondary,
+      marginTop: spacing.xs,
+    },
+    list: {
+      padding: spacing.lg,
+    },
+    footerLoader: {
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+    },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const { driverId } = route.params as { driverId?: string };
   const currentUserDriverId = useSelector((state: RootState) => state.auth.driverId);
@@ -48,7 +115,7 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
   if (isLoading && page === 1) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -68,7 +135,7 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
     if (!isFetching || page === 1) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={colors.primary} />
+        <ActivityIndicator size="small" color={tokens.primary} />
       </View>
     );
   };
@@ -86,9 +153,9 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
           <Text style={styles.statValue}>
             {data.reviews.length > 0
               ? (
-                  data.reviews.reduce((sum, r) => sum + r.rating, 0) /
-                  data.reviews.length
-                ).toFixed(1)
+                data.reviews.reduce((sum, r) => sum + r.rating, 0) /
+                data.reviews.length
+              ).toFixed(1)
               : '0.0'}
           </Text>
           <Text style={styles.statLabel}>{t('driver.stats_rating')}</Text>
@@ -105,7 +172,7 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
           <RefreshControl
             refreshing={isFetching && page === 1}
             onRefresh={handleRefresh}
-            colors={[colors.primary]}
+            colors={[tokens.primary]}
           />
         }
         onEndReached={handleLoadMore}
@@ -114,67 +181,4 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
       />
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text.primary,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    textAlign: 'center',
-  },
-  statsHeader: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    padding: spacing.lg,
-    elevation: 2,
-    marginBottom: spacing.md,
-  },
-  statBox: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: colors.border,
-    marginHorizontal: spacing.md,
-  },
-  statValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    marginTop: spacing.xs,
-  },
-  list: {
-    padding: spacing.lg,
-  },
-  footerLoader: {
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-  },
-});
+}

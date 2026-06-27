@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,6 +14,7 @@ import { Text, Chip, Button, ActivityIndicator } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { API_CONFIG } from '../../config/api';
 import { useSendSupportContactMutation } from '../../store/api/authApi';
@@ -25,7 +26,137 @@ type Tab = 'written' | 'immediate';
 export const SupportScreen = () => {
   const { t } = useTranslation();
 
-  const [activeTab, setActiveTab] = useState<Tab>('written');
+    const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  flex: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
+
+  header: {
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    padding: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  headerTitle: {
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: spacing.sm,
+  },
+  headerSubtitle: {
+    color: '#6B7280',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+
+  tabs: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    marginBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomColor: tokens.primary,
+  },
+  tabLabel: { color: colors.gray },
+  tabLabelActive: { color: tokens.primary, fontWeight: '600' },
+
+  section: {
+    backgroundColor: '#FFFFFF',
+    padding: spacing.lg,
+    borderRadius: 12,
+    marginHorizontal: spacing.md,
+  },
+
+  fieldLabel: {
+    color: '#374151',
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
+  categoryChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  categoryChip: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  categoryChipSelected: {
+    backgroundColor: '#EEF2FF',
+    borderColor: tokens.primary,
+  },
+  categoryChipText: { color: '#374151', fontSize: 13 },
+  categoryChipTextSelected: { color: tokens.primary, fontWeight: '600' },
+
+  messageInput: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 10,
+    padding: spacing.md,
+    color: '#111827',
+    fontSize: 14,
+    minHeight: 120,
+    backgroundColor: '#F9FAFB',
+  },
+  inputError: { borderColor: colors.error },
+  errorText: { color: colors.error, marginTop: 4 },
+
+  sendBtn: { marginTop: spacing.lg, borderRadius: 10 },
+
+  sentContainer: { alignItems: 'center', paddingVertical: spacing.xl },
+  sentTitle: { fontWeight: 'bold', color: '#111827', marginTop: spacing.md },
+  sentMsg: { color: '#6B7280', textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 },
+
+  warningBox: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    backgroundColor: '#FFFBEB',
+    borderRadius: 10,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    alignItems: 'flex-start',
+  },
+  warningText: { color: '#92400E', flex: 1, lineHeight: 18 },
+  hoursLabel: { color: '#6B7280', marginBottom: spacing.md, textAlign: 'center' },
+
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    marginBottom: spacing.md,
+    backgroundColor: '#FAFAFA',
+  },
+  contactIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contactInfo: { flex: 1 },
+  contactTitle: { fontWeight: '600', color: '#111827' },
+  contactSubtitle: { color: '#6B7280', marginTop: 2 },
+  }), [tokens]);
+const [activeTab, setActiveTab] = useState<Tab>('written');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [showError, setShowError] = useState(false);
@@ -89,7 +220,7 @@ export const SupportScreen = () => {
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
-          <Icon name="headset" size={48} color={colors.primary} />
+          <Icon name="headset" size={48} color={tokens.primary} />
           <Text variant="titleLarge" style={styles.headerTitle}>{t('support.title')}</Text>
           <Text variant="bodyMedium" style={styles.headerSubtitle}>{t('support.subtitle')}</Text>
         </View>
@@ -105,7 +236,7 @@ export const SupportScreen = () => {
               <Icon
                 name={tab === 'written' ? 'email-edit-outline' : 'phone'}
                 size={18}
-                color={activeTab === tab ? colors.primary : colors.gray}
+                color={activeTab === tab ? tokens.primary : colors.gray}
               />
               <Text
                 variant="bodyMedium"
@@ -178,7 +309,7 @@ export const SupportScreen = () => {
                   onPress={handleSend}
                   loading={isLoading}
                   disabled={isLoading}
-                  buttonColor={colors.primary}
+                  buttonColor={tokens.primary}
                   icon="send"
                   style={styles.sendBtn}
                 >
@@ -243,132 +374,3 @@ export const SupportScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-
-  header: {
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    padding: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  headerTitle: {
-    fontWeight: 'bold',
-    color: '#111827',
-    marginTop: spacing.sm,
-  },
-  headerSubtitle: {
-    color: '#6B7280',
-    marginTop: 4,
-    textAlign: 'center',
-  },
-
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    marginBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabActive: {
-    borderBottomColor: colors.primary,
-  },
-  tabLabel: { color: colors.gray },
-  tabLabelActive: { color: colors.primary, fontWeight: '600' },
-
-  section: {
-    backgroundColor: '#FFFFFF',
-    padding: spacing.lg,
-    borderRadius: 12,
-    marginHorizontal: spacing.md,
-  },
-
-  fieldLabel: {
-    color: '#374151',
-    fontWeight: '600',
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  categoryChips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  categoryChip: {
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  categoryChipSelected: {
-    backgroundColor: '#EEF2FF',
-    borderColor: colors.primary,
-  },
-  categoryChipText: { color: '#374151', fontSize: 13 },
-  categoryChipTextSelected: { color: colors.primary, fontWeight: '600' },
-
-  messageInput: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 10,
-    padding: spacing.md,
-    color: '#111827',
-    fontSize: 14,
-    minHeight: 120,
-    backgroundColor: '#F9FAFB',
-  },
-  inputError: { borderColor: colors.error },
-  errorText: { color: colors.error, marginTop: 4 },
-
-  sendBtn: { marginTop: spacing.lg, borderRadius: 10 },
-
-  sentContainer: { alignItems: 'center', paddingVertical: spacing.xl },
-  sentTitle: { fontWeight: 'bold', color: '#111827', marginTop: spacing.md },
-  sentMsg: { color: '#6B7280', textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 },
-
-  warningBox: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    backgroundColor: '#FFFBEB',
-    borderRadius: 10,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    alignItems: 'flex-start',
-  },
-  warningText: { color: '#92400E', flex: 1, lineHeight: 18 },
-  hoursLabel: { color: '#6B7280', marginBottom: spacing.md, textAlign: 'center' },
-
-  contactCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    marginBottom: spacing.md,
-    backgroundColor: '#FAFAFA',
-  },
-  contactIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  contactInfo: { flex: 1 },
-  contactTitle: { fontWeight: '600', color: '#111827' },
-  contactSubtitle: { color: '#6B7280', marginTop: 2 },
-});

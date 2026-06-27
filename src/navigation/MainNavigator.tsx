@@ -3,6 +3,7 @@ import { Alert, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootState } from '../store';
 import { MainTabParamList } from './types';
 import { HomeStack } from './HomeStack';
@@ -18,12 +19,15 @@ import { ProStack } from './ProStack';
 import { ProDemandesStack } from './ProDemandesStack';
 import { ProAgendaStack } from './ProAgendaStack';
 import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeProvider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const MainNavigator = () => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
   const user = useSelector((state: RootState) => state.auth.user);
   const isDriver = activeRole === 'driver';
@@ -32,12 +36,19 @@ export const MainNavigator = () => {
   const isActiveDriver = user?.driver?.status === 'active';
 
   const tabScreenOptions = {
-    tabBarActiveTintColor: colors.primary,
-    tabBarInactiveTintColor: colors.gray,
+    tabBarActiveTintColor: tokens.tabActive,
+    tabBarInactiveTintColor: tokens.tabInactive,
     tabBarStyle: {
-      backgroundColor: colors.white,
-      borderTopColor: colors.border,
+      backgroundColor: tokens.tabBar,
+      borderTopColor: tokens.border,
       borderTopWidth: 1,
+      height: 58 + insets.bottom,
+      paddingBottom: 6 + insets.bottom,
+      paddingTop: 4,
+    },
+    tabBarLabelStyle: {
+      fontSize: 11,
+      fontWeight: '600' as const,
     },
     headerShown: false,
   };

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,6 +14,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { Step1Data, Step2Data, AddressData } from '../../types/transport';
 import { MapboxService } from '../../services/mapbox.service';
@@ -63,6 +64,164 @@ const getSuggestionIcon = (types?: string[], featureType?: string): string => {
 };
 
 export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  title: {
+    color: colors.dark,
+    marginBottom: spacing.sm,
+  },
+  countryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: tokens.primary + '40',
+  },
+  countryBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  countryBadgeChange: {
+    fontSize: 12,
+    color: tokens.primary,
+    textDecorationLine: 'underline',
+  },
+  card: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  cardTitle: {
+    color: colors.dark,
+  },
+  input: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+  },
+  addressInputContainer: {
+    marginBottom: spacing.md,
+  },
+  addressInput: {
+    backgroundColor: colors.white,
+  },
+  successChip: {
+    alignSelf: 'flex-start',
+    marginBottom: spacing.md,
+    backgroundColor: '#E8F5E9',
+  },
+  suggestionsContainer: {
+    marginVertical: spacing.sm,
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.sm,
+  },
+  suggestionsTitle: {
+    color: colors.dark,
+    marginBottom: spacing.sm,
+    fontWeight: '600',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  suggestionText: {
+    flex: 1,
+    marginLeft: spacing.xs,
+  },
+  suggestionName: {
+    color: colors.dark,
+    fontWeight: '500',
+  },
+  suggestionLocation: {
+    color: colors.gray,
+    marginTop: 2,
+  },
+  suggestionDistance: {
+    color: tokens.primary,
+    fontWeight: '600',
+    marginLeft: spacing.xs,
+    minWidth: 44,
+    textAlign: 'right',
+  },
+  label: {
+    color: colors.dark,
+    marginBottom: spacing.xs,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  loadingText: {
+    color: colors.white,
+  },
+  infoText: {
+    color: colors.white,
+    textAlign: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+  },
+  infoCard: {
+    backgroundColor: tokens.primary,
+    marginBottom: spacing.md,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  backButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+  },
+  nextButton: {
+    flex: 2,
+    paddingVertical: spacing.sm,
+  },
+  }), [tokens]);
+
   const { t, i18n } = useTranslation();
   const { step1Data, step2Prefill, step3Prefill } = route.params as {
     step1Data: Step1Data;
@@ -448,7 +607,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
               <IconButton
                 icon="crosshairs-gps"
                 size={20}
-                iconColor={colors.primary}
+                iconColor={tokens.primary}
                 onPress={() => useCurrentLocation('pickup')}
               />
             </View>
@@ -461,11 +620,11 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
                 value={pickup.address}
                 onChangeText={(text) => handleAddressChange(text, 'pickup')}
                 outlineColor={colors.border}
-                activeOutlineColor={colors.primary}
+                activeOutlineColor={tokens.primary}
                 style={styles.addressInput}
                 right={
                   isGeocodingPickup ? (
-                    <TextInput.Icon icon={() => <ActivityIndicator size={20} color={colors.primary} />} />
+                    <TextInput.Icon icon={() => <ActivityIndicator size={20} color={tokens.primary} />} />
                   ) : undefined
                 }
               />
@@ -486,7 +645,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
                     <IconButton
                       icon={getSuggestionIcon(suggestion.types, suggestion.featureType)}
                       size={20}
-                      iconColor={colors.primary}
+                      iconColor={tokens.primary}
                     />
                     <View style={styles.suggestionText}>
                       <Text variant="bodyMedium" style={styles.suggestionName}>
@@ -547,7 +706,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
                 <Switch
                   value={pickup.hasElevator}
                   onValueChange={(value) => setPickup({ ...pickup, hasElevator: value })}
-                  color={colors.primary}
+                  color={tokens.primary}
                 />
               </View>
             </View>
@@ -562,7 +721,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
               numberOfLines={2}
               maxLength={200}
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               style={styles.input}
             />
           </Card.Content>
@@ -578,7 +737,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
               <IconButton
                 icon="crosshairs-gps"
                 size={20}
-                iconColor={colors.primary}
+                iconColor={tokens.primary}
                 onPress={() => useCurrentLocation('delivery')}
               />
             </View>
@@ -591,11 +750,11 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
                 value={delivery.address}
                 onChangeText={(text) => handleAddressChange(text, 'delivery')}
                 outlineColor={colors.border}
-                activeOutlineColor={colors.primary}
+                activeOutlineColor={tokens.primary}
                 style={styles.addressInput}
                 right={
                   isGeocodingDelivery ? (
-                    <TextInput.Icon icon={() => <ActivityIndicator size={20} color={colors.primary} />} />
+                    <TextInput.Icon icon={() => <ActivityIndicator size={20} color={tokens.primary} />} />
                   ) : undefined
                 }
               />
@@ -616,7 +775,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
                     <IconButton
                       icon={getSuggestionIcon(suggestion.types, suggestion.featureType)}
                       size={20}
-                      iconColor={colors.primary}
+                      iconColor={tokens.primary}
                     />
                     <View style={styles.suggestionText}>
                       <Text variant="bodyMedium" style={styles.suggestionName}>
@@ -677,7 +836,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
                 <Switch
                   value={delivery.hasElevator}
                   onValueChange={(value) => setDelivery({ ...delivery, hasElevator: value })}
-                  color={colors.primary}
+                  color={tokens.primary}
                 />
               </View>
             </View>
@@ -692,7 +851,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
               numberOfLines={2}
               maxLength={200}
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               style={styles.input}
             />
           </Card.Content>
@@ -730,7 +889,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
             mode="contained"
             onPress={handleNext}
             disabled={!pickup.address || !delivery.address}
-            buttonColor={colors.primary}
+            buttonColor={tokens.primary}
             style={styles.nextButton}
           >
             {t('transport.next')}
@@ -740,158 +899,3 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  title: {
-    color: colors.dark,
-    marginBottom: spacing.sm,
-  },
-  countryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.primary + '40',
-  },
-  countryBadgeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  countryBadgeChange: {
-    fontSize: 12,
-    color: colors.primary,
-    textDecorationLine: 'underline',
-  },
-  card: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  cardTitle: {
-    color: colors.dark,
-  },
-  input: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-  },
-  addressInputContainer: {
-    marginBottom: spacing.md,
-  },
-  addressInput: {
-    backgroundColor: colors.white,
-  },
-  successChip: {
-    alignSelf: 'flex-start',
-    marginBottom: spacing.md,
-    backgroundColor: '#E8F5E9',
-  },
-  suggestionsContainer: {
-    marginVertical: spacing.sm,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.sm,
-  },
-  suggestionsTitle: {
-    color: colors.dark,
-    marginBottom: spacing.sm,
-    fontWeight: '600',
-  },
-  suggestionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  suggestionText: {
-    flex: 1,
-    marginLeft: spacing.xs,
-  },
-  suggestionName: {
-    color: colors.dark,
-    fontWeight: '500',
-  },
-  suggestionLocation: {
-    color: colors.gray,
-    marginTop: 2,
-  },
-  suggestionDistance: {
-    color: colors.primary,
-    fontWeight: '600',
-    marginLeft: spacing.xs,
-    minWidth: 44,
-    textAlign: 'right',
-  },
-  label: {
-    color: colors.dark,
-    marginBottom: spacing.xs,
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  loadingText: {
-    color: colors.white,
-  },
-  infoText: {
-    color: colors.white,
-    textAlign: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    backgroundColor: colors.white,
-  },
-  infoCard: {
-    backgroundColor: colors.primary,
-    marginBottom: spacing.md,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-  },
-  nextButton: {
-    flex: 2,
-    paddingVertical: spacing.sm,
-  },
-});

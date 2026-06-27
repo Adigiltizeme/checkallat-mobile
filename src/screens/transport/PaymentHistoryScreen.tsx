@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput
 import { Text, Card, Chip, ActivityIndicator } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useGetMyTransportRequestsQuery } from '../../store/api/transportApi';
 import { STATUS_COLORS, TransportStatus } from '../../types/transport';
@@ -23,6 +24,48 @@ const ESCROW_COLORS: Record<string, string> = {
 };
 
 export const PaymentHistoryScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+  filtersContainer: { backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
+  chevron: { fontSize: 12, color: colors.gray },
+  tabsRow: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, gap: spacing.xs },
+  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: colors.lightGray, marginRight: spacing.xs },
+  tabActive: { backgroundColor: tokens.primary },
+  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  tabTextActive: { color: colors.white, fontWeight: '600' },
+  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginTop: spacing.xs, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.lightGray, paddingHorizontal: spacing.sm },
+  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
+  dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
+  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.lightGray },
+  dateModeBtnActive: { backgroundColor: `${tokens.primary}20`, borderColor: tokens.primary },
+  dateModeBtnText: { fontSize: 12, color: colors.gray },
+  dateModeBtnTextActive: { color: tokens.primary, fontWeight: '600' },
+  dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.sm, gap: spacing.xs },
+  dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  dateLabel: { fontSize: 13, color: colors.gray },
+  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: colors.lightGray },
+  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
+  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
+  list: { padding: spacing.md },
+  listEmpty: { flexGrow: 1 },
+  card: { marginBottom: spacing.md, backgroundColor: colors.white },
+  cardHeader: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap', marginBottom: spacing.xs },
+  statusChip: {},
+  locationRow: { flexDirection: 'row', gap: spacing.xs, marginBottom: 2 },
+  locationLabel: { width: 20, color: colors.gray },
+  locationText: { flex: 1, color: colors.dark },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
+  dateText: { color: colors.gray },
+  amountText: { color: tokens.primary, fontWeight: '700' },
+  empty: { color: colors.gray, textAlign: 'center' },
+  }), [tokens]);
+
   const { t, i18n } = useTranslation();
   const { data: requests, isLoading, isFetching, refetch } = useGetMyTransportRequestsQuery(undefined, {
     pollingInterval: 8000,
@@ -194,7 +237,7 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
                 {escrowStatus === 'refunded' && (
                   <Text variant="bodySmall" style={{ color: colors.error, fontSize: 11 }}>↩️ {t('payment.history_refunded')}</Text>
                 )}
-                <Text variant="bodySmall" style={{ color: colors.primary, fontSize: 11, marginTop: 2 }}>
+                <Text variant="bodySmall" style={{ color: tokens.primary, fontSize: 11, marginTop: 2 }}>
                   {t('common.details')} →
                 </Text>
               </View>
@@ -208,7 +251,7 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -221,7 +264,7 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={[styles.list, filtered.length === 0 && styles.listEmpty]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primary]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[tokens.primary]} />}
         ListEmptyComponent={
           <View style={styles.center}>
             <Text variant="bodyMedium" style={styles.empty}>{t('payment.history_empty')}</Text>
@@ -232,41 +275,3 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  filtersContainer: { backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
-  tabsRow: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, gap: spacing.xs },
-  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: colors.lightGray, marginRight: spacing.xs },
-  tabActive: { backgroundColor: colors.primary },
-  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
-  tabTextActive: { color: colors.white, fontWeight: '600' },
-  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginTop: spacing.xs, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.lightGray, paddingHorizontal: spacing.sm },
-  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
-  dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.lightGray },
-  dateModeBtnActive: { backgroundColor: `${colors.primary}20`, borderColor: colors.primary },
-  dateModeBtnText: { fontSize: 12, color: colors.gray },
-  dateModeBtnTextActive: { color: colors.primary, fontWeight: '600' },
-  dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.sm, gap: spacing.xs },
-  dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  dateLabel: { fontSize: 13, color: colors.gray },
-  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: colors.lightGray },
-  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
-  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
-  list: { padding: spacing.md },
-  listEmpty: { flexGrow: 1 },
-  card: { marginBottom: spacing.md, backgroundColor: colors.white },
-  cardHeader: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap', marginBottom: spacing.xs },
-  statusChip: {},
-  locationRow: { flexDirection: 'row', gap: spacing.xs, marginBottom: 2 },
-  locationLabel: { width: 20, color: colors.gray },
-  locationText: { flex: 1, color: colors.dark },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
-  dateText: { color: colors.gray },
-  amountText: { color: colors.primary, fontWeight: '700' },
-  empty: { color: colors.gray, textAlign: 'center' },
-});

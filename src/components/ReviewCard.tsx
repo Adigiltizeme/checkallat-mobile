@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Card, Text, Avatar, Divider } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
+import { useAppTheme } from '../theme/ThemeProvider';
 
 interface ReviewCardProps {
   review: {
@@ -28,6 +29,99 @@ interface ReviewCardProps {
 }
 
 export const ReviewCard: React.FC<ReviewCardProps> = ({ review, showDriverResponse = true }) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  card: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+    elevation: 2,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  avatar: {
+    backgroundColor: tokens.primary,
+  },
+  headerText: {
+    marginLeft: spacing.md,
+    flex: 1,
+  },
+  clientName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  date: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
+  ratingSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    marginRight: spacing.sm,
+  },
+  star: {
+    marginRight: 2,
+  },
+  ratingText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  detailedRatings: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  detailLabel: {
+    fontSize: 13,
+    color: colors.text.secondary,
+    width: 100,
+  },
+  comment: {
+    fontSize: 14,
+    color: colors.text.primary,
+    lineHeight: 20,
+    marginTop: spacing.sm,
+  },
+  divider: {
+    marginVertical: spacing.md,
+  },
+  responseSection: {
+    backgroundColor: colors.light,
+    padding: spacing.md,
+    borderRadius: 8,
+  },
+  responseLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: tokens.primary,
+    marginBottom: spacing.xs,
+  },
+  responseText: {
+    fontSize: 14,
+    color: colors.text.primary,
+    lineHeight: 20,
+  },
+  responseDate: {
+    fontSize: 11,
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
+  },
+  }), [tokens]);
   const { t, i18n } = useTranslation();
 
   const renderStars = (rating: number) => {
@@ -147,94 +241,3 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, showDriverRespon
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-    elevation: 2,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  avatar: {
-    backgroundColor: colors.primary,
-  },
-  headerText: {
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  clientName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-  },
-  date: {
-    fontSize: 12,
-    color: colors.text.secondary,
-    marginTop: 2,
-  },
-  ratingSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  starsRow: {
-    flexDirection: 'row',
-    marginRight: spacing.sm,
-  },
-  star: {
-    marginRight: 2,
-  },
-  ratingText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text.primary,
-  },
-  detailedRatings: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.xs,
-  },
-  detailLabel: {
-    fontSize: 13,
-    color: colors.text.secondary,
-    width: 100,
-  },
-  comment: {
-    fontSize: 14,
-    color: colors.text.primary,
-    lineHeight: 20,
-    marginTop: spacing.sm,
-  },
-  divider: {
-    marginVertical: spacing.md,
-  },
-  responseSection: {
-    backgroundColor: colors.light,
-    padding: spacing.md,
-    borderRadius: 8,
-  },
-  responseLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-    marginBottom: spacing.xs,
-  },
-  responseText: {
-    fontSize: 14,
-    color: colors.text.primary,
-    lineHeight: 20,
-  },
-  responseDate: {
-    fontSize: 11,
-    color: colors.text.secondary,
-    marginTop: spacing.xs,
-  },
-});

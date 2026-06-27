@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, StyleSheet, Dimensions, Linking, Share, TouchableOpacity, Animated } from 'react-native';
 import { Text, Avatar, ActivityIndicator, IconButton } from 'react-native-paper';
 import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useGetTrackingInfoQuery, useGetTransportRequestQuery } from '../../store/api/transportApi';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
@@ -23,6 +24,130 @@ const PANEL_FULL   = height * 0.52;
 const PANEL_MINI   = 72; // hauteur réduite : handle + statut uniquement
 
 export const TransportTrackingScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000' },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  error: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+  errorButton: { marginTop: spacing.lg },
+
+  markerContainer: {
+    width: 36, height: 36, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: colors.white, elevation: 4,
+  },
+  driverMarker: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: tokens.primary,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: colors.white, elevation: 4,
+  },
+  markerText: { fontSize: 18 },
+
+  topActions: {
+    position: 'absolute',
+    top: spacing.xl + 8,
+    left: spacing.sm,
+    right: spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  fab: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    elevation: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    overflow: 'hidden',
+  },
+
+  handleRow: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  handle: {
+    width: 40, height: 4,
+    borderRadius: 2,
+    backgroundColor: '#D1D5DB',
+  },
+  chevronIcon: { marginTop: 2 },
+
+  statusBanner: {
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  statusBannerText: { color: colors.white, fontWeight: '700' },
+  etaText: { color: 'rgba(255,255,255,0.9)', marginTop: 2, fontSize: 12 },
+
+  panelContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.md },
+
+  driverHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  driverAvatar: { backgroundColor: tokens.primary },
+  driverInfo: { flex: 1 },
+  driverName: { color: colors.dark, fontWeight: '600' },
+  driverDetails: { color: colors.gray, marginTop: 2 },
+  trackingContactBtns: { flexDirection: 'row', gap: 8, marginLeft: 4 },
+  trackingCallBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: colors.success,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  trackingMsgBtn: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: `${tokens.primary}20`,
+    borderWidth: 1, borderColor: tokens.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+
+  infoCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
+    backgroundColor: '#FFF3CD', borderRadius: 8,
+    padding: spacing.sm, marginBottom: spacing.sm,
+  },
+  infoText: { flex: 1, color: colors.dark, lineHeight: 18 },
+
+  locationInfo: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    padding: spacing.xs,
+    backgroundColor: `${colors.success}12`,
+    borderRadius: 6, marginBottom: spacing.sm,
+  },
+  locationText: { color: colors.success, fontWeight: '500', fontSize: 12 },
+
+  routeSection: {
+    borderTopWidth: 1, borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+  },
+  routeItem: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginVertical: 2 },
+  routeContent: { flex: 1 },
+  routeLabel: { color: colors.gray, fontSize: 10, textTransform: 'uppercase', fontWeight: '600' },
+  routeAddress: { color: colors.dark, fontSize: 13, marginTop: 1 },
+  routeDivider: { paddingLeft: 6, marginVertical: 2 },
+  }), [tokens]);
+
   const { t, i18n } = useTranslation();
   const { requestId } = route.params as { requestId: string };
   const cameraRef = useRef<any>(null);
@@ -91,7 +216,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   if (requestLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -101,7 +226,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
       <View style={styles.error}>
         <Text variant="titleLarge">{t('transport.request_not_found')}</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorButton}>
-          <Text style={{ color: colors.primary }}>{t('common.back')}</Text>
+          <Text style={{ color: tokens.primary }}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -146,7 +271,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
               { latitude: request.pickup.lat, longitude: request.pickup.lng },
               { latitude: request.delivery.lat, longitude: request.delivery.lng },
             ]}
-            strokeColor={colors.primary} strokeWidth={3} lineDashPattern={[8, 4]}
+            strokeColor={tokens.primary} strokeWidth={3} lineDashPattern={[8, 4]}
           />
         </RNMapView>
       );
@@ -170,7 +295,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
         </Mapbox.PointAnnotation>
         {driverCoord && (
           <Mapbox.PointAnnotation id="driver" coordinate={driverCoord}>
-            <View style={[styles.markerContainer, { backgroundColor: colors.primary }]}>
+            <View style={[styles.markerContainer, { backgroundColor: tokens.primary }]}>
               <Text style={styles.markerText}>🚚</Text>
             </View>
             <Mapbox.Callout title={trackingInfo?.driverName || 'Driver'} />
@@ -178,7 +303,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
         )}
         <Mapbox.ShapeSource id="routeSource" shape={routeShape}>
           <Mapbox.LineLayer id="routeLine"
-            style={{ lineColor: colors.primary, lineWidth: 3, lineDasharray: [2, 2] }} />
+            style={{ lineColor: tokens.primary, lineWidth: 3, lineDasharray: [2, 2] }} />
         </Mapbox.ShapeSource>
       </Mapbox.MapView>
     );
@@ -256,7 +381,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
                       style={styles.trackingMsgBtn}
                       onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: driverName })}
                     >
-                      <Icon name="message-text" size={18} color={colors.primary} />
+                      <Icon name="message-text" size={18} color={tokens.primary} />
                     </TouchableOpacity>
                   </View>
                 )}
@@ -313,124 +438,3 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  error: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  errorButton: { marginTop: spacing.lg },
-
-  markerContainer: {
-    width: 36, height: 36, borderRadius: 18,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: colors.white, elevation: 4,
-  },
-  driverMarker: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.primary,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: colors.white, elevation: 4,
-  },
-  markerText: { fontSize: 18 },
-
-  topActions: {
-    position: 'absolute',
-    top: spacing.xl + 8,
-    left: spacing.sm,
-    right: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  fab: {
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-
-  bottomSheet: {
-    position: 'absolute',
-    bottom: 0, left: 0, right: 0,
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    overflow: 'hidden',
-  },
-
-  handleRow: {
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  handle: {
-    width: 40, height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D1D5DB',
-  },
-  chevronIcon: { marginTop: 2 },
-
-  statusBanner: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  statusBannerText: { color: colors.white, fontWeight: '700' },
-  etaText: { color: 'rgba(255,255,255,0.9)', marginTop: 2, fontSize: 12 },
-
-  panelContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.md },
-
-  driverHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  driverAvatar: { backgroundColor: colors.primary },
-  driverInfo: { flex: 1 },
-  driverName: { color: colors.dark, fontWeight: '600' },
-  driverDetails: { color: colors.gray, marginTop: 2 },
-  trackingContactBtns: { flexDirection: 'row', gap: 8, marginLeft: 4 },
-  trackingCallBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: colors.success,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  trackingMsgBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: `${colors.primary}20`,
-    borderWidth: 1, borderColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center',
-  },
-
-  infoCard: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
-    backgroundColor: '#FFF3CD', borderRadius: 8,
-    padding: spacing.sm, marginBottom: spacing.sm,
-  },
-  infoText: { flex: 1, color: colors.dark, lineHeight: 18 },
-
-  locationInfo: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-    padding: spacing.xs,
-    backgroundColor: `${colors.success}12`,
-    borderRadius: 6, marginBottom: spacing.sm,
-  },
-  locationText: { color: colors.success, fontWeight: '500', fontSize: 12 },
-
-  routeSection: {
-    borderTopWidth: 1, borderTopColor: colors.border,
-    paddingTop: spacing.sm,
-  },
-  routeItem: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginVertical: 2 },
-  routeContent: { flex: 1 },
-  routeLabel: { color: colors.gray, fontSize: 10, textTransform: 'uppercase', fontWeight: '600' },
-  routeAddress: { color: colors.dark, fontSize: 13, marginTop: 1 },
-  routeDivider: { paddingLeft: 6, marginVertical: 2 },
-});

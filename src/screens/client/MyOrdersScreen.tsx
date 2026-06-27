@@ -18,6 +18,7 @@ import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { formatCurrency } from '../../config/currency';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/ThemeProvider';
 
 type Tab = 'transport' | 'services' | 'marketplace';
 
@@ -28,6 +29,7 @@ const TRANSPORT_STATUS_COLOR: Record<string, { color: string; bg: string }> = {
   arrived_at_pickup:  { color: '#6B21A8', bg: '#F3E8FF' },
   in_transit:         { color: '#065F46', bg: '#D1FAE5' },
   delivered:          { color: '#166534', bg: '#DCFCE7' },
+  completed:          { color: '#166534', bg: '#DCFCE7' },
   cancelled:          { color: '#991B1B', bg: '#FEE2E2' },
 };
 
@@ -44,6 +46,7 @@ const BOOKING_STATUS_COLOR: Record<string, { color: string; bg: string }> = {
 
 export const MyOrdersScreen = () => {
   const { t, i18n } = useTranslation();
+  const { tokens } = useAppTheme();
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<Tab>('transport');
   const [refreshing, setRefreshing] = useState(false);
@@ -237,16 +240,16 @@ export const MyOrdersScreen = () => {
         {tabs.map((tab) => (
           <TouchableOpacity
             key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+            style={[styles.tab, activeTab === tab.key && { borderBottomColor: tokens.primary }]}
             onPress={() => setActiveTab(tab.key)}
             activeOpacity={0.8}
           >
             <Icon
               name={tab.icon}
               size={16}
-              color={activeTab === tab.key ? colors.primary : colors.gray}
+              color={activeTab === tab.key ? tokens.primary : colors.gray}
             />
-            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+            <Text style={[styles.tabText, activeTab === tab.key && { color: tokens.primary }]}>
               {t(tab.labelKey)}
             </Text>
           </TouchableOpacity>
@@ -301,9 +304,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
   },
-  tabActive: { borderBottomColor: colors.primary },
   tabText: { fontSize: 12, color: colors.gray, fontWeight: '600' },
-  tabTextActive: { color: colors.primary },
 
   list: { padding: spacing.md, paddingBottom: spacing.xxl },
 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { proStackScreenOptions } from './stackOptions';
 
 import { ProAgendaScreen } from '../screens/pro/ProAgendaScreen';
 import { ProBookingDetailsScreen } from '../screens/pro/ProBookingDetailsScreen';
@@ -23,17 +24,13 @@ export type ProAgendaStackParamList = {
 
 const Stack = createStackNavigator<ProAgendaStackParamList>();
 
-const PRO_COLOR = '#10B981';
 
 export const ProAgendaStack = () => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: PRO_COLOR },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: '600' },
-      }}
+      screenOptions={proStackScreenOptions(tokens)}
     >
       <Stack.Screen
         name="ProAgendaHome"

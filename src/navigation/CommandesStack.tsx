@@ -1,7 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { defaultStackScreenOptions } from './stackOptions';
 
 import { MyOrdersScreen } from '../screens/client/MyOrdersScreen';
 import { BookingDetailsScreen } from '../screens/services/BookingDetailsScreen';
@@ -27,13 +28,10 @@ const Stack = createStackNavigator<CommandesStackParamList>();
 
 export const CommandesStack = () => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.primary },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: '600' },
-      }}
+      screenOptions={defaultStackScreenOptions(tokens)}
     >
       <Stack.Screen
         name="MyOrders"

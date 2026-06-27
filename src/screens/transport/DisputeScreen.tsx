@@ -14,6 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TransportStackParamList } from '../../navigation/types';
 import { useOpenDisputeMutation } from '../../store/api/transportApi';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<TransportStackParamList, 'Dispute'>;
@@ -21,6 +22,7 @@ type Props = StackScreenProps<TransportStackParamList, 'Dispute'>;
 const CATEGORIES = ['quality', 'payment', 'cancellation', 'damage', 'fraud', 'other'] as const;
 
 export const DisputeScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
   const { t } = useTranslation();
   const { requestId } = route.params;
 
@@ -63,7 +65,7 @@ export const DisputeScreen = ({ route, navigation }: Props) => {
         <Button
           mode="contained"
           onPress={() => navigation.goBack()}
-          buttonColor={colors.primary}
+          buttonColor={tokens.primary}
           style={styles.doneBtn}
           icon="arrow-left"
         >

@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,7 +7,9 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { Text, Button, Card, Divider, ActivityIndicator } from 'react-native-paper';
+import { Text, Card, Divider } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { HomeStackParamList } from '../../navigation/types';
@@ -20,6 +22,50 @@ import { getLocalizedName } from '../../utils/localize';
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep5'>;
 
 export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  title: { color: colors.dark, marginBottom: spacing.lg },
+  card: { borderRadius: 12, marginBottom: spacing.md, elevation: 2 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: spacing.sm },
+  summaryLabel: { fontSize: 13, color: colors.gray, flex: 1 },
+  summaryValue: { fontSize: 14, fontWeight: '500', color: colors.dark, flex: 2, textAlign: 'right' },
+  summaryValueHighlight: { color: tokens.primary, fontWeight: '700' },
+  divider: { backgroundColor: colors.lightGray },
+  descLabel: { fontSize: 13, color: colors.gray, marginBottom: 4 },
+  descText: { fontSize: 14, color: colors.dark, lineHeight: 20 },
+  photosRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.xs },
+  photoThumb: { width: 64, height: 64, borderRadius: 8, backgroundColor: colors.lightGray },
+  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
+  paymentCards: { gap: spacing.sm, marginBottom: spacing.lg },
+  paymentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: colors.border,
+    padding: spacing.md,
+    position: 'relative',
+  },
+  paymentCardActive: { borderColor: tokens.primary, backgroundColor: '#E8F5F3' },
+  paymentIcon: { fontSize: 24, marginRight: spacing.md },
+  paymentInfo: { flex: 1 },
+  paymentTitle: { fontSize: 15, fontWeight: '600', color: colors.dark },
+  paymentTitleActive: { color: tokens.primary },
+  paymentDesc: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  paymentCheck: {
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: tokens.primary,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  paymentCheckIcon: { color: colors.white, fontSize: 13, fontWeight: '700' },
+  buttons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  backWrap: { flex: 1 },
+  nextWrap: { flex: 2 },
+  }), [tokens]);
   const { t, i18n } = useTranslation();
   const { categorySlug, step1Data, step2Data, step3Data, step4Data } = route.params;
 
@@ -111,7 +157,7 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: tokens.background }]} contentContainerStyle={styles.content}>
       <Text variant="headlineSmall" style={styles.title}>
         {t('booking_request.step5_title')}
       </Text>
@@ -207,74 +253,33 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
       </View>
 
       <View style={styles.buttons}>
-        <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.backBtn} disabled={isLoading}>
-          {t('booking_request.back')}
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleSubmit}
-          style={styles.submitBtn}
-          labelStyle={styles.submitBtnLabel}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator size={20} color={colors.white} />
-          ) : (
-            t('booking_request.submit')
-          )}
-        </Button>
+        <View style={styles.backWrap}>
+          <ChocolateButton variant="outline" onPress={() => navigation.goBack()} disabled={isLoading}>
+            {t('booking_request.back')}
+          </ChocolateButton>
+        </View>
+        <View style={styles.nextWrap}>
+          <ChocolateButton onPress={handleSubmit} disabled={isLoading} loading={isLoading}>
+            {t('booking_request.submit')}
+          </ChocolateButton>
+        </View>
       </View>
     </ScrollView>
   );
 };
 
-const SummaryRow = ({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) => (
-  <View style={styles.summaryRow}>
-    <Text style={styles.summaryLabel}>{label}</Text>
-    <Text style={[styles.summaryValue, highlight && styles.summaryValueHighlight]}>{value}</Text>
-  </View>
-);
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  title: { color: colors.dark, marginBottom: spacing.lg },
-  card: { borderRadius: 12, marginBottom: spacing.md, elevation: 2 },
+const summaryRowStyles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: spacing.sm },
-  summaryLabel: { fontSize: 13, color: colors.gray, flex: 1 },
+  summaryLabel: { fontSize: 14, color: colors.gray, flex: 1 },
   summaryValue: { fontSize: 14, fontWeight: '500', color: colors.dark, flex: 2, textAlign: 'right' },
-  summaryValueHighlight: { color: colors.primary, fontWeight: '700' },
-  divider: { backgroundColor: colors.lightGray },
-  descLabel: { fontSize: 13, color: colors.gray, marginBottom: 4 },
-  descText: { fontSize: 14, color: colors.dark, lineHeight: 20 },
-  photosRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.xs },
-  photoThumb: { width: 64, height: 64, borderRadius: 8, backgroundColor: colors.lightGray },
-  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
-  paymentCards: { gap: spacing.sm, marginBottom: spacing.lg },
-  paymentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.border,
-    padding: spacing.md,
-    position: 'relative',
-  },
-  paymentCardActive: { borderColor: colors.primary, backgroundColor: '#E8F5F3' },
-  paymentIcon: { fontSize: 24, marginRight: spacing.md },
-  paymentInfo: { flex: 1 },
-  paymentTitle: { fontSize: 15, fontWeight: '600', color: colors.dark },
-  paymentTitleActive: { color: colors.primary },
-  paymentDesc: { fontSize: 12, color: colors.gray, marginTop: 2 },
-  paymentCheck: {
-    width: 22, height: 22, borderRadius: 11,
-    backgroundColor: colors.primary,
-    justifyContent: 'center', alignItems: 'center',
-  },
-  paymentCheckIcon: { color: colors.white, fontSize: 13, fontWeight: '700' },
-  buttons: { flexDirection: 'row', gap: spacing.sm },
-  backBtn: { flex: 1, borderColor: colors.primary },
-  submitBtn: { flex: 2, backgroundColor: colors.primary, borderRadius: 8 },
-  submitBtnLabel: { fontSize: 16, paddingVertical: 4 },
+  summaryValueHighlight: { fontWeight: '700' },
 });
+const SummaryRow = ({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) => {
+  const { tokens: srTokens } = useAppTheme();
+  return (
+  <View style={summaryRowStyles.summaryRow}>
+    <Text style={summaryRowStyles.summaryLabel}>{label}</Text>
+    <Text style={[summaryRowStyles.summaryValue, highlight && [summaryRowStyles.summaryValueHighlight, { color: srTokens.primary }]]}>{value}</Text>
+  </View>
+  );
+};

@@ -14,6 +14,7 @@ import { Text, Card, Chip, ActivityIndicator, FAB } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { StackScreenProps } from '@react-navigation/stack';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../config/currency';
 import { DriverStackParamList } from '../../navigation/types';
@@ -42,6 +43,123 @@ type DateMode = 'range' | 'single';
 const toDay = (d: string) => d ? new Date(d).toLocaleDateString('en-CA') : '';
 
 export const DriverHomeScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  availabilityCard: {
+    backgroundColor: colors.white,
+    padding: spacing.md,
+    margin: spacing.md,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  availabilityContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  availabilityTitle: { fontWeight: 'bold', marginBottom: spacing.xs },
+  availabilitySubtitle: { color: colors.gray },
+  statsContainer: { flexDirection: 'row', paddingHorizontal: spacing.md, marginBottom: spacing.md, gap: spacing.sm },
+  statCard: { flex: 1, backgroundColor: colors.white, padding: spacing.md, borderRadius: 12, alignItems: 'center', elevation: 2 },
+  statNumber: { fontWeight: 'bold', color: tokens.primary },
+  statLabel: { color: colors.gray, marginTop: spacing.xs },
+  collapsibleCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    elevation: 1,
+    overflow: 'hidden',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
+  chevron: { fontSize: 12, color: colors.gray },
+  filtersContainer: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    elevation: 1,
+    overflow: 'hidden',
+  },
+  dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.lightGray,
+    paddingHorizontal: spacing.sm,
+  },
+  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
+  searchClear: { padding: spacing.xs },
+  tabsRow: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
+  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: colors.lightGray, marginRight: spacing.xs },
+  tabActive: { backgroundColor: tokens.primary },
+  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  tabTextActive: { color: colors.white, fontWeight: '600' },
+  dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
+  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.lightGray },
+  dateModeBtnActive: { backgroundColor: `${tokens.primary}20`, borderColor: tokens.primary },
+  dateModeBtnText: { fontSize: 12, color: colors.gray },
+  dateModeBtnTextActive: { color: tokens.primary, fontWeight: '600' },
+  dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
+  dateLabel: { fontSize: 13, color: colors.gray },
+  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: colors.lightGray },
+  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
+  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingTop: spacing.xs },
+  listContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl * 2 },
+  deliveryCard: { marginBottom: spacing.md, backgroundColor: colors.white, elevation: 2 },
+  activeCard: { borderLeftWidth: 4, borderLeftColor: tokens.primary },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  deliveryTitle: { fontWeight: 'bold' },
+  statusChip: {},
+  locationSection: { marginBottom: spacing.md },
+  locationRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  locationText: { flex: 1 },
+  locationLabel: { color: colors.gray, marginBottom: 2 },
+  routeLine: { width: 2, height: 20, backgroundColor: colors.border, marginLeft: 9, marginVertical: spacing.xs },
+  infoRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
+  infoItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  infoText: { color: colors.gray },
+  clientRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
+  clientText: { fontSize: 13, color: colors.gray, flex: 1 },
+  actionButton: { backgroundColor: tokens.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.sm, borderRadius: 8, gap: spacing.xs, marginTop: spacing.sm },
+  actionButtonText: { color: colors.white, fontWeight: 'bold' },
+  emptyContainer: { alignItems: 'center', paddingTop: spacing.xl * 2, paddingHorizontal: spacing.xl },
+  emptyText: { marginTop: spacing.md, fontWeight: 'bold' },
+  emptySubtext: { marginTop: spacing.xs, color: colors.gray, textAlign: 'center' },
+  fab: { position: 'absolute', bottom: spacing.md, right: spacing.md, backgroundColor: colors.success },
+
+  availableBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: tokens.primary,
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.md,
+    borderRadius: 12,
+    padding: spacing.md,
+    elevation: 4,
+    shadowColor: tokens.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  availableBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+  availableBannerTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  availableBannerSub: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
+  }), [tokens]);
+
   const { t, i18n } = useTranslation();
   const { data: deliveries, isLoading, isFetching, refetch } = useGetMyDeliveriesQuery(undefined, {
     pollingInterval: 8000,
@@ -213,7 +331,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
 
             <View style={styles.locationSection}>
               <View style={styles.locationRow}>
-                <Icon name="map-marker" size={20} color={colors.primary} />
+                <Icon name="map-marker" size={20} color={tokens.primary} />
                 <View style={styles.locationText}>
                   <Text variant="bodySmall" style={styles.locationLabel}>{t('driver.loading_point_label')}</Text>
                   <Text variant="bodyMedium" numberOfLines={1}>{item.pickup.address}</Text>
@@ -263,7 +381,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -284,7 +402,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
           <Switch
             value={isAvailable}
             onValueChange={toggleAvailability}
-            trackColor={{ false: colors.gray, true: colors.primary }}
+            trackColor={{ false: colors.gray, true: tokens.primary }}
             thumbColor={colors.white}
           />
         </View>
@@ -459,7 +577,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[tokens.primary]} />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -482,117 +600,3 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  availabilityCard: {
-    backgroundColor: colors.white,
-    padding: spacing.md,
-    margin: spacing.md,
-    borderRadius: 12,
-    elevation: 2,
-  },
-  availabilityContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  availabilityTitle: { fontWeight: 'bold', marginBottom: spacing.xs },
-  availabilitySubtitle: { color: colors.gray },
-  statsContainer: { flexDirection: 'row', paddingHorizontal: spacing.md, marginBottom: spacing.md, gap: spacing.sm },
-  statCard: { flex: 1, backgroundColor: colors.white, padding: spacing.md, borderRadius: 12, alignItems: 'center', elevation: 2 },
-  statNumber: { fontWeight: 'bold', color: colors.primary },
-  statLabel: { color: colors.gray, marginTop: spacing.xs },
-  collapsibleCard: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
-    elevation: 1,
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
-  filtersContainer: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
-    elevation: 1,
-    overflow: 'hidden',
-  },
-  dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: spacing.md,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    backgroundColor: colors.lightGray,
-    paddingHorizontal: spacing.sm,
-  },
-  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
-  searchClear: { padding: spacing.xs },
-  tabsRow: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
-  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: colors.lightGray, marginRight: spacing.xs },
-  tabActive: { backgroundColor: colors.primary },
-  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
-  tabTextActive: { color: colors.white, fontWeight: '600' },
-  dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.lightGray },
-  dateModeBtnActive: { backgroundColor: `${colors.primary}20`, borderColor: colors.primary },
-  dateModeBtnText: { fontSize: 12, color: colors.gray },
-  dateModeBtnTextActive: { color: colors.primary, fontWeight: '600' },
-  dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateLabel: { fontSize: 13, color: colors.gray },
-  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: colors.lightGray },
-  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
-  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingTop: spacing.xs },
-  listContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl * 2 },
-  deliveryCard: { marginBottom: spacing.md, backgroundColor: colors.white, elevation: 2 },
-  activeCard: { borderLeftWidth: 4, borderLeftColor: colors.primary },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  deliveryTitle: { fontWeight: 'bold' },
-  statusChip: {},
-  locationSection: { marginBottom: spacing.md },
-  locationRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  locationText: { flex: 1 },
-  locationLabel: { color: colors.gray, marginBottom: 2 },
-  routeLine: { width: 2, height: 20, backgroundColor: colors.border, marginLeft: 9, marginVertical: spacing.xs },
-  infoRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
-  infoItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  infoText: { color: colors.gray },
-  clientRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
-  clientText: { fontSize: 13, color: colors.gray, flex: 1 },
-  actionButton: { backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.sm, borderRadius: 8, gap: spacing.xs, marginTop: spacing.sm },
-  actionButtonText: { color: colors.white, fontWeight: 'bold' },
-  emptyContainer: { alignItems: 'center', paddingTop: spacing.xl * 2, paddingHorizontal: spacing.xl },
-  emptyText: { marginTop: spacing.md, fontWeight: 'bold' },
-  emptySubtext: { marginTop: spacing.xs, color: colors.gray, textAlign: 'center' },
-  fab: { position: 'absolute', bottom: spacing.md, right: spacing.md, backgroundColor: colors.success },
-
-  availableBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.primary,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.md,
-    borderRadius: 12,
-    padding: spacing.md,
-    elevation: 4,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  availableBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
-  availableBannerTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-  availableBannerSub: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
-});

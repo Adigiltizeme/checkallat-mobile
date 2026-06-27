@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Switch, Image, Linking } from 'react-native';
 import { List, Button, Divider, Text } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
@@ -11,13 +11,92 @@ import { logout, setActiveRole, clearDefaultRole } from '../../store/slices/auth
 import { ProfileStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/ThemeProvider';
 
 type ProfileNavProp = StackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 const NOTIF_KEY = 'notificationsEnabled';
 const LANG_LABELS: Record<string, string> = { fr: 'Français', en: 'English', ar: 'العربية' };
+const THEME_LABEL_KEYS: Record<string, string> = {
+  light:   'settings.theme_light',
+  comfort: 'settings.theme_comfort',
+  dark:    'settings.theme_dark',
+  system:  'settings.theme_system',
+  teal:    'settings.theme_teal',
+};
 
 export const ProfileScreen = () => {
+  const { tokens, mode } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  header: {
+    backgroundColor: colors.white,
+    padding: spacing.xl,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: tokens.primary,
+    marginBottom: spacing.md,
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: tokens.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  avatarInitials: {
+    color: colors.white,
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  name: {
+    color: colors.dark,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  email: {
+    color: colors.gray,
+  },
+  driverBadge: {
+    marginTop: 8,
+    backgroundColor: tokens.primary + '15',
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+  },
+  driverBadgeText: {
+    color: tokens.primary,
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  section: {
+    backgroundColor: colors.white,
+    marginBottom: spacing.md,
+  },
+  logoutButton: {
+    margin: spacing.lg,
+    paddingVertical: 8,
+  },
+  version: {
+    textAlign: 'center',
+    color: colors.gray,
+    marginBottom: spacing.xl,
+  },
+  }), [tokens]);
+  const sectionStyle = [styles.section, { backgroundColor: tokens.card }];
+  const headerStyle  = [styles.header,  { backgroundColor: tokens.card }];
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileNavProp>();
@@ -52,13 +131,13 @@ export const ProfileScreen = () => {
     (user?.lastName?.[0] || '').toUpperCase();
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: tokens.background }]}>
       {/* Header avatar */}
-      <View style={styles.header}>
+      <View style={headerStyle}>
         {avatarSource ? (
-          <Image source={avatarSource} style={styles.avatarImage} />
+          <Image source={avatarSource} style={[styles.avatarImage, { borderColor: tokens.primary }]} />
         ) : (
-          <View style={styles.avatarPlaceholder}>
+          <View style={[styles.avatarPlaceholder, { backgroundColor: tokens.primary }]}>
             <Text style={styles.avatarInitials}>{initials}</Text>
           </View>
         )}
@@ -69,8 +148,8 @@ export const ProfileScreen = () => {
           {user?.email || user?.phone}
         </Text>
         {isDriver && (
-          <View style={styles.driverBadge}>
-            <Text style={styles.driverBadgeText}>🚚 {t('profile.driver_badge')}</Text>
+          <View style={[styles.driverBadge, { backgroundColor: tokens.primary + '15' }]}>
+            <Text style={[styles.driverBadgeText, { color: tokens.primary }]}>🚚 {t('profile.driver_badge')}</Text>
           </View>
         )}
         {isPro && (
@@ -82,10 +161,10 @@ export const ProfileScreen = () => {
 
       {/* Switcher de rôle — visible uniquement si plusieurs rôles */}
       {availableRoles.length > 1 && (
-        <View style={styles.section}>
+        <View style={sectionStyle}>
           {availableRoles.filter((r) => r !== activeRole).map((role, index) => {
             const iconName = role === 'driver' ? 'truck-delivery' : role === 'pro' ? 'briefcase' : role === 'seller' ? 'store' : 'account';
-            const iconColor = role === 'driver' ? '#F59E0B' : role === 'pro' ? '#10B981' : role === 'seller' ? '#8B5CF6' : colors.primary;
+            const iconColor = role === 'driver' ? '#F59E0B' : role === 'pro' ? '#10B981' : role === 'seller' ? '#8B5CF6' : tokens.primary;
             return (
               <React.Fragment key={role}>
                 {index > 0 && <Divider />}
@@ -113,11 +192,11 @@ export const ProfileScreen = () => {
       )}
 
       {/* Compte */}
-      <View style={styles.section}>
+      <View style={sectionStyle}>
         <List.Item
           title={t('profile.my_info')}
           description={t('profile.my_info_desc')}
-          left={(props) => <List.Icon {...props} icon="account-edit" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="account-edit" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('EditProfile')}
         />
@@ -125,21 +204,21 @@ export const ProfileScreen = () => {
         <List.Item
           title={t('profile.my_addresses')}
           description={t('profile.my_addresses_desc')}
-          left={(props) => <List.Icon {...props} icon="map-marker-multiple" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="map-marker-multiple" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('Addresses')}
         />
         <Divider />
         <List.Item
           title={t('profile.payment_methods')}
-          left={(props) => <List.Icon {...props} icon="credit-card" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="credit-card" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('PayoutAccounts')}
         />
       </View>
 
       {/* Mes activités / Ajouter une activité */}
-      <View style={styles.section}>
+      <View style={sectionStyle}>
         <List.Item
           title={t('activity.my_activities')}
           description={t('activity.my_activities_desc')}
@@ -150,7 +229,7 @@ export const ProfileScreen = () => {
       </View>
 
       {/* Proposer un nouveau service */}
-      <View style={styles.section}>
+      <View style={sectionStyle}>
         <List.Item
           title={t('proposal.my_proposals')}
           description={t('proposal.subtitle')}
@@ -161,28 +240,28 @@ export const ProfileScreen = () => {
       </View>
 
       {/* Sécurité */}
-      <View style={styles.section}>
+      <View style={sectionStyle}>
         <List.Item
           title={t('profile.change_password')}
           description={t('profile.change_password_desc')}
-          left={(props) => <List.Icon {...props} icon="lock-reset" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="lock-reset" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('ChangePassword')}
         />
       </View>
 
       {/* Préférences */}
-      <View style={styles.section}>
+      <View style={sectionStyle}>
         <List.Item
           title={t('profile.notifications')}
           description={notificationsEnabled ? t('profile.notifications_on') : t('profile.notifications_off')}
-          left={(props) => <List.Icon {...props} icon="bell" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="bell" color={tokens.primary} />}
           right={() => (
             <Switch
               value={notificationsEnabled}
               onValueChange={toggleNotifications}
-              trackColor={{ false: colors.border, true: colors.primary + '80' }}
-              thumbColor={notificationsEnabled ? colors.primary : colors.gray}
+              trackColor={{ false: colors.border, true: tokens.primary + '80' }}
+              thumbColor={notificationsEnabled ? tokens.primary : colors.gray}
             />
           )}
         />
@@ -190,31 +269,39 @@ export const ProfileScreen = () => {
         <List.Item
           title={t('profile.language')}
           description={LANG_LABELS[currentLang] ?? currentLang}
-          left={(props) => <List.Icon {...props} icon="translate" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="translate" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('Language')}
+        />
+        <Divider />
+        <List.Item
+          title={t('settings.theme_title')}
+          description={t(THEME_LABEL_KEYS[mode])}
+          left={(props) => <List.Icon {...props} icon="palette-outline" color={tokens.primary} />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => navigation.navigate('Appearance')}
         />
       </View>
 
       {/* Support */}
-      <View style={styles.section}>
+      <View style={sectionStyle}>
         <List.Item
           title={t('profile.help')}
-          left={(props) => <List.Icon {...props} icon="headset" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="headset" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('Support')}
         />
         <Divider />
         <List.Item
           title={t('profile.terms')}
-          left={(props) => <List.Icon {...props} icon="file-document" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="file-document" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => Linking.openURL('https://checkallat-web-admin.vercel.app/terms')}
         />
         <Divider />
         <List.Item
           title={t('profile.privacy')}
-          left={(props) => <List.Icon {...props} icon="shield-lock" color={colors.primary} />}
+          left={(props) => <List.Icon {...props} icon="shield-lock" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => Linking.openURL('https://checkallat-web-admin.vercel.app/privacy')}
         />
@@ -237,70 +324,3 @@ export const ProfileScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  header: {
-    backgroundColor: colors.white,
-    padding: spacing.xl,
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    marginBottom: spacing.md,
-  },
-  avatarPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  avatarInitials: {
-    color: colors.white,
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  name: {
-    color: colors.dark,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  email: {
-    color: colors.gray,
-  },
-  driverBadge: {
-    marginTop: 8,
-    backgroundColor: colors.primary + '15',
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-  },
-  driverBadgeText: {
-    color: colors.primary,
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  section: {
-    backgroundColor: colors.white,
-    marginBottom: spacing.md,
-  },
-  logoutButton: {
-    margin: spacing.lg,
-    paddingVertical: 8,
-  },
-  version: {
-    textAlign: 'center',
-    color: colors.gray,
-    marginBottom: spacing.xl,
-  },
-});

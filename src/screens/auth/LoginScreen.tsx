@@ -1,5 +1,7 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, ScrollView, Platform, View, Image, Dimensions } from 'react-native';
+
+const LOGO_SIZE = Dimensions.get('window').width * 0.85;
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,6 +12,7 @@ import { useLoginMutation } from '../../store/api/authApi';
 import { useDispatch } from 'react-redux';
 import { setCredentials, DEFAULT_ROLE_KEY, UserRole } from '../../store/slices/authSlice';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { LanguagePickerModal, LANGUAGE_PICKER_DISMISSED_KEY } from './LanguagePickerModal';
@@ -22,6 +25,49 @@ interface LoginForm {
 type Props = StackScreenProps<AuthStackParamList, 'Login'>;
 
 export const LoginScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  content: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+  },
+  title: {
+    marginBottom: 32,
+    color: colors.dark,
+    textAlign: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  logo: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+  },
+  input: {
+    marginBottom: 16,
+    backgroundColor: colors.white,
+  },
+  button: {
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  linkButton: {
+    marginTop: 8,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginBottom: 8,
+    marginTop: -8,
+  },
+  }), [tokens]);
   const { t } = useTranslation();
   const [login, { isLoading, error }] = useLoginMutation();
   const dispatch = useDispatch();
@@ -68,11 +114,15 @@ export const LoginScreen = ({ navigation }: Props) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text variant="displaySmall" style={styles.title}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../../assets/splash.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+        <Text variant="bodyLarge" style={styles.title}>
           {t('auth.login_title')}
-        </Text>
-        <Text variant="displaySmall" style={styles.titleBrand}>
-          CheckAll@t
         </Text>
 
         <Controller
@@ -87,7 +137,7 @@ export const LoginScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
             />
           )}
         />
@@ -108,7 +158,7 @@ export const LoginScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               right={
                 <TextInput.Icon
                   icon={showPassword ? 'eye-off' : 'eye'}
@@ -134,7 +184,7 @@ export const LoginScreen = ({ navigation }: Props) => {
           onPress={handleSubmit(onSubmit)}
           loading={isLoading}
           style={styles.button}
-          buttonColor={colors.primary}
+          buttonColor={tokens.primary}
         >
           {t('auth.login_btn')}
         </Button>
@@ -151,42 +201,3 @@ export const LoginScreen = ({ navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  title: {
-    marginBottom: 8,
-    color: colors.dark,
-    textAlign: 'center',
-  },
-  titleBrand: {
-    marginBottom: 48,
-    color: colors.primary,
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  input: {
-    marginBottom: 16,
-    backgroundColor: colors.white,
-  },
-  button: {
-    marginTop: 16,
-    paddingVertical: 8,
-  },
-  linkButton: {
-    marginTop: 8,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 12,
-    marginBottom: 8,
-    marginTop: -8,
-  },
-});

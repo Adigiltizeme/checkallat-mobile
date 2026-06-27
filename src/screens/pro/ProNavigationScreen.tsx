@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import Constants from 'expo-constants';
 import * as Location from 'expo-location';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { ProStackParamList } from '../../navigation/types';
 import {
@@ -31,6 +32,102 @@ const Mapbox = isExpoGo ? null : require('@rnmapbox/maps').default;
 type Props = StackScreenProps<ProStackParamList, 'ProNavigation'>;
 
 export const ProNavigationScreen = ({ navigation, route }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
+  loadingText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
+  map: { flex: 1 },
+
+  // Marqueurs
+  proMarker: {
+    width: 44, height: 44, backgroundColor: tokens.primary, borderRadius: 22,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: colors.white,
+  },
+  proMarkerGo: {
+    width: 38, height: 38, backgroundColor: tokens.primary, borderRadius: 19,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: colors.white,
+  },
+  destinationMarker: {
+    width: 32, height: 32, borderRadius: 16, backgroundColor: tokens.primary,
+    justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: colors.white,
+  },
+
+  // Carte destination (top)
+  topCard: {
+    position: 'absolute', top: 50, left: spacing.md, right: spacing.md,
+    borderRadius: 14, elevation: 6,
+  },
+  topCardContent: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+  },
+  destIconWrap: { width: 32, alignItems: 'center' },
+  destTextWrap: { flex: 1 },
+  destLabel: { fontSize: 11, color: colors.gray, textTransform: 'uppercase', letterSpacing: 0.5 },
+  destAddress: { fontSize: 14, fontWeight: '700', color: colors.dark, marginTop: 2 },
+  callButton: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.success,
+    justifyContent: 'center', alignItems: 'center',
+  },
+
+  // Badge statut
+  statusBadge: {
+    position: 'absolute', top: 130, alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: tokens.primary, borderRadius: 20,
+    paddingHorizontal: spacing.md, paddingVertical: 6,
+    elevation: 4,
+  },
+  statusBadgeArrived: { backgroundColor: colors.success },
+  statusBadgeText: { color: colors.white, fontSize: 13, fontWeight: '700' },
+
+  // Bouton recentrer
+  centerButton: {
+    position: 'absolute', bottom: 220, right: spacing.md,
+    backgroundColor: colors.white, width: 52, height: 52, borderRadius: 26,
+    justifyContent: 'center', alignItems: 'center', elevation: 4,
+  },
+
+  // Actions bas
+  bottomActions: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    elevation: 8,
+    gap: spacing.sm,
+  },
+  googleMapsBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+    backgroundColor: '#4285F4', borderRadius: 12, paddingVertical: 14,
+  },
+  googleMapsBtnText: { color: colors.white, fontSize: 15, fontWeight: '700' },
+  primaryBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+    backgroundColor: tokens.primary, borderRadius: 12, paddingVertical: 16,
+  },
+  arrivedBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+    backgroundColor: colors.success, borderRadius: 12, paddingVertical: 16,
+  },
+  primaryBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
+  backBtn: {
+    borderRadius: 12, paddingVertical: 12, alignItems: 'center',
+    borderWidth: 1.5, borderColor: colors.border,
+  },
+  backBtnText: { fontSize: 14, color: colors.gray, fontWeight: '600' },
+  btnDisabled: { opacity: 0.6 },
+  backBtnCenter: {
+    marginTop: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm,
+    borderRadius: 8, borderWidth: 1, borderColor: colors.border,
+  },
+  backBtnCenterText: { color: colors.gray, fontSize: 14 },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const { bookingId } = route.params;
 
@@ -163,7 +260,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
   if (!booking) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
         <Text style={styles.loadingText}>{t('pro_navigation.loading')}</Text>
       </View>
     );
@@ -184,7 +281,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
   if (!currentLocation) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
         <Text style={styles.loadingText}>{t('transport.retrieving_gps_position')}</Text>
       </View>
     );
@@ -244,7 +341,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
             coordinate={{ latitude: destination.lat, longitude: destination.lng }}
             title={t('pro_navigation.client_address')}
             description={destination.address}
-            pinColor={colors.primary}
+            pinColor={tokens.primary}
           />
 
           {/* Ligne de route */}
@@ -253,7 +350,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
               { latitude: currentLocation.latitude, longitude: currentLocation.longitude },
               { latitude: destination.lat, longitude: destination.lng },
             ]}
-            strokeColor={colors.primary}
+            strokeColor={tokens.primary}
             strokeWidth={4}
             lineDashPattern={[10, 5]}
           />
@@ -289,7 +386,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
           <Mapbox.LineLayer
             id="routeLine"
             style={{
-              lineColor: colors.primary,
+              lineColor: tokens.primary,
               lineWidth: 4,
               lineDasharray: [2, 1.5],
             }}
@@ -310,7 +407,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
             <Icon
               name="map-marker"
               size={26}
-              color={arrivedAt ? colors.success : colors.primary}
+              color={arrivedAt ? colors.success : tokens.primary}
             />
           </View>
           <View style={styles.destTextWrap}>
@@ -346,7 +443,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
       {/* Bouton recentrer (Mapbox seulement) */}
       {!isExpoGo && (
         <TouchableOpacity style={styles.centerButton} onPress={handleCenterMap}>
-          <Icon name="crosshairs-gps" size={28} color={colors.primary} />
+          <Icon name="crosshairs-gps" size={28} color={tokens.primary} />
         </TouchableOpacity>
       )}
 
@@ -402,96 +499,3 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
-  loadingText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
-  map: { flex: 1 },
-
-  // Marqueurs
-  proMarker: {
-    width: 44, height: 44, backgroundColor: colors.primary, borderRadius: 22,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: colors.white,
-  },
-  proMarkerGo: {
-    width: 38, height: 38, backgroundColor: colors.primary, borderRadius: 19,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: colors.white,
-  },
-  destinationMarker: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: colors.white,
-  },
-
-  // Carte destination (top)
-  topCard: {
-    position: 'absolute', top: 50, left: spacing.md, right: spacing.md,
-    borderRadius: 14, elevation: 6,
-  },
-  topCardContent: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-  },
-  destIconWrap: { width: 32, alignItems: 'center' },
-  destTextWrap: { flex: 1 },
-  destLabel: { fontSize: 11, color: colors.gray, textTransform: 'uppercase', letterSpacing: 0.5 },
-  destAddress: { fontSize: 14, fontWeight: '700', color: colors.dark, marginTop: 2 },
-  callButton: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: colors.success,
-    justifyContent: 'center', alignItems: 'center',
-  },
-
-  // Badge statut
-  statusBadge: {
-    position: 'absolute', top: 130, alignSelf: 'center',
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: colors.primary, borderRadius: 20,
-    paddingHorizontal: spacing.md, paddingVertical: 6,
-    elevation: 4,
-  },
-  statusBadgeArrived: { backgroundColor: colors.success },
-  statusBadgeText: { color: colors.white, fontSize: 13, fontWeight: '700' },
-
-  // Bouton recentrer
-  centerButton: {
-    position: 'absolute', bottom: 220, right: spacing.md,
-    backgroundColor: colors.white, width: 52, height: 52, borderRadius: 26,
-    justifyContent: 'center', alignItems: 'center', elevation: 4,
-  },
-
-  // Actions bas
-  bottomActions: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    elevation: 8,
-    gap: spacing.sm,
-  },
-  googleMapsBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
-    backgroundColor: '#4285F4', borderRadius: 12, paddingVertical: 14,
-  },
-  googleMapsBtnText: { color: colors.white, fontSize: 15, fontWeight: '700' },
-  primaryBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
-    backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16,
-  },
-  arrivedBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
-    backgroundColor: colors.success, borderRadius: 12, paddingVertical: 16,
-  },
-  primaryBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-  backBtn: {
-    borderRadius: 12, paddingVertical: 12, alignItems: 'center',
-    borderWidth: 1.5, borderColor: colors.border,
-  },
-  backBtnText: { fontSize: 14, color: colors.gray, fontWeight: '600' },
-  btnDisabled: { opacity: 0.6 },
-  backBtnCenter: {
-    marginTop: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm,
-    borderRadius: 8, borderWidth: 1, borderColor: colors.border,
-  },
-  backBtnCenterText: { color: colors.gray, fontSize: 14 },
-});

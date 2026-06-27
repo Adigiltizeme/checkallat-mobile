@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -20,6 +20,7 @@ import { useCreateBookingMutation } from '../../store/api/bookingsApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<HomeStackParamList, 'CreateBooking'>;
@@ -40,6 +41,94 @@ function isToday(date: Date): boolean {
 }
 
 export const CreateBookingScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+
+  label: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
+  hint: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
+  errorHint: { fontSize: 12, color: colors.error, marginTop: 4 },
+  emptyText: { fontSize: 13, color: colors.gray, fontStyle: 'italic' },
+
+  // Pro summary
+  proSummary: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
+    marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border,
+  },
+  proAvatarSmall: {
+    width: 42, height: 42, borderRadius: 12,
+    backgroundColor: tokens.primary + '20', alignItems: 'center', justifyContent: 'center',
+  },
+  proAvatarLetter: { fontSize: 18, fontWeight: '700', color: tokens.primary },
+  proSummaryName: { fontSize: 14, fontWeight: '700', color: colors.dark },
+  proSummaryRating: { fontSize: 12, color: colors.gray, marginTop: 2 },
+
+  // Offerings
+  offeringOption: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
+    marginBottom: spacing.sm, borderWidth: 1.5, borderColor: colors.border,
+  },
+  offeringOptionActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '08' },
+  radioCircle: {
+    width: 20, height: 20, borderRadius: 10, borderWidth: 2,
+    borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
+  },
+  radioCircleActive: { borderColor: tokens.primary },
+  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: tokens.primary },
+  offeringName: { fontSize: 14, fontWeight: '600', color: colors.dark },
+  offeringNameActive: { color: tokens.primary },
+  offeringPrice: { fontSize: 12, color: colors.gray, marginTop: 2 },
+
+  // Inputs
+  textArea: { backgroundColor: colors.white, minHeight: 100 },
+  input: { backgroundColor: colors.white },
+
+  // Date
+  dateCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.white, borderRadius: 12,
+    borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
+  },
+  dateArrow: { padding: spacing.md },
+  dateCenter: { flex: 1, alignItems: 'center', paddingVertical: spacing.md },
+  dateText: { fontSize: 14, fontWeight: '600', color: colors.dark, textTransform: 'capitalize' },
+
+  // Payment
+  paymentRow: { flexDirection: 'row', gap: spacing.md },
+  paymentOption: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
+    borderWidth: 1.5, borderColor: colors.border, justifyContent: 'center',
+  },
+  paymentOptionActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '08' },
+  paymentLabel: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  paymentLabelActive: { color: tokens.primary, fontWeight: '700' },
+
+  // Summary
+  summaryCard: {
+    backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#BBF7D0',
+    borderRadius: 12, padding: spacing.md, marginTop: spacing.lg,
+  },
+  summaryTitle: { fontSize: 14, fontWeight: '700', color: '#166534', marginBottom: spacing.sm },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  summaryLabel: { fontSize: 13, color: colors.gray },
+  summaryValue: { fontSize: 13, color: colors.dark, fontWeight: '500' },
+
+  // Submit
+  submitBtn: {
+    backgroundColor: tokens.primary, borderRadius: 14, paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, marginTop: spacing.xl,
+  },
+  submitBtnDisabled: { opacity: 0.5 },
+  submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
+  }), [tokens]);
+
   const { t, i18n } = useTranslation();
   const { proId, offeringId: preSelectedOffering } = route.params;
   const { userLat, userLng } = useSelector((state: RootState) => state.location);
@@ -163,7 +252,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
           multiline
           numberOfLines={4}
           outlineColor={colors.border}
-          activeOutlineColor={colors.primary}
+          activeOutlineColor={tokens.primary}
           style={styles.textArea}
         />
         {description.trim().length > 0 && description.trim().length < 10 && (
@@ -178,7 +267,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
           onChangeText={setAddress}
           placeholder={t('booking.address_placeholder')}
           outlineColor={colors.border}
-          activeOutlineColor={colors.primary}
+          activeOutlineColor={tokens.primary}
           style={styles.input}
           left={<TextInput.Icon icon="map-marker-outline" color={colors.gray} />}
         />
@@ -225,7 +314,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
               <Icon
                 name={method === 'cash' ? 'cash' : 'shield-check'}
                 size={22}
-                color={paymentMethod === method ? colors.primary : colors.gray}
+                color={paymentMethod === method ? tokens.primary : colors.gray}
               />
               <Text style={[styles.paymentLabel, paymentMethod === method && styles.paymentLabelActive]}>
                 {t(method === 'cash' ? 'booking.payment_cash' : 'booking.payment_inapp')}
@@ -253,7 +342,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
             {selectedOffering.priceMin && (
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>{t('booking.price_estimate')}</Text>
-                <Text style={[styles.summaryValue, { color: colors.primary, fontWeight: '700' }]}>
+                <Text style={[styles.summaryValue, { color: tokens.primary, fontWeight: '700' }]}>
                   {selectedOffering.priceMax
                     ? `${selectedOffering.priceMin} – ${selectedOffering.priceMax} EGP`
                     : `${t('services.from_price', { price: selectedOffering.priceMin, currency: 'EGP' })}`}
@@ -283,88 +372,3 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-
-  label: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
-  hint: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
-  errorHint: { fontSize: 12, color: colors.error, marginTop: 4 },
-  emptyText: { fontSize: 13, color: colors.gray, fontStyle: 'italic' },
-
-  // Pro summary
-  proSummary: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
-    marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border,
-  },
-  proAvatarSmall: {
-    width: 42, height: 42, borderRadius: 12,
-    backgroundColor: colors.primary + '20', alignItems: 'center', justifyContent: 'center',
-  },
-  proAvatarLetter: { fontSize: 18, fontWeight: '700', color: colors.primary },
-  proSummaryName: { fontSize: 14, fontWeight: '700', color: colors.dark },
-  proSummaryRating: { fontSize: 12, color: colors.gray, marginTop: 2 },
-
-  // Offerings
-  offeringOption: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
-    marginBottom: spacing.sm, borderWidth: 1.5, borderColor: colors.border,
-  },
-  offeringOptionActive: { borderColor: colors.primary, backgroundColor: colors.primary + '08' },
-  radioCircle: {
-    width: 20, height: 20, borderRadius: 10, borderWidth: 2,
-    borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
-  },
-  radioCircleActive: { borderColor: colors.primary },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
-  offeringName: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  offeringNameActive: { color: colors.primary },
-  offeringPrice: { fontSize: 12, color: colors.gray, marginTop: 2 },
-
-  // Inputs
-  textArea: { backgroundColor: colors.white, minHeight: 100 },
-  input: { backgroundColor: colors.white },
-
-  // Date
-  dateCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.white, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
-  },
-  dateArrow: { padding: spacing.md },
-  dateCenter: { flex: 1, alignItems: 'center', paddingVertical: spacing.md },
-  dateText: { fontSize: 14, fontWeight: '600', color: colors.dark, textTransform: 'capitalize' },
-
-  // Payment
-  paymentRow: { flexDirection: 'row', gap: spacing.md },
-  paymentOption: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
-    borderWidth: 1.5, borderColor: colors.border, justifyContent: 'center',
-  },
-  paymentOptionActive: { borderColor: colors.primary, backgroundColor: colors.primary + '08' },
-  paymentLabel: { fontSize: 13, color: colors.gray, fontWeight: '500' },
-  paymentLabelActive: { color: colors.primary, fontWeight: '700' },
-
-  // Summary
-  summaryCard: {
-    backgroundColor: '#F0FDF4', borderWidth: 1, borderColor: '#BBF7D0',
-    borderRadius: 12, padding: spacing.md, marginTop: spacing.lg,
-  },
-  summaryTitle: { fontSize: 14, fontWeight: '700', color: '#166534', marginBottom: spacing.sm },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  summaryLabel: { fontSize: 13, color: colors.gray },
-  summaryValue: { fontSize: 13, color: colors.dark, fontWeight: '500' },
-
-  // Submit
-  submitBtn: {
-    backgroundColor: colors.primary, borderRadius: 14, paddingVertical: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: spacing.sm, marginTop: spacing.xl,
-  },
-  submitBtnDisabled: { opacity: 0.5 },
-  submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-});

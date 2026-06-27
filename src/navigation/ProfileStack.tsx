@@ -2,12 +2,14 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { ProfileStackParamList } from './types';
-import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { defaultStackScreenOptions } from './stackOptions';
 
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { AddressesScreen } from '../screens/profile/AddressesScreen';
 import { LanguageScreen } from '../screens/profile/LanguageScreen';
+import { AppearanceScreen } from '../screens/profile/AppearanceScreen';
 import { SupportScreen } from '../screens/profile/SupportScreen';
 import { ChangePasswordScreen } from '../screens/profile/ChangePasswordScreen';
 import { ChangePhoneScreen } from '../screens/profile/ChangePhoneScreen';
@@ -25,14 +27,11 @@ const Stack = createStackNavigator<ProfileStackParamList>();
 
 export const ProfileStack = () => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
 
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.primary },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: '600' },
-      }}
+      screenOptions={defaultStackScreenOptions(tokens)}
     >
       <Stack.Screen
         name="ProfileHome"
@@ -53,6 +52,11 @@ export const ProfileStack = () => {
         name="Language"
         component={LanguageScreen}
         options={{ title: t('language.title') }}
+      />
+      <Stack.Screen
+        name="Appearance"
+        component={AppearanceScreen}
+        options={{ title: t('settings.theme_title') }}
       />
       <Stack.Screen
         name="Support"

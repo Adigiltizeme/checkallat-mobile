@@ -1,7 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { defaultStackScreenOptions } from './stackOptions';
 
 import { DriverAvailableRequestsScreen } from '../screens/driver/DriverAvailableRequestsScreen';
 import { DriverTransportDetailsScreen } from '../screens/driver/DriverTransportDetailsScreen';
@@ -27,17 +28,14 @@ const Stack = createStackNavigator<DriverAvailablesStackParamList>();
 
 export const DriverAvailablesStack = () => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.primary },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: 'bold' },
-      }}
+      screenOptions={defaultStackScreenOptions(tokens)}
     >
       <Stack.Screen
         name="DriverAvailablesHome"
-        component={DriverAvailableRequestsScreen}
+        component={DriverAvailableRequestsScreen as React.ComponentType<any>}
         options={{ title: t('driver.available_requests_title') }}
       />
       <Stack.Screen

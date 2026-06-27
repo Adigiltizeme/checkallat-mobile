@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { Text, Button, ActivityIndicator, Card } from 'react-native-paper';
 import { useStripe } from '@stripe/stripe-react-native';
@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TransportStackParamList } from '../../navigation/types';
 import { useCreatePaymentIntentMutation } from '../../store/api/paymentsApi';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { formatCurrency } from '../../config/currency';
 
 type Props = StackScreenProps<TransportStackParamList, 'StripePayment'>;
@@ -15,6 +16,88 @@ type Props = StackScreenProps<TransportStackParamList, 'StripePayment'>;
 type PaymentState = 'loading' | 'ready' | 'processing' | 'success' | 'error';
 
 export const StripePaymentScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    padding: 16,
+  },
+  amountCard: {
+    marginBottom: 24,
+  },
+  amountContent: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  secureLabel: {
+    marginTop: 12,
+    color: colors.gray,
+  },
+  amount: {
+    marginTop: 8,
+    fontWeight: 'bold',
+    color: tokens.primary,
+  },
+  escrowNote: {
+    marginTop: 8,
+    color: colors.gray,
+    textAlign: 'center',
+  },
+  stateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+  stateText: {
+    color: colors.gray,
+    fontSize: 16,
+    marginTop: 12,
+  },
+  errorTitle: {
+    color: colors.error,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  errorMsg: {
+    color: colors.gray,
+    textAlign: 'center',
+    paddingHorizontal: 24,
+  },
+  successTitle: {
+    color: colors.success,
+    fontWeight: 'bold',
+  },
+  actionsContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingBottom: 16,
+    gap: 12,
+  },
+  stripeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  stripeInfoText: {
+    color: colors.gray,
+  },
+  button: {
+    marginBottom: 4,
+  },
+  payButton: {
+    marginBottom: 8,
+  },
+  payButtonContent: {
+    paddingVertical: 8,
+  },
+  }), [tokens]);
+
   const { requestId, amount, type } = route.params;
   const { t } = useTranslation();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -120,7 +203,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
       {/* Amount card */}
       <Card style={styles.amountCard}>
         <Card.Content style={styles.amountContent}>
-          <Icon name="shield-lock" size={48} color={colors.primary} />
+          <Icon name="shield-lock" size={48} color={tokens.primary} />
           <Text variant="titleMedium" style={styles.secureLabel}>
             {t('payment.secure_payment')}
           </Text>
@@ -136,7 +219,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
       {/* State-based content */}
       {paymentState === 'loading' && (
         <View style={styles.stateContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={tokens.primary} />
           <Text style={styles.stateText}>{t('payment.preparing')}</Text>
         </View>
       )}
@@ -186,7 +269,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
             disabled={paymentState === 'processing'}
             style={[styles.button, styles.payButton]}
             icon="credit-card"
-            buttonColor={colors.primary}
+            buttonColor={tokens.primary}
             contentStyle={styles.payButtonContent}
           >
             {t('payment.pay_now')}
@@ -205,82 +288,3 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-    padding: 16,
-  },
-  amountCard: {
-    marginBottom: 24,
-  },
-  amountContent: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  secureLabel: {
-    marginTop: 12,
-    color: colors.gray,
-  },
-  amount: {
-    marginTop: 8,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  escrowNote: {
-    marginTop: 8,
-    color: colors.gray,
-    textAlign: 'center',
-  },
-  stateContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  stateText: {
-    color: colors.gray,
-    fontSize: 16,
-    marginTop: 12,
-  },
-  errorTitle: {
-    color: colors.error,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  errorMsg: {
-    color: colors.gray,
-    textAlign: 'center',
-    paddingHorizontal: 24,
-  },
-  successTitle: {
-    color: colors.success,
-    fontWeight: 'bold',
-  },
-  actionsContainer: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    paddingBottom: 16,
-    gap: 12,
-  },
-  stripeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginBottom: 8,
-  },
-  stripeInfoText: {
-    color: colors.gray,
-  },
-  button: {
-    marginBottom: 4,
-  },
-  payButton: {
-    marginBottom: 8,
-  },
-  payButtonContent: {
-    paddingVertical: 8,
-  },
-});

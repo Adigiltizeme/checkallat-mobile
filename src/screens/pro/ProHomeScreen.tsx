@@ -24,6 +24,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
@@ -36,7 +37,6 @@ type Props = StackScreenProps<ProStackParamList, 'ProHome'>;
 type TemporalFilter = 'all' | 'today' | 'upcoming' | 'history';
 type DateMode = 'range' | 'single';
 
-const PRO_GREEN = '#10B981';
 const ACTIVE_STATUSES = ['accepted', 'en_route', 'arrived', 'in_progress'];
 
 const STATUS_COLORS: Record<string, string> = {
@@ -53,6 +53,75 @@ const STATUS_COLORS: Record<string, string> = {
 const toDay = (d: string) => (d ? new Date(d).toLocaleDateString('en-CA') : '');
 
 export const ProHomeScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  availabilityCard: { backgroundColor: colors.white, padding: spacing.md, margin: spacing.md, borderRadius: 12, elevation: 2 },
+  availabilityContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  availabilityTitle: { fontWeight: 'bold', marginBottom: spacing.xs },
+  availabilitySubtitle: { color: colors.gray },
+  pendingBanner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: tokens.primary, marginHorizontal: spacing.md, marginBottom: spacing.md,
+    borderRadius: 12, padding: spacing.md, elevation: 4,
+    shadowColor: tokens.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4,
+  },
+  bannerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
+  bannerTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
+  bannerSub: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
+  collapsibleCard: { backgroundColor: colors.white, borderRadius: 12, marginHorizontal: spacing.md, marginBottom: spacing.md, elevation: 1, overflow: 'hidden' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
+  chevron: { fontSize: 12, color: colors.gray },
+  statsContainer: { flexDirection: 'row', paddingHorizontal: spacing.md, marginBottom: spacing.md, gap: spacing.sm },
+  statCard: { flex: 1, backgroundColor: colors.white, padding: spacing.md, borderRadius: 12, alignItems: 'center', elevation: 2 },
+  statNumber: { fontWeight: 'bold', color: tokens.primary },
+  statLabel: { color: colors.gray, marginTop: spacing.xs },
+  filtersContainer: { backgroundColor: colors.white, borderRadius: 12, marginHorizontal: spacing.md, marginBottom: spacing.md, elevation: 1, overflow: 'hidden' },
+  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginTop: spacing.xs, marginBottom: spacing.xs, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: '#F3F4F6', paddingHorizontal: spacing.sm },
+  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
+  searchClear: { padding: spacing.xs },
+  tabsRow: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
+  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: '#F3F4F6', marginRight: spacing.xs },
+  tabActive: { backgroundColor: tokens.primary },
+  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  tabTextActive: { color: colors.white, fontWeight: '600' },
+  dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
+  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: '#F3F4F6' },
+  dateModeBtnActive: { backgroundColor: `${tokens.primary}20`, borderColor: tokens.primary },
+  dateModeBtnText: { fontSize: 12, color: colors.gray },
+  dateModeBtnTextActive: { color: tokens.primary, fontWeight: '600' },
+  dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
+  dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  dateLabel: { fontSize: 13, color: colors.gray },
+  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: '#F3F4F6' },
+  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
+  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.sm },
+  listContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl * 2 },
+  bookingCard: { marginBottom: spacing.md, backgroundColor: colors.white, elevation: 2 },
+  activeCard: { borderLeftWidth: 4, borderLeftColor: tokens.primary },
+  confirmRequiredCard: { borderLeftWidth: 4, borderLeftColor: '#D97706' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
+  cardTitle: { fontWeight: 'bold' },
+  clientText: { color: colors.gray, marginTop: 2 },
+  statusChip: {},
+  infoRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginBottom: 2 },
+  infoItem: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
+  infoText: { color: colors.gray, flexShrink: 1 },
+  confirmBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    marginTop: spacing.sm, paddingHorizontal: spacing.sm, paddingVertical: 4,
+    backgroundColor: '#FEF3C7', borderRadius: 6, alignSelf: 'flex-start',
+  },
+  confirmBadgeText: { fontSize: 11, fontWeight: '600', color: '#D97706' },
+  emptyContainer: { alignItems: 'center', paddingTop: spacing.xl * 2, paddingHorizontal: spacing.xl },
+  emptyText: { marginTop: spacing.md, fontWeight: 'bold', textAlign: 'center' },
+  emptySubtext: { marginTop: spacing.xs, color: colors.gray, textAlign: 'center' },
+  fab: { position: 'absolute', bottom: spacing.md, right: spacing.md, backgroundColor: tokens.primary },
+}), [tokens]);
+
   const { t, i18n } = useTranslation();
   const pro = useSelector((state: RootState) => (state.auth.user as any)?.pro);
   const proId: string = pro?.id ?? '';
@@ -248,7 +317,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={PRO_GREEN} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -265,7 +334,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
               {isAvailable ? t('pro_space.available_subtitle') : t('pro_space.unavailable_subtitle')}
             </Text>
           </View>
-          <Switch value={isAvailable} onValueChange={toggleAvailability} trackColor={{ false: colors.gray, true: PRO_GREEN }} thumbColor={colors.white} />
+          <Switch value={isAvailable} onValueChange={toggleAvailability} trackColor={{ false: colors.gray, true: tokens.primary }} thumbColor={colors.white} />
         </View>
       </View>
 
@@ -370,7 +439,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
         renderItem={renderBooking}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[PRO_GREEN]} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[tokens.primary]} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Icon name="briefcase-search-outline" size={80} color={colors.gray} />
@@ -384,71 +453,4 @@ export const ProHomeScreen = ({ navigation }: Props) => {
   );
 };
 
-const PRO_GREEN_COLOR = '#10B981';
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  availabilityCard: { backgroundColor: colors.white, padding: spacing.md, margin: spacing.md, borderRadius: 12, elevation: 2 },
-  availabilityContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  availabilityTitle: { fontWeight: 'bold', marginBottom: spacing.xs },
-  availabilitySubtitle: { color: colors.gray },
-  pendingBanner: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: PRO_GREEN_COLOR, marginHorizontal: spacing.md, marginBottom: spacing.md,
-    borderRadius: 12, padding: spacing.md, elevation: 4,
-    shadowColor: PRO_GREEN_COLOR, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.3, shadowRadius: 4,
-  },
-  bannerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
-  bannerTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-  bannerSub: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
-  collapsibleCard: { backgroundColor: colors.white, borderRadius: 12, marginHorizontal: spacing.md, marginBottom: spacing.md, elevation: 1, overflow: 'hidden' },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
-  statsContainer: { flexDirection: 'row', paddingHorizontal: spacing.md, marginBottom: spacing.md, gap: spacing.sm },
-  statCard: { flex: 1, backgroundColor: colors.white, padding: spacing.md, borderRadius: 12, alignItems: 'center', elevation: 2 },
-  statNumber: { fontWeight: 'bold', color: PRO_GREEN_COLOR },
-  statLabel: { color: colors.gray, marginTop: spacing.xs },
-  filtersContainer: { backgroundColor: colors.white, borderRadius: 12, marginHorizontal: spacing.md, marginBottom: spacing.md, elevation: 1, overflow: 'hidden' },
-  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginTop: spacing.xs, marginBottom: spacing.xs, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: '#F3F4F6', paddingHorizontal: spacing.sm },
-  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
-  searchClear: { padding: spacing.xs },
-  tabsRow: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
-  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: '#F3F4F6', marginRight: spacing.xs },
-  tabActive: { backgroundColor: PRO_GREEN_COLOR },
-  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
-  tabTextActive: { color: colors.white, fontWeight: '600' },
-  dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: '#F3F4F6' },
-  dateModeBtnActive: { backgroundColor: `${PRO_GREEN_COLOR}20`, borderColor: PRO_GREEN_COLOR },
-  dateModeBtnText: { fontSize: 12, color: colors.gray },
-  dateModeBtnTextActive: { color: PRO_GREEN_COLOR, fontWeight: '600' },
-  dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  dateLabel: { fontSize: 13, color: colors.gray },
-  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: '#F3F4F6' },
-  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
-  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.sm },
-  listContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl * 2 },
-  bookingCard: { marginBottom: spacing.md, backgroundColor: colors.white, elevation: 2 },
-  activeCard: { borderLeftWidth: 4, borderLeftColor: PRO_GREEN_COLOR },
-  confirmRequiredCard: { borderLeftWidth: 4, borderLeftColor: '#D97706' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
-  cardTitle: { fontWeight: 'bold' },
-  clientText: { color: colors.gray, marginTop: 2 },
-  statusChip: {},
-  infoRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginBottom: 2 },
-  infoItem: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
-  infoText: { color: colors.gray, flexShrink: 1 },
-  confirmBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    marginTop: spacing.sm, paddingHorizontal: spacing.sm, paddingVertical: 4,
-    backgroundColor: '#FEF3C7', borderRadius: 6, alignSelf: 'flex-start',
-  },
-  confirmBadgeText: { fontSize: 11, fontWeight: '600', color: '#D97706' },
-  emptyContainer: { alignItems: 'center', paddingTop: spacing.xl * 2, paddingHorizontal: spacing.xl },
-  emptyText: { marginTop: spacing.md, fontWeight: 'bold', textAlign: 'center' },
-  emptySubtext: { marginTop: spacing.xs, color: colors.gray, textAlign: 'center' },
-  fab: { position: 'absolute', bottom: spacing.md, right: spacing.md, backgroundColor: PRO_GREEN_COLOR },
-});

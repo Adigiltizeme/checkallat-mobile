@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, Modal, Dimensions, Linking } from 'react-native';
 import { Text, Card, Button, Divider, ActivityIndicator, Chip, IconButton } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import {
@@ -26,6 +27,314 @@ import {
 type Props = StackScreenProps<any, 'TransportDetails'>;
 
 export const TransportDetailsScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  loading: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  error: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  errorButton: {
+    marginTop: spacing.lg,
+  },
+  statusCard: {
+    marginBottom: spacing.md,
+    elevation: 4,
+  },
+  statusText: {
+    color: colors.white,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  statusSubtext: {
+    color: colors.white,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+  },
+  card: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+  },
+  sectionTitle: {
+    color: tokens.primary,
+    marginBottom: spacing.sm,
+  },
+  value: {
+    color: colors.dark,
+    fontWeight: '600',
+  },
+  description: {
+    color: colors.dark,
+    marginTop: spacing.xs,
+  },
+  detail: {
+    color: colors.gray,
+    marginTop: 4,
+  },
+  addressBlock: {
+    marginVertical: spacing.xs,
+  },
+  addressLabel: {
+    color: colors.gray,
+    marginBottom: 4,
+  },
+  instructions: {
+    color: tokens.primary,
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  divider: {
+    marginVertical: spacing.sm,
+  },
+  distanceRow: {
+    marginTop: spacing.xs,
+  },
+  service: {
+    color: colors.dark,
+    marginVertical: 4,
+  },
+  priceCard: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: tokens.primary,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: spacing.xs,
+  },
+  totalDivider: {
+    marginVertical: spacing.md,
+    backgroundColor: tokens.primary,
+    height: 2,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalValue: {
+    color: tokens.primary,
+    fontWeight: '700',
+  },
+  paymentMethod: {
+    color: colors.gray,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  noteContainer: {
+    marginTop: spacing.sm,
+    padding: spacing.sm,
+    backgroundColor: colors.lightBlue,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: tokens.primary,
+  },
+  noteLabel: {
+    color: colors.gray,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  noteText: {
+    color: colors.dark,
+    lineHeight: 20,
+  },
+  infoCard: {
+    backgroundColor: '#FFF3CD',
+    marginBottom: spacing.md,
+  },
+  infoText: {
+    color: colors.dark,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  actions: {
+    gap: spacing.md,
+  },
+  button: {
+    paddingVertical: spacing.sm,
+  },
+  cancelButton: {
+    borderColor: colors.error,
+  },
+  escrowCard: {
+    borderWidth: 1,
+    borderColor: tokens.primary + '40',
+  },
+  escrowRow: {
+    gap: 4,
+  },
+  escrowStatus: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  escrowNote: {
+    color: colors.gray,
+    marginTop: 4,
+  },
+  warningCard: {
+    backgroundColor: '#FFF3CD',
+  },
+  warningText: {
+    color: '#856404',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  photosSection: {
+    marginTop: spacing.md,
+  },
+  photosLabel: {
+    color: colors.gray,
+    marginBottom: spacing.xs,
+  },
+  photosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  photoThumbnail: {
+    width: 70,
+    height: 70,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  driverRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  driverAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: `${tokens.primary}20`,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  driverAvatarText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: tokens.primary,
+  },
+  driverInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  driverName: {
+    color: colors.dark,
+    fontWeight: '600',
+  },
+  driverDetail: {
+    color: colors.gray,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  contactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: tokens.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+  contactBtnMessage: {
+    backgroundColor: `${tokens.primary}15`,
+    borderWidth: 1,
+    borderColor: tokens.primary,
+  },
+  contactBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  contactBtnMessageText: {
+    color: tokens.primary,
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: spacing.sm,
+  },
+  objectChip: {
+    backgroundColor: `${tokens.primary}20`,
+    paddingHorizontal: 8,
+    margin: 0,
+  },
+  objectChipText: {
+    color: tokens.primary,
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  modalTitle: {
+    color: colors.white,
+    fontWeight: '600',
+  },
+  modalImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.7,
+  },
+  modalNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+  },
+  navButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  navButtonDisabled: {
+    opacity: 0.3,
+  },
+  }), [tokens]);
+
   const { t, i18n } = useTranslation();
   const { requestId } = route.params as { requestId: string };
   const { data: request, isLoading, refetch } = useGetTransportRequestQuery(requestId, {
@@ -182,7 +491,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -301,7 +610,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                       style={[styles.contactBtn, styles.contactBtnMessage]}
                       onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: driverName })}
                     >
-                      <Icon name="message-text" size={16} color={colors.primary} />
+                      <Icon name="message-text" size={16} color={tokens.primary} />
                       <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('transport.message_driver')}</Text>
                     </TouchableOpacity>
                   </View>
@@ -562,8 +871,8 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
               const escrow = (request as any).payment.escrowStatus;
               const escrowMap: Record<string, { icon: string; key: string; color: string }> = {
                 pending:  { icon: '⏳', key: 'payment.escrow_pending',  color: colors.warning },
-                captured: { icon: '💳', key: 'payment.escrow_captured', color: colors.primary },
-                held:     { icon: '🔒', key: 'payment.escrow_held',     color: colors.primary },
+                captured: { icon: '💳', key: 'payment.escrow_captured', color: tokens.primary },
+                held:     { icon: '🔒', key: 'payment.escrow_held',     color: tokens.primary },
                 released: { icon: '✅', key: 'payment.escrow_released', color: colors.success },
                 refunded: { icon: '↩️', key: 'payment.escrow_refunded', color: colors.error },
               };
@@ -668,7 +977,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
           <Button
             mode="contained"
             onPress={handleTrack}
-            buttonColor={colors.primary}
+            buttonColor={tokens.primary}
             style={styles.button}
             icon="map-marker-path"
           >
@@ -793,308 +1102,3 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  error: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  errorButton: {
-    marginTop: spacing.lg,
-  },
-  statusCard: {
-    marginBottom: spacing.md,
-    elevation: 4,
-  },
-  statusText: {
-    color: colors.white,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  statusSubtext: {
-    color: colors.white,
-    textAlign: 'center',
-    marginTop: spacing.xs,
-  },
-  card: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-  },
-  sectionTitle: {
-    color: colors.primary,
-    marginBottom: spacing.sm,
-  },
-  value: {
-    color: colors.dark,
-    fontWeight: '600',
-  },
-  description: {
-    color: colors.dark,
-    marginTop: spacing.xs,
-  },
-  detail: {
-    color: colors.gray,
-    marginTop: 4,
-  },
-  addressBlock: {
-    marginVertical: spacing.xs,
-  },
-  addressLabel: {
-    color: colors.gray,
-    marginBottom: 4,
-  },
-  instructions: {
-    color: colors.primary,
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-  divider: {
-    marginVertical: spacing.sm,
-  },
-  distanceRow: {
-    marginTop: spacing.xs,
-  },
-  service: {
-    color: colors.dark,
-    marginVertical: 4,
-  },
-  priceCard: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: spacing.xs,
-  },
-  totalDivider: {
-    marginVertical: spacing.md,
-    backgroundColor: colors.primary,
-    height: 2,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalValue: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  paymentMethod: {
-    color: colors.gray,
-    textAlign: 'center',
-    marginTop: spacing.sm,
-  },
-  noteContainer: {
-    marginTop: spacing.sm,
-    padding: spacing.sm,
-    backgroundColor: colors.lightBlue,
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-  },
-  noteLabel: {
-    color: colors.gray,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  noteText: {
-    color: colors.dark,
-    lineHeight: 20,
-  },
-  infoCard: {
-    backgroundColor: '#FFF3CD',
-    marginBottom: spacing.md,
-  },
-  infoText: {
-    color: colors.dark,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  actions: {
-    gap: spacing.md,
-  },
-  button: {
-    paddingVertical: spacing.sm,
-  },
-  cancelButton: {
-    borderColor: colors.error,
-  },
-  escrowCard: {
-    borderWidth: 1,
-    borderColor: colors.primary + '40',
-  },
-  escrowRow: {
-    gap: 4,
-  },
-  escrowStatus: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  escrowNote: {
-    color: colors.gray,
-    marginTop: 4,
-  },
-  warningCard: {
-    backgroundColor: '#FFF3CD',
-  },
-  warningText: {
-    color: '#856404',
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  photosSection: {
-    marginTop: spacing.md,
-  },
-  photosLabel: {
-    color: colors.gray,
-    marginBottom: spacing.xs,
-  },
-  photosGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  photoThumbnail: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  thumbnailImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  driverRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  driverAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: `${colors.primary}20`,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  driverAvatarText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  driverInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  driverName: {
-    color: colors.dark,
-    fontWeight: '600',
-  },
-  driverDetail: {
-    color: colors.gray,
-  },
-  contactRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  contactBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  contactBtnMessage: {
-    backgroundColor: `${colors.primary}15`,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  contactBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  contactBtnMessageText: {
-    color: colors.primary,
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: spacing.sm,
-  },
-  objectChip: {
-    backgroundColor: `${colors.primary}20`,
-    paddingHorizontal: 8,
-    margin: 0,
-  },
-  objectChipText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  modalTitle: {
-    color: colors.white,
-    fontWeight: '600',
-  },
-  modalImageContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalImage: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height * 0.7,
-  },
-  modalNavigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-  },
-  navButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  navButtonDisabled: {
-    opacity: 0.3,
-  },
-});

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,6 +15,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { HomeStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import {
   useGetBookingTrackingQuery,
@@ -45,6 +46,152 @@ const MILESTONES = [
 ] as const;
 
 export const BookingTrackingScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#000' },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  error: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+  errorButton: { marginTop: spacing.lg },
+
+  markerContainer: {
+    width: 36, height: 36, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: colors.white, elevation: 4,
+  },
+  proMarker: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: colors.success,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: colors.white, elevation: 4,
+  },
+  markerText: { fontSize: 18 },
+
+  topActions: {
+    position: 'absolute',
+    top: spacing.xl + 8,
+    left: spacing.sm,
+    right: spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  fab: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    elevation: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    overflow: 'hidden',
+  },
+
+  handleRow: { alignItems: 'center', paddingVertical: 10 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB' },
+  chevronIcon: { marginTop: 2 },
+
+  statusBanner: {
+    marginHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  statusBannerText: { color: colors.white, fontWeight: '700' },
+  etaText: { color: 'rgba(255,255,255,0.9)', marginTop: 2, fontSize: 12 },
+
+  panelContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.md },
+
+  proHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  proAvatar: { backgroundColor: tokens.primary },
+  proInfo: { flex: 1 },
+  proName: { color: colors.dark, fontWeight: '600' },
+  proDetails: { color: colors.gray, marginTop: 2 },
+
+  infoCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
+    backgroundColor: '#FFF3CD', borderRadius: 8,
+    padding: spacing.sm, marginBottom: spacing.sm,
+  },
+  infoText: { flex: 1, color: colors.dark, lineHeight: 18 },
+
+  milestoneSection: {
+    borderTopWidth: 1, borderTopColor: colors.border,
+    paddingTop: spacing.sm, marginBottom: spacing.sm,
+  },
+  milestone: {
+    flexDirection: 'row', alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  milestoneLeft: { width: 20, alignItems: 'center', marginRight: spacing.sm },
+  milestoneCircle: {
+    width: 14, height: 14, borderRadius: 7,
+    borderWidth: 2, borderColor: colors.border, backgroundColor: colors.white,
+  },
+  milestoneDone: { backgroundColor: tokens.primary, borderColor: tokens.primary },
+  milestoneLine: { width: 2, flex: 1, backgroundColor: colors.border, marginTop: 2, minHeight: 16 },
+  milestoneLineDone: { backgroundColor: tokens.primary },
+  milestoneRight: { flex: 1, paddingBottom: 8 },
+  milestoneLabel: { fontSize: 13, color: colors.gray },
+  milestoneLabelDone: { color: colors.dark, fontWeight: '600' },
+  milestoneTime: { fontSize: 11, color: colors.gray, marginTop: 1 },
+
+  actionRow: { marginTop: spacing.xs },
+  actionBtn: {
+    backgroundColor: tokens.primary,
+    borderRadius: 10,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  actionBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+
+  waitingBadge: {
+    backgroundColor: '#FFF3CD',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+  },
+  waitingText: { color: '#92400E', fontSize: 13, fontWeight: '500' },
+
+  cashModalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center', alignItems: 'center', padding: spacing.lg,
+  },
+  cashModalBox: {
+    backgroundColor: colors.white, borderRadius: 16,
+    padding: spacing.lg, width: '100%', maxWidth: 400,
+  },
+  cashModalTitle: { fontSize: 17, fontWeight: '700', color: colors.dark, marginBottom: spacing.xs },
+  cashModalMsg: { fontSize: 14, color: colors.gray, lineHeight: 20 },
+  cashModalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+  cashModalCancel: {
+    flex: 1, borderRadius: 10, paddingVertical: 12,
+    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+  },
+  cashModalConfirm: {
+    flex: 2, borderRadius: 10, paddingVertical: 12,
+    backgroundColor: tokens.primary, alignItems: 'center',
+  },
+  }), [tokens]);
+
   const { bookingId, role } = route.params;
   const { t, i18n } = useTranslation();
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -206,14 +353,14 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
 
   const statusColor =
     booking?.status === 'completed'   ? colors.success :
-    booking?.status === 'in_progress' ? colors.primary :
+    booking?.status === 'in_progress' ? tokens.primary :
     booking?.status === 'cancelled'   ? colors.error   :
     '#F59E0B';
 
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -223,7 +370,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
       <View style={styles.error}>
         <Text variant="titleLarge">{t('booking_tracking.tracking_unavailable')}</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorButton}>
-          <Text style={{ color: colors.primary }}>{t('common.back')}</Text>
+          <Text style={{ color: tokens.primary }}>{t('common.back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -252,7 +399,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
           <Marker
             coordinate={{ latitude: clientLat, longitude: clientLng }}
             title={t('booking_tracking.your_address')}
-            pinColor={colors.primary}
+            pinColor={tokens.primary}
           />
           {hasProLocation && (
             <Marker
@@ -276,7 +423,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
           defaultSettings={{ centerCoordinate: clientCoord, zoomLevel: 13 }}
         />
         <Mapbox.PointAnnotation id="client" coordinate={clientCoord}>
-          <View style={[styles.markerContainer, { backgroundColor: colors.primary }]}>
+          <View style={[styles.markerContainer, { backgroundColor: tokens.primary }]}>
             <Text style={styles.markerText}>📍</Text>
           </View>
           <Mapbox.Callout title={t('booking_tracking.your_address')} />
@@ -495,7 +642,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
               keyboardType="numeric"
               placeholder="0.00"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               style={{ backgroundColor: colors.white, marginTop: spacing.sm }}
               right={<TextInput.Affix text="EGP" />}
             />
@@ -519,146 +666,3 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  error: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  errorButton: { marginTop: spacing.lg },
-
-  markerContainer: {
-    width: 36, height: 36, borderRadius: 18,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: colors.white, elevation: 4,
-  },
-  proMarker: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.success,
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: colors.white, elevation: 4,
-  },
-  markerText: { fontSize: 18 },
-
-  topActions: {
-    position: 'absolute',
-    top: spacing.xl + 8,
-    left: spacing.sm,
-    right: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  fab: {
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-
-  bottomSheet: {
-    position: 'absolute',
-    bottom: 0, left: 0, right: 0,
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    overflow: 'hidden',
-  },
-
-  handleRow: { alignItems: 'center', paddingVertical: 10 },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB' },
-  chevronIcon: { marginTop: 2 },
-
-  statusBanner: {
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  statusBannerText: { color: colors.white, fontWeight: '700' },
-  etaText: { color: 'rgba(255,255,255,0.9)', marginTop: 2, fontSize: 12 },
-
-  panelContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.md },
-
-  proHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  proAvatar: { backgroundColor: colors.primary },
-  proInfo: { flex: 1 },
-  proName: { color: colors.dark, fontWeight: '600' },
-  proDetails: { color: colors.gray, marginTop: 2 },
-
-  infoCard: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
-    backgroundColor: '#FFF3CD', borderRadius: 8,
-    padding: spacing.sm, marginBottom: spacing.sm,
-  },
-  infoText: { flex: 1, color: colors.dark, lineHeight: 18 },
-
-  milestoneSection: {
-    borderTopWidth: 1, borderTopColor: colors.border,
-    paddingTop: spacing.sm, marginBottom: spacing.sm,
-  },
-  milestone: {
-    flexDirection: 'row', alignItems: 'flex-start',
-    marginBottom: 4,
-  },
-  milestoneLeft: { width: 20, alignItems: 'center', marginRight: spacing.sm },
-  milestoneCircle: {
-    width: 14, height: 14, borderRadius: 7,
-    borderWidth: 2, borderColor: colors.border, backgroundColor: colors.white,
-  },
-  milestoneDone: { backgroundColor: colors.primary, borderColor: colors.primary },
-  milestoneLine: { width: 2, flex: 1, backgroundColor: colors.border, marginTop: 2, minHeight: 16 },
-  milestoneLineDone: { backgroundColor: colors.primary },
-  milestoneRight: { flex: 1, paddingBottom: 8 },
-  milestoneLabel: { fontSize: 13, color: colors.gray },
-  milestoneLabelDone: { color: colors.dark, fontWeight: '600' },
-  milestoneTime: { fontSize: 11, color: colors.gray, marginTop: 1 },
-
-  actionRow: { marginTop: spacing.xs },
-  actionBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  actionBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
-
-  waitingBadge: {
-    backgroundColor: '#FFF3CD',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.md,
-    alignItems: 'center',
-  },
-  waitingText: { color: '#92400E', fontSize: 13, fontWeight: '500' },
-
-  cashModalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center', alignItems: 'center', padding: spacing.lg,
-  },
-  cashModalBox: {
-    backgroundColor: colors.white, borderRadius: 16,
-    padding: spacing.lg, width: '100%', maxWidth: 400,
-  },
-  cashModalTitle: { fontSize: 17, fontWeight: '700', color: colors.dark, marginBottom: spacing.xs },
-  cashModalMsg: { fontSize: 14, color: colors.gray, lineHeight: 20 },
-  cashModalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
-  cashModalCancel: {
-    flex: 1, borderRadius: 10, paddingVertical: 12,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
-  },
-  cashModalConfirm: {
-    flex: 2, borderRadius: 10, paddingVertical: 12,
-    backgroundColor: colors.primary, alignItems: 'center',
-  },
-});

@@ -4,6 +4,7 @@ import { Text, Button, TextInput, Divider, ActivityIndicator } from 'react-nativ
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import {
   useClientConfirmCompletionMutation,
@@ -19,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 type Props = StackScreenProps<any, 'TransportCompletion'>;
 
 export const TransportCompletionScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
   const { requestId } = route.params as { requestId: string };
   const { t } = useTranslation();
   const { data: request, isLoading, refetch } = useGetTransportRequestQuery(requestId, {
@@ -139,7 +141,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -171,7 +173,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
               mode="contained"
               onPress={() => setShowReviewForm(true)}
               style={styles.confirmButton}
-              buttonColor={colors.primary}
+              buttonColor={tokens.primary}
               icon="star"
             >
               {t('transport.completion_leave_review')}
@@ -220,7 +222,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
           numberOfLines={4}
           style={styles.input}
           outlineColor={colors.border}
-          activeOutlineColor={colors.primary}
+          activeOutlineColor={tokens.primary}
         />
 
         <Button
@@ -229,7 +231,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
           loading={isSubmittingReview}
           disabled={isSubmittingReview || (!punctualityRating && !qualityRating && !cleanlinessRating && !courtesyRating)}
           style={styles.submitButton}
-          buttonColor={colors.primary}
+          buttonColor={tokens.primary}
         >
           {t('transport.review_submit')}
         </Button>
@@ -270,7 +272,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
         placeholder={t('transport.completion_notes_placeholder')}
         style={styles.input}
         outlineColor={colors.border}
-        activeOutlineColor={colors.primary}
+        activeOutlineColor={tokens.primary}
       />
 
       <Button

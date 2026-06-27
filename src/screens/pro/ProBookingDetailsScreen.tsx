@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -28,6 +28,7 @@ import {
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<ProStackParamList, 'ProBookingDetails'>;
@@ -52,6 +53,143 @@ const ESCROW_MAP: Record<string, { icon: string; key: string; color: string }> =
 };
 
 export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { color: colors.gray, fontSize: 14 },
+
+  statusBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    borderRadius: 12, padding: spacing.md, marginBottom: spacing.md,
+  },
+  statusText: { fontSize: 15, fontWeight: '700' },
+
+  card: {
+    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
+    marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border,
+  },
+  cardTitle: {
+    fontSize: 12, fontWeight: '700', color: colors.gray,
+    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.sm,
+  },
+
+  clientRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  clientAvatar: {
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: tokens.primary + '20', alignItems: 'center', justifyContent: 'center',
+  },
+  clientAvatarLetter: { fontSize: 18, fontWeight: '700', color: tokens.primary },
+  clientName: { fontSize: 15, fontWeight: '700', color: colors.dark },
+  contactRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  contactBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, borderRadius: 10, paddingVertical: 10, backgroundColor: tokens.primary,
+  },
+  contactBtnMessage: {
+    backgroundColor: colors.white, borderWidth: 1.5, borderColor: tokens.primary,
+  },
+  contactBtnText: { fontSize: 13, fontWeight: '700', color: colors.white },
+  contactBtnMessageText: { color: tokens.primary },
+
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 5 },
+  detailText: { fontSize: 14, color: colors.dark, flex: 1 },
+
+  photosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  photoThumbnail: {
+    width: 70, height: 70, borderRadius: 8,
+    overflow: 'hidden', borderWidth: 1, borderColor: colors.border,
+  },
+  thumbnailImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+
+  escrowCard: { borderColor: tokens.primary + '40' },
+  escrowStatus: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
+
+  cancelForm: {
+    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
+    marginBottom: spacing.md, borderWidth: 1, borderColor: colors.error + '60',
+  },
+  cancelFormTitle: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
+  cancelFormActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  cancelAbortBtn: {
+    flex: 1, borderRadius: 10, paddingVertical: 12,
+    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+  },
+  cancelConfirmBtn: {
+    flex: 2, borderRadius: 10, paddingVertical: 12,
+    backgroundColor: colors.error, alignItems: 'center',
+  },
+
+  actionsRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  actionBtnPrimary: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.xs, backgroundColor: tokens.primary, borderRadius: 12, paddingVertical: 14,
+  },
+  actionBtnSecondary: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.xs, borderRadius: 12, paddingVertical: 14,
+    borderWidth: 1.5, borderColor: colors.error,
+  },
+  actionBtnNavigation: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, backgroundColor: tokens.primary, borderRadius: 12, paddingVertical: 16,
+  },
+  actionBtnTrack: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.xs, backgroundColor: '#6366F1', borderRadius: 12, paddingVertical: 12,
+  },
+  actionBtnText: { fontSize: 14, fontWeight: '700' },
+
+  cashModalOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center', alignItems: 'center', padding: spacing.lg,
+  },
+  cashModalBox: {
+    backgroundColor: colors.white, borderRadius: 16,
+    padding: spacing.lg, width: '100%', maxWidth: 400,
+  },
+  cashModalTitle: { fontSize: 17, fontWeight: '700', color: colors.dark, marginBottom: spacing.xs },
+  cashModalMsg: { fontSize: 14, color: colors.gray, lineHeight: 20 },
+  cashModalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
+  cashModalCancel: {
+    flex: 1, borderRadius: 10, paddingVertical: 12,
+    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+  },
+  cashModalConfirm: {
+    flex: 2, borderRadius: 10, paddingVertical: 12,
+    backgroundColor: tokens.primary, alignItems: 'center',
+  },
+
+  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' },
+  modalHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: spacing.md, paddingTop: spacing.xl, paddingBottom: spacing.md,
+  },
+  modalTitle: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  modalImageContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  modalImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.7,
+  },
+  modalNavigation: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.xl,
+  },
+  navButton: { backgroundColor: 'rgba(255,255,255,0.2)' },
+  navButtonDisabled: { opacity: 0.3 },
+
+  disputeBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, borderRadius: 14, paddingVertical: 14,
+    backgroundColor: `${colors.error}10`, marginTop: spacing.sm,
+    borderWidth: 1, borderColor: `${colors.error}30`,
+  },
+  disputeBtnText: { fontSize: 14, fontWeight: '700', color: colors.error },
+  }), [tokens]);
+
   const { t, i18n } = useTranslation();
   const { bookingId } = route.params;
 
@@ -269,7 +407,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
               })}
               activeOpacity={0.8}
             >
-              <Icon name="message-text" size={16} color={colors.primary} />
+              <Icon name="message-text" size={16} color={tokens.primary} />
               <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('booking.message_pro')}</Text>
             </TouchableOpacity>
           </View>
@@ -605,7 +743,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
               keyboardType="numeric"
               placeholder="0.00"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               style={{ backgroundColor: colors.white, marginTop: spacing.sm }}
               right={<TextInput.Affix text="EGP" />}
             />
@@ -698,137 +836,3 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: colors.gray, fontSize: 14 },
-
-  statusBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    borderRadius: 12, padding: spacing.md, marginBottom: spacing.md,
-  },
-  statusText: { fontSize: 15, fontWeight: '700' },
-
-  card: {
-    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
-    marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border,
-  },
-  cardTitle: {
-    fontSize: 12, fontWeight: '700', color: colors.gray,
-    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.sm,
-  },
-
-  clientRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  clientAvatar: {
-    width: 44, height: 44, borderRadius: 12,
-    backgroundColor: colors.primary + '20', alignItems: 'center', justifyContent: 'center',
-  },
-  clientAvatarLetter: { fontSize: 18, fontWeight: '700', color: colors.primary },
-  clientName: { fontSize: 15, fontWeight: '700', color: colors.dark },
-  contactRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  contactBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, borderRadius: 10, paddingVertical: 10, backgroundColor: colors.primary,
-  },
-  contactBtnMessage: {
-    backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.primary,
-  },
-  contactBtnText: { fontSize: 13, fontWeight: '700', color: colors.white },
-  contactBtnMessageText: { color: colors.primary },
-
-  detailRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 5 },
-  detailText: { fontSize: 14, color: colors.dark, flex: 1 },
-
-  photosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  photoThumbnail: {
-    width: 70, height: 70, borderRadius: 8,
-    overflow: 'hidden', borderWidth: 1, borderColor: colors.border,
-  },
-  thumbnailImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-
-  escrowCard: { borderColor: colors.primary + '40' },
-  escrowStatus: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
-
-  cancelForm: {
-    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
-    marginBottom: spacing.md, borderWidth: 1, borderColor: colors.error + '60',
-  },
-  cancelFormTitle: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
-  cancelFormActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
-  cancelAbortBtn: {
-    flex: 1, borderRadius: 10, paddingVertical: 12,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
-  },
-  cancelConfirmBtn: {
-    flex: 2, borderRadius: 10, paddingVertical: 12,
-    backgroundColor: colors.error, alignItems: 'center',
-  },
-
-  actionsRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  actionBtnPrimary: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: spacing.xs, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14,
-  },
-  actionBtnSecondary: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: spacing.xs, borderRadius: 12, paddingVertical: 14,
-    borderWidth: 1.5, borderColor: colors.error,
-  },
-  actionBtnNavigation: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: spacing.sm, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16,
-  },
-  actionBtnTrack: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: spacing.xs, backgroundColor: '#6366F1', borderRadius: 12, paddingVertical: 12,
-  },
-  actionBtnText: { fontSize: 14, fontWeight: '700' },
-
-  cashModalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center', alignItems: 'center', padding: spacing.lg,
-  },
-  cashModalBox: {
-    backgroundColor: colors.white, borderRadius: 16,
-    padding: spacing.lg, width: '100%', maxWidth: 400,
-  },
-  cashModalTitle: { fontSize: 17, fontWeight: '700', color: colors.dark, marginBottom: spacing.xs },
-  cashModalMsg: { fontSize: 14, color: colors.gray, lineHeight: 20 },
-  cashModalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
-  cashModalCancel: {
-    flex: 1, borderRadius: 10, paddingVertical: 12,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
-  },
-  cashModalConfirm: {
-    flex: 2, borderRadius: 10, paddingVertical: 12,
-    backgroundColor: colors.primary, alignItems: 'center',
-  },
-
-  modalContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)' },
-  modalHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: spacing.md, paddingTop: spacing.xl, paddingBottom: spacing.md,
-  },
-  modalTitle: { color: colors.white, fontSize: 16, fontWeight: '600' },
-  modalImageContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  modalImage: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height * 0.7,
-  },
-  modalNavigation: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: spacing.lg, paddingVertical: spacing.xl,
-  },
-  navButton: { backgroundColor: 'rgba(255,255,255,0.2)' },
-  navButtonDisabled: { opacity: 0.3 },
-
-  disputeBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: spacing.sm, borderRadius: 14, paddingVertical: 14,
-    backgroundColor: `${colors.error}10`, marginTop: spacing.sm,
-    borderWidth: 1, borderColor: `${colors.error}30`,
-  },
-  disputeBtnText: { fontSize: 14, fontWeight: '700', color: colors.error },
-});

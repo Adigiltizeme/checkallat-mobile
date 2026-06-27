@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { Button, Text, Switch, IconButton, Card, Checkbox } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { Step1Data, Step2Data, Step3Data } from '../../types/transport';
 import { useGetActivePricingQuery } from '../../store/api/transportApi';
@@ -13,6 +14,101 @@ import { RootState } from '../../store';
 type Props = StackScreenProps<any, 'TransportRequestStep3'>;
 
 export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  title: {
+    color: colors.dark,
+    marginBottom: spacing.sm,
+  },
+  subtitle: {
+    color: colors.gray,
+    marginBottom: spacing.lg,
+  },
+  card: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+  },
+  serviceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  serviceRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  serviceInfo: {
+    flex: 1,
+  },
+  serviceTitle: {
+    color: colors.dark,
+    marginBottom: 4,
+  },
+  serviceDescription: {
+    color: colors.gray,
+    marginBottom: 4,
+  },
+  servicePrice: {
+    color: tokens.primary,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  helperCounter: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: spacing.sm,
+  },
+  stepperValue: {
+    marginHorizontal: spacing.lg,
+    color: tokens.primary,
+    fontWeight: '700',
+  },
+  infoCard: {
+    backgroundColor: '#E3F2FD',
+    marginBottom: spacing.md,
+  },
+  infoIcon: {
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  infoText: {
+    color: colors.dark,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  backButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+  },
+  nextButton: {
+    flex: 2,
+    paddingVertical: spacing.sm,
+  },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const { step1Data, step2Data, step3Prefill } = route.params as {
     step1Data: Step1Data;
@@ -74,7 +170,7 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
             <Switch
               value={needHelpers}
               onValueChange={setNeedHelpers}
-              color={colors.primary}
+              color={tokens.primary}
             />
           </View>
 
@@ -115,7 +211,7 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
             <Checkbox
               status={needDisassembly ? 'checked' : 'unchecked'}
               onPress={() => setNeedDisassembly(!needDisassembly)}
-              color={colors.primary}
+              color={tokens.primary}
             />
             <View style={styles.serviceInfo}>
               <Text variant="titleMedium" style={styles.serviceTitle}>
@@ -141,7 +237,7 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
             <Checkbox
               status={needReassembly ? 'checked' : 'unchecked'}
               onPress={() => setNeedReassembly(!needReassembly)}
-              color={colors.primary}
+              color={tokens.primary}
             />
             <View style={styles.serviceInfo}>
               <Text variant="titleMedium" style={styles.serviceTitle}>
@@ -167,7 +263,7 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
             <Checkbox
               status={needPacking ? 'checked' : 'unchecked'}
               onPress={() => setNeedPacking(!needPacking)}
-              color={colors.primary}
+              color={tokens.primary}
             />
             <View style={styles.serviceInfo}>
               <Text variant="titleMedium" style={styles.serviceTitle}>
@@ -211,7 +307,7 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
         <Button
           mode="contained"
           onPress={handleNext}
-          buttonColor={colors.primary}
+          buttonColor={tokens.primary}
           style={styles.nextButton}
         >
           {t('transport.next')}
@@ -220,95 +316,3 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  title: {
-    color: colors.dark,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    color: colors.gray,
-    marginBottom: spacing.lg,
-  },
-  card: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-  },
-  serviceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  serviceRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  serviceInfo: {
-    flex: 1,
-  },
-  serviceTitle: {
-    color: colors.dark,
-    marginBottom: 4,
-  },
-  serviceDescription: {
-    color: colors.gray,
-    marginBottom: 4,
-  },
-  servicePrice: {
-    color: colors.primary,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  helperCounter: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: spacing.sm,
-  },
-  stepperValue: {
-    marginHorizontal: spacing.lg,
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  infoCard: {
-    backgroundColor: '#E3F2FD',
-    marginBottom: spacing.md,
-  },
-  infoIcon: {
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  infoText: {
-    color: colors.dark,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-  },
-  nextButton: {
-    flex: 2,
-    paddingVertical: spacing.sm,
-  },
-});

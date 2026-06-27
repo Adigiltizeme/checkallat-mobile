@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,6 +14,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { SUPPORTED_COUNTRIES, SupportedCountry } from '../../config/countries';
 import { selectCountry } from '../../store/slices/locationSlice';
+import { useAppTheme } from '../../theme/ThemeProvider';
 
 interface Props {
   visible: boolean;
@@ -31,6 +32,81 @@ export const UnsupportedCountryModal = ({
   onDismiss,
   mode = 'unsupported',
 }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: {
+    fontWeight: 'bold',
+    marginBottom: spacing.sm,
+    color: tokens.primary,
+  },
+  subtitle: {
+    color: colors.gray,
+    lineHeight: 20,
+  },
+  sectionTitle: {
+    fontWeight: '700',
+    margin: spacing.md,
+    marginBottom: spacing.sm,
+    color: '#111827',
+  },
+  list: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.lg,
+  },
+  countryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+  },
+  flag: {
+    fontSize: 32,
+    marginRight: spacing.md,
+  },
+  countryInfo: {
+    flex: 1,
+  },
+  countryName: {
+    fontWeight: '700',
+    color: '#111827',
+  },
+  countryCode: {
+    color: colors.gray,
+    marginTop: 2,
+  },
+  arrow: {
+    fontSize: 22,
+    color: colors.gray,
+  },
+  footer: {
+    padding: spacing.md,
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  dismissButton: {
+    borderRadius: 8,
+  },
+  }), [tokens]);
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -106,76 +182,3 @@ export const UnsupportedCountryModal = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    padding: spacing.lg,
-    paddingBottom: spacing.md,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: spacing.sm,
-    color: colors.primary,
-  },
-  subtitle: {
-    color: colors.gray,
-    lineHeight: 20,
-  },
-  sectionTitle: {
-    fontWeight: '700',
-    margin: spacing.md,
-    marginBottom: spacing.sm,
-    color: '#111827',
-  },
-  list: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.lg,
-  },
-  countryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-  },
-  flag: {
-    fontSize: 32,
-    marginRight: spacing.md,
-  },
-  countryInfo: {
-    flex: 1,
-  },
-  countryName: {
-    fontWeight: '700',
-    color: '#111827',
-  },
-  countryCode: {
-    color: colors.gray,
-    marginTop: 2,
-  },
-  arrow: {
-    fontSize: 22,
-    color: colors.gray,
-  },
-  footer: {
-    padding: spacing.md,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  dismissButton: {
-    borderRadius: 8,
-  },
-});

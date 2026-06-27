@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -16,6 +16,7 @@ import { useUpdateProfileMutation } from '../../store/api/authApi';
 import i18n, { isRTL, SUPPORTED_LANGUAGES } from '../../i18n';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/ThemeProvider';
 
 const LANG_LABELS: Record<string, { native: string; flag: string }> = {
   fr: { native: 'Français', flag: '🇫🇷' },
@@ -24,6 +25,67 @@ const LANG_LABELS: Record<string, { native: string; flag: string }> = {
 };
 
 export const LanguageScreen = () => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+    padding: spacing.lg,
+  },
+  subtitle: {
+    color: colors.gray,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  list: {
+    gap: spacing.sm,
+  },
+  item: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  itemSelected: {
+    borderColor: tokens.primary,
+    backgroundColor: tokens.primary + '08',
+  },
+  flag: {
+    fontSize: 28,
+  },
+  langName: {
+    flex: 1,
+    color: colors.dark,
+  },
+  langNameSelected: {
+    color: tokens.primary,
+    fontWeight: '700',
+  },
+  checkCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: tokens.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkMark: {
+    color: colors.white,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  hint: {
+    color: colors.gray,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+  },
+  }), [tokens]);
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const currentLang = useSelector((state: RootState) => state.auth?.language ?? 'fr');
@@ -114,62 +176,3 @@ export const LanguageScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-    padding: spacing.lg,
-  },
-  subtitle: {
-    color: colors.gray,
-    marginBottom: spacing.lg,
-    textAlign: 'center',
-  },
-  list: {
-    gap: spacing.sm,
-  },
-  item: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  itemSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '08',
-  },
-  flag: {
-    fontSize: 28,
-  },
-  langName: {
-    flex: 1,
-    color: colors.dark,
-  },
-  langNameSelected: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  checkCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkMark: {
-    color: colors.white,
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  hint: {
-    color: colors.gray,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-});

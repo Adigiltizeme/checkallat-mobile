@@ -15,7 +15,8 @@
     "ios": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --ios",
     "web": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --web",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "generate:assets": "node scripts/generate-assets-pipeline.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Linking, Platform } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -10,6 +10,8 @@ import { MainNavigator } from './MainNavigator';
 import { RoleSelectorScreen } from '../screens/auth/RoleSelectorScreen';
 import { OnboardingScreen, ONBOARDING_DONE_KEY } from '../screens/onboarding/OnboardingScreen';
 import { useDriverApprovalPolling } from '../hooks/useDriverApprovalPolling';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { colors } from '../theme/colors';
 import { API_CONFIG } from '../config/api';
 
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
@@ -61,6 +63,7 @@ const AuthenticatedRoot = () => {
 };
 
 export const RootNavigator = () => {
+  const { tokens, isDark } = useAppTheme();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 
@@ -73,8 +76,22 @@ export const RootNavigator = () => {
   // Attendre la lecture AsyncStorage avant de rendre
   if (onboardingDone === null) return null;
 
+  // Thème React Navigation — background appliqué à tous les écrans automatiquement
+  const navTheme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme : DefaultTheme).colors,
+      primary:      tokens.secondary,
+      background:   tokens.background,       // ← fond de tous les écrans
+      card:         tokens.header,           // en-têtes de navigation
+      text:         tokens.text.primary,
+      border:       tokens.border,
+      notification: colors.accent,
+    },
+  };
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navTheme}>
       {!onboardingDone ? (
         <OnboardingScreen onDone={() => setOnboardingDone(true)} />
       ) : isAuthenticated ? (

@@ -4,6 +4,7 @@ import { Text, FAB, Card, Chip, ActivityIndicator } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { StackScreenProps } from '@react-navigation/stack';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useGetMyTransportRequestsQuery } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
@@ -17,6 +18,134 @@ type DateMode = 'range' | 'single';
 const toDay = (d: string) => d ? new Date(d).toLocaleDateString('en-CA') : '';
 
 export const TransportListScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
+  loadingText: { color: colors.gray, marginTop: spacing.md },
+  filtersContainer: {
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
+  chevron: { fontSize: 12, color: colors.gray },
+  tabsRow: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.xs,
+    gap: spacing.xs,
+  },
+  tab: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: 20,
+    backgroundColor: colors.lightGray,
+    marginRight: spacing.xs,
+  },
+  tabActive: { backgroundColor: tokens.primary },
+  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  tabTextActive: { color: colors.white, fontWeight: '600' },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    backgroundColor: colors.lightGray,
+    paddingHorizontal: spacing.sm,
+  },
+  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
+  searchClear: { padding: spacing.xs },
+  dateModeRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    gap: spacing.xs,
+  },
+  dateModeBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.lightGray,
+  },
+  dateModeBtnActive: { backgroundColor: `${tokens.primary}20`, borderColor: tokens.primary },
+  dateModeBtnText: { fontSize: 12, color: colors.gray },
+  dateModeBtnTextActive: { color: tokens.primary, fontWeight: '600' },
+  dateRangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+    gap: spacing.xs,
+  },
+  dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  dateLabel: { fontSize: 13, color: colors.gray },
+  dateInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    fontSize: 13,
+    color: colors.dark,
+    backgroundColor: colors.lightGray,
+  },
+  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
+  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
+  list: { padding: spacing.md },
+  listEmpty: { flexGrow: 1 },
+  requestCard: { marginBottom: spacing.md, backgroundColor: colors.white },
+  sectionTitle: { color: tokens.primary, marginBottom: spacing.sm },
+  statusContainer: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.sm },
+  statusChip: {},
+  chipsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
+  objectChip: { backgroundColor: `${tokens.primary}20`, paddingHorizontal: 8, paddingVertical: 0, margin: 0 },
+  objectChipText: { color: tokens.primary, fontSize: 12, fontWeight: '600', lineHeight: 16 },
+  requestDescription: { color: colors.gray, marginBottom: spacing.sm },
+  requestDetails: { gap: 4, marginBottom: spacing.sm },
+  detailRow: { flexDirection: 'row', gap: spacing.xs },
+  detailLabel: { color: colors.gray, width: 40 },
+  detailValue: { flex: 1, color: colors.dark },
+  requestFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
+  requestDate: { color: colors.gray },
+  requestPrice: { color: tokens.primary, fontWeight: '700' },
+  driverRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: spacing.xs,
+  },
+  driverIcon: { fontSize: 16 },
+  driverInfo: { flex: 1 },
+  driverName: { fontSize: 13, fontWeight: '600', color: colors.dark },
+  driverSub: { fontSize: 12, color: colors.gray },
+  driverPending: { fontSize: 12, color: colors.gray, fontStyle: 'italic' },
+  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  emptyIcon: { fontSize: 80, marginBottom: spacing.lg },
+  emptyTitle: { color: colors.dark, marginBottom: spacing.sm },
+  emptyText: { color: colors.gray, textAlign: 'center', marginBottom: spacing.xs },
+  fab: { position: 'absolute', right: spacing.lg, bottom: spacing.lg, backgroundColor: tokens.primary },
+  }), [tokens]);
+
   const { t, i18n } = useTranslation();
   const { data: requests, isLoading, isFetching, refetch } = useGetMyTransportRequestsQuery(undefined, {
     pollingInterval: 8000,
@@ -295,7 +424,7 @@ export const TransportListScreen = ({ navigation }: Props) => {
   if (isLoading && !requests && !hasLoadedOnce) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
         <Text style={styles.loadingText}>{t('common.loading')}</Text>
       </View>
     );
@@ -311,7 +440,7 @@ export const TransportListScreen = ({ navigation }: Props) => {
         contentContainerStyle={[styles.list, filteredRequests.length === 0 && styles.listEmpty]}
         ListEmptyComponent={renderEmpty}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[colors.primary]} />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[tokens.primary]} />
         }
       />
       <FAB
@@ -324,127 +453,3 @@ export const TransportListScreen = ({ navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  loading: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
-  loadingText: { color: colors.gray, marginTop: spacing.md },
-  filtersContainer: {
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
-  tabsRow: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.xs,
-    gap: spacing.xs,
-  },
-  tab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: 20,
-    backgroundColor: colors.lightGray,
-    marginRight: spacing.xs,
-  },
-  tabActive: { backgroundColor: colors.primary },
-  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
-  tabTextActive: { color: colors.white, fontWeight: '600' },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: spacing.md,
-    marginTop: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    backgroundColor: colors.lightGray,
-    paddingHorizontal: spacing.sm,
-  },
-  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
-  searchClear: { padding: spacing.xs },
-  dateModeRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    gap: spacing.xs,
-  },
-  dateModeBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.lightGray,
-  },
-  dateModeBtnActive: { backgroundColor: `${colors.primary}20`, borderColor: colors.primary },
-  dateModeBtnText: { fontSize: 12, color: colors.gray },
-  dateModeBtnTextActive: { color: colors.primary, fontWeight: '600' },
-  dateRangeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
-    gap: spacing.xs,
-  },
-  dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  dateLabel: { fontSize: 13, color: colors.gray },
-  dateInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    fontSize: 13,
-    color: colors.dark,
-    backgroundColor: colors.lightGray,
-  },
-  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
-  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
-  list: { padding: spacing.md },
-  listEmpty: { flexGrow: 1 },
-  requestCard: { marginBottom: spacing.md, backgroundColor: colors.white },
-  sectionTitle: { color: colors.primary, marginBottom: spacing.sm },
-  statusContainer: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.sm },
-  statusChip: {},
-  chipsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
-  objectChip: { backgroundColor: `${colors.primary}20`, paddingHorizontal: 8, paddingVertical: 0, margin: 0 },
-  objectChipText: { color: colors.primary, fontSize: 12, fontWeight: '600', lineHeight: 16 },
-  requestDescription: { color: colors.gray, marginBottom: spacing.sm },
-  requestDetails: { gap: 4, marginBottom: spacing.sm },
-  detailRow: { flexDirection: 'row', gap: spacing.xs },
-  detailLabel: { color: colors.gray, width: 40 },
-  detailValue: { flex: 1, color: colors.dark },
-  requestFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
-  requestDate: { color: colors.gray },
-  requestPrice: { color: colors.primary, fontWeight: '700' },
-  driverRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    gap: spacing.xs,
-  },
-  driverIcon: { fontSize: 16 },
-  driverInfo: { flex: 1 },
-  driverName: { fontSize: 13, fontWeight: '600', color: colors.dark },
-  driverSub: { fontSize: 12, color: colors.gray },
-  driverPending: { fontSize: 12, color: colors.gray, fontStyle: 'italic' },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
-  emptyIcon: { fontSize: 80, marginBottom: spacing.lg },
-  emptyTitle: { color: colors.dark, marginBottom: spacing.sm },
-  emptyText: { color: colors.gray, textAlign: 'center', marginBottom: spacing.xs },
-  fab: { position: 'absolute', right: spacing.lg, bottom: spacing.lg, backgroundColor: colors.primary },
-});

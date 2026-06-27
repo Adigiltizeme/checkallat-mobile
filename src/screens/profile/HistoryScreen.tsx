@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList, RefreshControl, ActivityIndicator, Touchabl
 import { Card, Text, Chip } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../config/currency';
 import { useGetMyTransportRequestsQuery, useGetMyDeliveriesQuery } from '../../store/api/transportApi';
@@ -32,7 +33,187 @@ const toDay = (d: string) => d?.split('T')[0] ?? '';
 
 export const HistoryScreen = () => {
   const { t, i18n } = useTranslation();
-  const isDriver = useSelector((state: RootState) => state.auth.isDriver);
+    const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  centerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    backgroundColor: colors.white,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  headerTitle: {
+    color: colors.dark,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    color: colors.gray,
+  },
+  filtersContainer: {
+    backgroundColor: colors.white,
+    marginBottom: spacing.sm,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
+  chevron: { fontSize: 12, color: colors.gray },
+  tabsRow: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+    gap: spacing.xs,
+  },
+  tab: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: 20,
+    backgroundColor: colors.lightGray,
+    marginRight: spacing.xs,
+  },
+  tabActive: {
+    backgroundColor: tokens.primary,
+  },
+  tabText: {
+    fontSize: 13,
+    color: colors.gray,
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: colors.white,
+    fontWeight: '600',
+  },
+  dateModeRow: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    gap: spacing.xs,
+  },
+  dateModeBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.lightGray,
+  },
+  dateModeBtnActive: {
+    backgroundColor: `${tokens.primary}20`,
+    borderColor: tokens.primary,
+  },
+  dateModeBtnText: {
+    fontSize: 12,
+    color: colors.gray,
+  },
+  dateModeBtnTextActive: {
+    color: tokens.primary,
+    fontWeight: '600',
+  },
+  dateRangeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    gap: spacing.xs,
+  },
+  dateLabel: {
+    fontSize: 13,
+    color: colors.gray,
+  },
+  dateInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    fontSize: 13,
+    color: colors.dark,
+    backgroundColor: colors.lightGray,
+  },
+  clearBtn: {
+    fontSize: 16,
+    color: colors.gray,
+    paddingHorizontal: spacing.xs,
+  },
+  countText: {
+    fontSize: 12,
+    color: colors.gray,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+  },
+  list: {
+    padding: spacing.md,
+  },
+  card: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: `${tokens.primary}20`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  infoContainer: {
+    flex: 1,
+  },
+  title: {
+    color: colors.dark,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  date: {
+    color: colors.gray,
+  },
+  rightContainer: {
+    alignItems: 'flex-end',
+    paddingBottom: 4,
+  },
+  amount: {
+    color: colors.dark,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  statusChip: {},
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xxl * 2,
+  },
+  emptyText: {
+    color: colors.dark,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  emptySubtext: {
+    color: colors.gray,
+  },
+  }), [tokens]);
+const isDriver = useSelector((state: RootState) => state.auth.isDriver);
 
   const STATUS_CONFIG = useMemo(() => ({
     pending: { label: t('status.pending'), color: STATUS_COLORS_MAP.pending },
@@ -231,7 +412,7 @@ export const HistoryScreen = () => {
       <Card style={styles.card} mode="elevated">
         <Card.Content style={styles.cardContent}>
           <View style={styles.iconContainer}>
-            <Icon name="truck-fast" size={24} color={colors.primary} />
+            <Icon name="truck-fast" size={24} color={tokens.primary} />
           </View>
           <View style={styles.infoContainer}>
             <Text variant="titleMedium" style={styles.title}>
@@ -271,7 +452,7 @@ export const HistoryScreen = () => {
   if (isLoading && !transports) {
     return (
       <View style={[styles.container, styles.centerContainer]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -298,7 +479,7 @@ export const HistoryScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={[colors.primary]}
+            colors={[tokens.primary]}
           />
         }
         ListEmptyComponent={
@@ -321,181 +502,3 @@ export const HistoryScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  centerContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    backgroundColor: colors.white,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  headerTitle: {
-    color: colors.dark,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    color: colors.gray,
-  },
-  filtersContainer: {
-    backgroundColor: colors.white,
-    marginBottom: spacing.sm,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
-  tabsRow: {
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xs,
-    gap: spacing.xs,
-  },
-  tab: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: 20,
-    backgroundColor: colors.lightGray,
-    marginRight: spacing.xs,
-  },
-  tabActive: {
-    backgroundColor: colors.primary,
-  },
-  tabText: {
-    fontSize: 13,
-    color: colors.gray,
-    fontWeight: '500',
-  },
-  tabTextActive: {
-    color: colors.white,
-    fontWeight: '600',
-  },
-  dateModeRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    gap: spacing.xs,
-  },
-  dateModeBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.lightGray,
-  },
-  dateModeBtnActive: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
-  },
-  dateModeBtnText: {
-    fontSize: 12,
-    color: colors.gray,
-  },
-  dateModeBtnTextActive: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  dateRangeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-    gap: spacing.xs,
-  },
-  dateLabel: {
-    fontSize: 13,
-    color: colors.gray,
-  },
-  dateInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    fontSize: 13,
-    color: colors.dark,
-    backgroundColor: colors.lightGray,
-  },
-  clearBtn: {
-    fontSize: 16,
-    color: colors.gray,
-    paddingHorizontal: spacing.xs,
-  },
-  countText: {
-    fontSize: 12,
-    color: colors.gray,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xs,
-  },
-  list: {
-    padding: spacing.md,
-  },
-  card: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: `${colors.primary}20`,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: spacing.md,
-  },
-  infoContainer: {
-    flex: 1,
-  },
-  title: {
-    color: colors.dark,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  date: {
-    color: colors.gray,
-  },
-  rightContainer: {
-    alignItems: 'flex-end',
-    paddingBottom: 4,
-  },
-  amount: {
-    color: colors.dark,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  statusChip: {},
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.xxl * 2,
-  },
-  emptyText: {
-    color: colors.dark,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  emptySubtext: {
-    color: colors.gray,
-  },
-});

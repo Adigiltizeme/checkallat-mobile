@@ -14,6 +14,7 @@ import { getLocalizedName } from '../../utils/localize';
 import { useGetProDemandesQuery } from '../../store/api/bookingsApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const STATUS_BADGE: Record<string, { color: string; bg: string; icon: string }> = {
@@ -23,7 +24,8 @@ const STATUS_BADGE: Record<string, { color: string; bg: string; icon: string }> 
 
 export const ProDemandesScreen = () => {
   const { t, i18n } = useTranslation();
-  const navigation = useNavigation<any>();
+    const { tokens } = useAppTheme();
+const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
 
   const { data = [], isLoading, refetch } = useGetProDemandesQuery(undefined, {
@@ -93,7 +95,7 @@ export const ProDemandesScreen = () => {
   if (isLoading && items.length === 0) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={colors.primary} />
+        <ActivityIndicator color={tokens.primary} />
       </View>
     );
   }
@@ -116,7 +118,7 @@ export const ProDemandesScreen = () => {
         ...(accepted.length > 0 ? [{ _section: t('pro_space.demandes_accepted'), _key: 's2' }, ...accepted] : []),
       ]}
       keyExtractor={(item: any) => item._key ?? item.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[tokens.primary]} />}
       renderItem={({ item }: { item: any }) => {
         if (item._section) {
           return <Text style={styles.sectionHeader}>{item._section}</Text>;

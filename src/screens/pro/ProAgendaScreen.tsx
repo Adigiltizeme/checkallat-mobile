@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -14,6 +14,7 @@ import { getLocalizedName } from '../../utils/localize';
 import { useGetProAgendaQuery } from '../../store/api/bookingsApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const STATUS_BADGE: Record<string, { color: string; bg: string; icon: string }> = {
@@ -30,7 +31,40 @@ const isToday = (d: Date) => {
 
 export const ProAgendaScreen = () => {
   const { t, i18n } = useTranslation();
-  const navigation = useNavigation<any>();
+    const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  content: { padding: spacing.md, paddingBottom: spacing.xxl },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+  emptyText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
+
+  card: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: colors.white, borderRadius: 14,
+    padding: spacing.md, marginBottom: spacing.sm,
+    borderWidth: 1, borderColor: colors.border, gap: spacing.sm,
+  },
+  cardToday: { borderColor: tokens.primary, borderWidth: 1.5 },
+
+  dateStripe: {
+    width: 48, alignItems: 'center', justifyContent: 'center',
+    paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border,
+  },
+  dateDay: { fontSize: 10, fontWeight: '700', color: colors.gray, letterSpacing: 0.5 },
+  dateDayNum: { fontSize: 22, fontWeight: '800', color: colors.dark, lineHeight: 26 },
+  dateTime: { fontSize: 10, color: tokens.primary, fontWeight: '600' },
+  dateTbd: { fontSize: 11, color: colors.gray, fontWeight: '600' },
+
+  cardBody: { flex: 1 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  cardTitle: { fontSize: 14, fontWeight: '700', color: colors.dark, flex: 1, marginRight: 6 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 20, paddingHorizontal: 7, paddingVertical: 2 },
+  badgeText: { fontSize: 10, fontWeight: '700' },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
+  cardMeta: { fontSize: 12, color: colors.gray, flex: 1 },
+  }), [tokens]);
+const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
 
   const { data = [], isLoading, refetch } = useGetProAgendaQuery(undefined, {
@@ -115,7 +149,7 @@ export const ProAgendaScreen = () => {
   if (isLoading && items.length === 0) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={colors.primary} />
+        <ActivityIndicator color={tokens.primary} />
       </View>
     );
   }
@@ -135,40 +169,8 @@ export const ProAgendaScreen = () => {
       contentContainerStyle={styles.content}
       data={items}
       keyExtractor={(item: any) => item.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[tokens.primary]} />}
       renderItem={renderItem}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.md, paddingBottom: spacing.xxl },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-  emptyText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
-
-  card: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.white, borderRadius: 14,
-    padding: spacing.md, marginBottom: spacing.sm,
-    borderWidth: 1, borderColor: colors.border, gap: spacing.sm,
-  },
-  cardToday: { borderColor: colors.primary, borderWidth: 1.5 },
-
-  dateStripe: {
-    width: 48, alignItems: 'center', justifyContent: 'center',
-    paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border,
-  },
-  dateDay: { fontSize: 10, fontWeight: '700', color: colors.gray, letterSpacing: 0.5 },
-  dateDayNum: { fontSize: 22, fontWeight: '800', color: colors.dark, lineHeight: 26 },
-  dateTime: { fontSize: 10, color: colors.primary, fontWeight: '600' },
-  dateTbd: { fontSize: 11, color: colors.gray, fontWeight: '600' },
-
-  cardBody: { flex: 1 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: colors.dark, flex: 1, marginRight: 6 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 20, paddingHorizontal: 7, paddingVertical: 2 },
-  badgeText: { fontSize: 10, fontWeight: '700' },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
-  cardMeta: { fontSize: 12, color: colors.gray, flex: 1 },
-});

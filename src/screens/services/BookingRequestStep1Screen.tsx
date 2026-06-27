@@ -5,7 +5,10 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { Text, TextInput, Button, Chip } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
+import { ChocolateChip } from '../../components/shared/ChocolateChip';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -115,6 +118,7 @@ const CATEGORY_FIELDS: Record<string, CategoryField[]> = {
 const HAS_URGENCY = ['plumbing', 'electricity', 'handyman', 'air_condition'];
 
 export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
   const { t, i18n } = useTranslation();
   const { categorySlug, categoryNameFr, categoryNameEn, categoryNameAr, prefill, step2Prefill } = route.params as any;
   const user = useSelector((state: RootState) => state.auth.user);
@@ -183,7 +187,7 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={[styles.container, { backgroundColor: tokens.background }]} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.stepLabel}>{t('booking_request.step_of', { current: 1, total: 5 })}</Text>
       <Text style={styles.categoryTitle}>{categoryName}</Text>
 
@@ -198,18 +202,12 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
                 i18n.language,
               );
               return (
-                <Chip
+                <ChocolateChip
                   key={opt.value}
+                  label={label}
                   selected={(selections[field.key] ?? []).includes(opt.value)}
                   onPress={() => toggleSelection(field.key, opt.value)}
-                  style={[
-                    styles.chip,
-                    (selections[field.key] ?? []).includes(opt.value) && styles.chipSelected,
-                  ]}
-                  textStyle={(selections[field.key] ?? []).includes(opt.value) ? styles.chipTextSelected : undefined}
-                >
-                  {label}
-                </Chip>
+                />
               );
             })}
           </View>
@@ -225,17 +223,14 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
           <Text style={styles.sectionLabel}>{t('booking_request.urgency_label')}</Text>
           <View style={styles.chipsRow}>
             {(['normal', 'urgent'] as const).map(u => (
-              <Chip
+              <ChocolateChip
                 key={u}
-                selected={urgency === u}
-                onPress={() => setUrgency(u)}
-                style={[styles.chip, urgency === u && styles.chipSelected]}
-                textStyle={urgency === u ? styles.chipTextSelected : undefined}
-              >
-                {u === 'normal'
+                label={u === 'normal'
                   ? t('booking_request.urgency_normal')
                   : t('booking_request.urgency_urgent', { pct: 30 })}
-              </Chip>
+                selected={urgency === u}
+                onPress={() => setUrgency(u)}
+              />
             ))}
           </View>
         </View>
@@ -252,7 +247,7 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
           value={description}
           onChangeText={setDescription}
           outlineColor={submitted && description.trim().length < 10 ? colors.error : colors.border}
-          activeOutlineColor={colors.primary}
+          activeOutlineColor={tokens.primary}
           style={styles.textarea}
         />
         {submitted && description.trim().length < 10 && (
@@ -270,14 +265,9 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
         />
       </View>
 
-      <Button
-        mode="contained"
-        onPress={handleNext}
-        style={styles.nextBtn}
-        labelStyle={styles.nextBtnLabel}
-      >
+      <ChocolateButton onPress={handleNext} style={styles.nextBtn}>
         {t('booking_request.next')}
-      </Button>
+      </ChocolateButton>
     </ScrollView>
   );
 };
@@ -290,11 +280,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: spacing.lg },
   sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { marginBottom: 4, backgroundColor: colors.lightGray },
-  chipSelected: { backgroundColor: colors.primary },
-  chipTextSelected: { color: colors.white },
   textarea: { backgroundColor: colors.white, maxHeight: 120 },
-  nextBtn: { marginTop: spacing.md, borderRadius: 8, backgroundColor: colors.primary },
-  nextBtnLabel: { fontSize: 16, paddingVertical: 4 },
+  nextBtn: { marginTop: spacing.md },
   errorText: { fontSize: 12, color: colors.error, marginTop: 4 },
 });

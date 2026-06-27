@@ -13,6 +13,7 @@
     "error": "خطأ",
     "success": "نجاح",
     "retry": "إعادة المحاولة",
+    "continue_anyway": "المتابعة على أي حال",
     "search": "بحث",
     "filter": "تصفية",
     "filters": "التصفية",
@@ -212,6 +213,7 @@
     "restart_rtl_fallback": "يرجى إغلاق التطبيق وإعادة فتحه لتطبيق تغييرات RTL."
   },
   "transport": {
+    "price_fetch_error": "تعذّر حساب السعر. تحقق من اتصالك وحاول مجدداً.",
     "vehicle_van": "شاحنة صغيرة",
     "vehicle_small_truck": "شاحنة متوسطة",
     "vehicle_large_truck": "شاحنة كبيرة",
@@ -1284,7 +1286,11 @@
     "time_slot_evening_short": "مساء",
     "photos_section": "صورك",
     "payment_cash_desc": "ادفع نقداً عند انتهاء الخدمة",
-    "payment_inapp_desc": "دفع آمن محجوز حتى اكتمال الخدمة"
+    "payment_inapp_desc": "دفع آمن محجوز حتى اكتمال الخدمة",
+    "pro_view_showcase": "عرض الواجهة",
+    "pro_no_showcase": "لم يضف هذا المحترف واجهة بعد.",
+    "pro_search_placeholder": "ابحث عن مقدم خدمة بالاسم…",
+    "pro_search_no_result": "لا يوجد مقدم خدمة يطابق بحثك."
   },
   "booking_tracking": {
     "title": "تتبع الخدمة",
@@ -1447,5 +1453,17 @@
     "empty_services": "لا توجد حجوزات خدمات",
     "empty_marketplace": "لا توجد طلبات من السوق",
     "order_label": "طلب"
+  },
+  "settings": {
+    "theme_title": "المظهر",
+    "theme_subtitle": "اختر المظهر المرئي للتطبيق",
+    "theme_light": "فاتح",
+    "theme_comfort": "راحة العين",
+    "theme_dark": "داكن",
+    "theme_system": "النظام",
+    "theme_system_hint": "يتبع المظهر تلقائياً تفضيلات جهازك.",
+    "theme_teal": "فيروزي أصلي",
+    "section_checkallat": "ثيمات CheckAll@t",
+    "section_original": "الثيم الأصلي"
   }
 }

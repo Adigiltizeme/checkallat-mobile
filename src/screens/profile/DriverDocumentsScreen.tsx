@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -17,9 +17,87 @@ import { useUpdateDriverProfileMutation } from '../../store/api/transportApi';
 import { uploadMultipleImages } from '../../services/uploadService';
 import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 export const DriverDocumentsScreen = ({ navigation }: any) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  label: {
+    color: colors.dark,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
+  hint: {
+    color: colors.gray,
+    marginBottom: spacing.sm,
+    lineHeight: 18,
+  },
+  errorHint: {
+    color: colors.error,
+    marginTop: 4,
+  },
+  existingSection: {
+    marginTop: spacing.sm,
+  },
+  existingLabel: {
+    color: colors.gray,
+    marginBottom: spacing.xs,
+  },
+  existingRow: {
+    flexDirection: 'row',
+  },
+  existingThumb: {
+    width: 80,
+    height: 60,
+    borderRadius: 6,
+    marginRight: spacing.sm,
+    backgroundColor: colors.border,
+  },
+  licenseThumb: {
+    width: '100%',
+    height: 140,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+    marginTop: spacing.xs,
+  },
+  uploadingContainer: {
+    alignItems: 'center',
+    padding: spacing.md,
+    marginVertical: spacing.md,
+  },
+  uploadingText: {
+    marginTop: spacing.sm,
+    color: colors.gray,
+    fontSize: 14,
+  },
+  saveBtn: {
+    backgroundColor: tokens.primary,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: spacing.xl,
+  },
+  saveBtnDisabled: {
+    opacity: 0.5,
+  },
+  saveBtnText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.auth.token);
@@ -215,7 +293,7 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
       {/* Upload indicator */}
       {uploading && (
         <View style={styles.uploadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={tokens.primary} />
           <Text style={styles.uploadingText}>{t('transport.uploading_photos')}</Text>
         </View>
       )}
@@ -236,77 +314,3 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  label: {
-    color: colors.dark,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  hint: {
-    color: colors.gray,
-    marginBottom: spacing.sm,
-    lineHeight: 18,
-  },
-  errorHint: {
-    color: colors.error,
-    marginTop: 4,
-  },
-  existingSection: {
-    marginTop: spacing.sm,
-  },
-  existingLabel: {
-    color: colors.gray,
-    marginBottom: spacing.xs,
-  },
-  existingRow: {
-    flexDirection: 'row',
-  },
-  existingThumb: {
-    width: 80,
-    height: 60,
-    borderRadius: 6,
-    marginRight: spacing.sm,
-    backgroundColor: colors.border,
-  },
-  licenseThumb: {
-    width: '100%',
-    height: 140,
-    borderRadius: 8,
-    backgroundColor: colors.border,
-    marginTop: spacing.xs,
-  },
-  uploadingContainer: {
-    alignItems: 'center',
-    padding: spacing.md,
-    marginVertical: spacing.md,
-  },
-  uploadingText: {
-    marginTop: spacing.sm,
-    color: colors.gray,
-    fontSize: 14,
-  },
-  saveBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: spacing.xl,
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,7 +9,9 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { TextInput, Button, Text, IconButton, Switch, Chip, Card } from 'react-native-paper';
+import { TextInput, Text, IconButton, Switch, Chip, Card } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
@@ -55,6 +57,35 @@ const formatDistance = (meters?: number): string | null => {
 };
 
 export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.md, paddingBottom: spacing.xl },
+  stepLabel: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
+  countryBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.lightBlue, borderRadius: 8, padding: spacing.sm, marginBottom: spacing.md },
+  countryBadgeText: { fontSize: 14, color: colors.dark },
+  countryBadgeChange: { fontSize: 12, color: tokens.primary },
+  card: { borderRadius: 12, marginBottom: spacing.md, elevation: 2 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: colors.dark },
+  input: { backgroundColor: colors.white, marginBottom: spacing.xs },
+  suggestions: { backgroundColor: colors.white, borderRadius: 8, borderWidth: 1, borderColor: colors.border, marginBottom: spacing.xs },
+  suggestionItem: { flexDirection: 'row', alignItems: 'center', paddingRight: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.lightGray },
+  suggestionText: { flex: 1 },
+  suggestionName: { fontSize: 14, color: colors.dark },
+  suggestionSub: { fontSize: 12, color: colors.gray },
+  suggestionDist: { fontSize: 12, color: colors.gray },
+  successChip: { backgroundColor: '#E8F5E9', marginTop: spacing.xs },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm },
+  halfInput: { flex: 1, marginRight: spacing.sm },
+  fieldLabel: { fontSize: 12, color: colors.gray, marginBottom: 4 },
+  stepper: { flexDirection: 'row', alignItems: 'center' },
+  stepperVal: { fontSize: 18, fontWeight: '600', color: colors.dark, minWidth: 30, textAlign: 'center' },
+  buttons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  backWrap: { flex: 1 },
+  nextWrap: { flex: 2 },
+  }), [tokens]);
   const { t, i18n } = useTranslation();
   const { categorySlug, step1Data, step2Prefill } = route.params as any;
   const dispatch = useDispatch();
@@ -211,7 +242,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={[styles.container, { backgroundColor: tokens.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <UnsupportedCountryModal
         visible={showUnsupportedModal}
         detectedCountryCode={locationState.detectedCountryCode}
@@ -239,7 +270,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
           <Card.Content>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>📍 {t('booking_request.address_label')}</Text>
-              <IconButton icon="crosshairs-gps" size={20} iconColor={colors.primary} onPress={useCurrentLocation} />
+              <IconButton icon="crosshairs-gps" size={20} iconColor={tokens.primary} onPress={useCurrentLocation} />
             </View>
 
             <TextInput
@@ -249,16 +280,16 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
               value={address.address}
               onChangeText={handleAddressChange}
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               style={styles.input}
-              right={isGeocoding ? <TextInput.Icon icon={() => <ActivityIndicator size={20} color={colors.primary} />} /> : undefined}
+              right={isGeocoding ? <TextInput.Icon icon={() => <ActivityIndicator size={20} color={tokens.primary} />} /> : undefined}
             />
 
             {suggestions.length > 0 && (
               <View style={styles.suggestions}>
                 {suggestions.map((s: any, i: number) => (
                   <TouchableOpacity key={i} style={styles.suggestionItem} onPress={() => selectSuggestion(s)}>
-                    <IconButton icon={getSuggestionIcon(s.types, s.featureType)} size={20} iconColor={colors.primary} />
+                    <IconButton icon={getSuggestionIcon(s.types, s.featureType)} size={20} iconColor={tokens.primary} />
                     <View style={styles.suggestionText}>
                       <Text style={styles.suggestionName}>{s.name ?? s.placeName}</Text>
                       {(s.subtitle || s.city) ? (
@@ -294,7 +325,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
                 <Switch
                   value={address.hasElevator ?? false}
                   onValueChange={v => setAddress(prev => ({ ...prev, hasElevator: v }))}
-                  color={colors.primary}
+                  color={tokens.primary}
                 />
               </View>
             </View>
@@ -307,50 +338,25 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
               value={address.instructions ?? ''}
               onChangeText={v => setAddress(prev => ({ ...prev, instructions: v }))}
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               style={[styles.input, { marginTop: spacing.sm }]}
             />
           </Card.Content>
         </Card>
 
         <View style={styles.buttons}>
-          <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.backBtn}>
-            {t('booking_request.back')}
-          </Button>
-          <Button mode="contained" onPress={handleNext} style={styles.nextBtn} labelStyle={styles.nextBtnLabel}>
-            {t('booking_request.next')}
-          </Button>
+          <View style={styles.backWrap}>
+            <ChocolateButton variant="outline" onPress={() => navigation.goBack()}>
+              {t('booking_request.back')}
+            </ChocolateButton>
+          </View>
+          <View style={styles.nextWrap}>
+            <ChocolateButton onPress={handleNext}>
+              {t('booking_request.next')}
+            </ChocolateButton>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, paddingBottom: spacing.xl },
-  stepLabel: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
-  countryBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.lightBlue, borderRadius: 8, padding: spacing.sm, marginBottom: spacing.md },
-  countryBadgeText: { fontSize: 14, color: colors.dark },
-  countryBadgeChange: { fontSize: 12, color: colors.primary },
-  card: { borderRadius: 12, marginBottom: spacing.md, elevation: 2 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: colors.dark },
-  input: { backgroundColor: colors.white, marginBottom: spacing.xs },
-  suggestions: { backgroundColor: colors.white, borderRadius: 8, borderWidth: 1, borderColor: colors.border, marginBottom: spacing.xs },
-  suggestionItem: { flexDirection: 'row', alignItems: 'center', paddingRight: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.lightGray },
-  suggestionText: { flex: 1 },
-  suggestionName: { fontSize: 14, color: colors.dark },
-  suggestionSub: { fontSize: 12, color: colors.gray },
-  suggestionDist: { fontSize: 12, color: colors.gray },
-  successChip: { backgroundColor: '#E8F5E9', marginTop: spacing.xs },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm },
-  halfInput: { flex: 1, marginRight: spacing.sm },
-  fieldLabel: { fontSize: 12, color: colors.gray, marginBottom: 4 },
-  stepper: { flexDirection: 'row', alignItems: 'center' },
-  stepperVal: { fontSize: 18, fontWeight: '600', color: colors.dark, minWidth: 30, textAlign: 'center' },
-  buttons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  backBtn: { flex: 1, borderColor: colors.primary },
-  nextBtn: { flex: 2, backgroundColor: colors.primary, borderRadius: 8 },
-  nextBtnLabel: { fontSize: 16, paddingVertical: 4 },
-});

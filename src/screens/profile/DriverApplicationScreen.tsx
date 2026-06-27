@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,14 +19,83 @@ import { useApplyAsDriverMutation, useCancelDriverApplicationMutation } from '..
 import { uploadMultipleImages } from '../../services/uploadService';
 import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const VEHICLE_TYPES = ['van', 'small_truck', 'large_truck'] as const;
 type VehicleType = typeof VEHICLE_TYPES[number];
 
+// ─── Styles module-level ─────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  label: { color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
+  hint: { color: colors.gray, marginBottom: spacing.sm, lineHeight: 18 },
+  errorHint: { color: colors.error, marginTop: 4 },
+
+  // Status card
+  statusCard: {
+    borderRadius: 12, padding: spacing.xl, alignItems: 'center',
+    marginBottom: spacing.lg, borderWidth: 1,
+  },
+  statusPending: { backgroundColor: '#fefce8', borderColor: '#fde68a' },
+  statusRejected: { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
+  statusIcon: { fontSize: 40, marginBottom: spacing.sm },
+  statusTitle: { fontSize: 18, fontWeight: '700', marginBottom: spacing.sm },
+  statusTitlePending: { color: '#92400e' },
+  statusTitleRejected: { color: '#991b1b' },
+  statusDesc: { color: colors.gray, textAlign: 'center', lineHeight: 20 },
+
+  // Rejection reason card
+  reasonCard: {
+    backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa',
+    borderRadius: 10, padding: spacing.lg, marginBottom: spacing.lg,
+  },
+  reasonLabel: { fontSize: 12, fontWeight: '700', color: '#9a3412', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  reasonText: { fontSize: 14, color: '#7c2d12', lineHeight: 20 },
+
+  // Docs card
+  docsCard: {
+    backgroundColor: colors.white, borderRadius: 12, padding: spacing.lg,
+    marginBottom: spacing.lg, shadowColor: '#000', shadowOpacity: 0.05,
+    shadowRadius: 4, elevation: 2,
+  },
+  docsTitle: { color: colors.dark, marginBottom: spacing.md },
+  docsLabel: { color: colors.gray, marginTop: spacing.sm, marginBottom: 6 },
+  thumbRow: { flexDirection: 'row', marginBottom: spacing.sm },
+  thumb: { width: 72, height: 54, borderRadius: 6, marginRight: spacing.sm, backgroundColor: colors.border },
+  docThumb: { width: '100%', height: 120, borderRadius: 8, backgroundColor: colors.border, marginBottom: spacing.sm },
+
+  // Buttons
+  editBtn: {
+    paddingVertical: 14, borderRadius: 10,
+    alignItems: 'center', marginBottom: spacing.md,
+  },
+  editBtnText: { color: colors.white, fontSize: 15, fontWeight: '600' },
+  cancelBtn: {
+    borderWidth: 1.5, borderColor: colors.error, paddingVertical: 14,
+    borderRadius: 10, alignItems: 'center',
+  },
+  cancelBtnText: { color: colors.error, fontSize: 15, fontWeight: '600' },
+  btnDisabled: { opacity: 0.5 },
+
+  // Form
+  radioGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
+  radioBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingVertical: 8, paddingHorizontal: spacing.md },
+  radioBtnText: { color: colors.gray, fontSize: 14 },
+  input: { backgroundColor: colors.white, marginBottom: spacing.sm },
+  uploadingContainer: { alignItems: 'center', padding: spacing.md, marginVertical: spacing.md },
+  uploadingText: { marginTop: spacing.sm, color: colors.gray, fontSize: 14 },
+  submitBtn: { paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: spacing.xl },
+  submitBtnDisabled: { opacity: 0.5 },
+  submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  footerNote: { textAlign: 'center', color: colors.gray, marginTop: spacing.md, fontStyle: 'italic', lineHeight: 18 },
+});
+
 // ─── Vue suivi candidature ───────────────────────────────────────────────────
 const ApplicationTracking = ({ navigation }: { navigation: any }) => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const driver = user?.driver;
@@ -143,7 +212,7 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
       {/* Actions */}
       {isPending && (
         <TouchableOpacity
-          style={styles.editBtn}
+          style={[styles.editBtn, { backgroundColor: tokens.primary }]}
           onPress={() => navigation.navigate('DriverDocuments')}
           activeOpacity={0.8}
         >
@@ -172,6 +241,7 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
 // ─── Formulaire de candidature ───────────────────────────────────────────────
 const ApplicationForm = ({ navigation }: { navigation: any }) => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.auth.token);
 
@@ -242,11 +312,17 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
           {VEHICLE_TYPES.map((type) => (
             <TouchableOpacity
               key={type}
-              style={[styles.radioBtn, vehicleType === type && styles.radioBtnActive]}
+              style={[
+                styles.radioBtn,
+                vehicleType === type && { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
+              ]}
               onPress={() => setVehicleType(type)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.radioBtnText, vehicleType === type && styles.radioBtnTextActive]}>
+              <Text style={[
+                styles.radioBtnText,
+                vehicleType === type && { color: tokens.primary, fontWeight: '600' },
+              ]}>
                 {t(`transport.vehicle_${type}`)}
               </Text>
             </TouchableOpacity>
@@ -257,13 +333,13 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
         <Text variant="labelLarge" style={styles.label}>{t('profile.license_plate')} *</Text>
         <TextInput mode="outlined" value={vehiclePlate} onChangeText={setVehiclePlate}
           placeholder={t('profile.plate_placeholder')} autoCapitalize="characters"
-          outlineColor={colors.border} activeOutlineColor={colors.primary} style={styles.input} />
+          outlineColor={colors.border} activeOutlineColor={tokens.primary} style={styles.input} />
 
         {/* Capacité */}
         <Text variant="labelLarge" style={styles.label}>{t('driver_apply.vehicle_capacity')} *</Text>
         <TextInput mode="outlined" value={vehicleCapacity} onChangeText={setVehicleCapacity}
           keyboardType="decimal-pad" placeholder="Ex: 10" right={<TextInput.Affix text="m³" />}
-          outlineColor={colors.border} activeOutlineColor={colors.primary} style={styles.input} />
+          outlineColor={colors.border} activeOutlineColor={tokens.primary} style={styles.input} />
 
         {/* Photos véhicule */}
         <Text variant="labelLarge" style={styles.label}>{t('driver_apply.vehicle_photos_label')} *</Text>
@@ -291,13 +367,13 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
 
         {uploading && (
           <View style={styles.uploadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <ActivityIndicator size="large" color={tokens.primary} />
             <Text style={styles.uploadingText}>{t('transport.uploading_photos')}</Text>
           </View>
         )}
 
         <TouchableOpacity
-          style={[styles.submitBtn, !canSubmit && styles.submitBtnDisabled]}
+          style={[styles.submitBtn, { backgroundColor: tokens.primary }, !canSubmit && styles.submitBtnDisabled]}
           onPress={handleSubmit} disabled={!canSubmit} activeOpacity={0.8}
         >
           {isLoading || uploading
@@ -322,72 +398,3 @@ export const DriverApplicationScreen = ({ navigation }: any) => {
   }
   return <ApplicationForm navigation={navigation} />;
 };
-
-// ─── Styles ──────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  label: { color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
-  hint: { color: colors.gray, marginBottom: spacing.sm, lineHeight: 18 },
-  errorHint: { color: colors.error, marginTop: 4 },
-
-  // Status card
-  statusCard: {
-    borderRadius: 12, padding: spacing.xl, alignItems: 'center',
-    marginBottom: spacing.lg, borderWidth: 1,
-  },
-  statusPending: { backgroundColor: '#fefce8', borderColor: '#fde68a' },
-  statusRejected: { backgroundColor: '#fef2f2', borderColor: '#fecaca' },
-  statusIcon: { fontSize: 40, marginBottom: spacing.sm },
-  statusTitle: { fontSize: 18, fontWeight: '700', marginBottom: spacing.sm },
-  statusTitlePending: { color: '#92400e' },
-  statusTitleRejected: { color: '#991b1b' },
-  statusDesc: { color: colors.gray, textAlign: 'center', lineHeight: 20 },
-
-  // Rejection reason card
-  reasonCard: {
-    backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa',
-    borderRadius: 10, padding: spacing.lg, marginBottom: spacing.lg,
-  },
-  reasonLabel: { fontSize: 12, fontWeight: '700', color: '#9a3412', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
-  reasonText: { fontSize: 14, color: '#7c2d12', lineHeight: 20 },
-
-  // Docs card
-  docsCard: {
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.lg,
-    marginBottom: spacing.lg, shadowColor: '#000', shadowOpacity: 0.05,
-    shadowRadius: 4, elevation: 2,
-  },
-  docsTitle: { color: colors.dark, marginBottom: spacing.md },
-  docsLabel: { color: colors.gray, marginTop: spacing.sm, marginBottom: 6 },
-  thumbRow: { flexDirection: 'row', marginBottom: spacing.sm },
-  thumb: { width: 72, height: 54, borderRadius: 6, marginRight: spacing.sm, backgroundColor: colors.border },
-  docThumb: { width: '100%', height: 120, borderRadius: 8, backgroundColor: colors.border, marginBottom: spacing.sm },
-
-  // Buttons
-  editBtn: {
-    backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 10,
-    alignItems: 'center', marginBottom: spacing.md,
-  },
-  editBtnText: { color: colors.white, fontSize: 15, fontWeight: '600' },
-  cancelBtn: {
-    borderWidth: 1.5, borderColor: colors.error, paddingVertical: 14,
-    borderRadius: 10, alignItems: 'center',
-  },
-  cancelBtnText: { color: colors.error, fontSize: 15, fontWeight: '600' },
-  btnDisabled: { opacity: 0.5 },
-
-  // Form
-  radioGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
-  radioBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingVertical: 8, paddingHorizontal: spacing.md },
-  radioBtnActive: { borderColor: colors.primary, backgroundColor: colors.primary + '15' },
-  radioBtnText: { color: colors.gray, fontSize: 14 },
-  radioBtnTextActive: { color: colors.primary, fontWeight: '600' },
-  input: { backgroundColor: colors.white, marginBottom: spacing.sm },
-  uploadingContainer: { alignItems: 'center', padding: spacing.md, marginVertical: spacing.md },
-  uploadingText: { marginTop: spacing.sm, color: colors.gray, fontSize: 14 },
-  submitBtn: { backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: spacing.xl },
-  submitBtnDisabled: { opacity: 0.5 },
-  submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '600' },
-  footerNote: { textAlign: 'center', color: colors.gray, marginTop: spacing.md, fontStyle: 'italic', lineHeight: 18 },
-});

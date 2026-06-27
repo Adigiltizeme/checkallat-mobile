@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Text, TextInput, Button, Card, HelperText } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -8,11 +8,68 @@ import { useValidateCashPaymentMutation } from '../../store/api/transportApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { formatCurrency, CURRENCY_CONFIG } from '../../config/currency';
 
 type Props = NativeStackScreenProps<TransportStackParamList, 'CashValidation'>;
 
 export const CashValidationScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  card: {
+    margin: 16,
+  },
+  title: {
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    color: colors.gray,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  priceInfo: {
+    backgroundColor: colors.lightGray,
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  label: {
+    color: colors.gray,
+    marginBottom: 4,
+  },
+  expectedPrice: {
+    fontWeight: 'bold',
+    color: tokens.primary,
+  },
+  input: {
+    marginBottom: 16,
+  },
+  infoBox: {
+    backgroundColor: colors.lightBlue,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  infoText: {
+    color: colors.gray,
+    lineHeight: 20,
+  },
+  actions: {
+    padding: 16,
+    gap: 12,
+  },
+  button: {
+    marginBottom: 8,
+  },
+  }), [tokens]);
   const { requestId, totalPrice } = route.params;
   const isDriver = useSelector((state: RootState) => state.auth.isDriver);
   const { t } = useTranslation();
@@ -142,57 +199,3 @@ export const CashValidationScreen = ({ route, navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  card: {
-    margin: 16,
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: colors.gray,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  priceInfo: {
-    backgroundColor: colors.lightGray,
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  label: {
-    color: colors.gray,
-    marginBottom: 4,
-  },
-  expectedPrice: {
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  input: {
-    marginBottom: 16,
-  },
-  infoBox: {
-    backgroundColor: colors.lightBlue,
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  infoText: {
-    color: colors.gray,
-    lineHeight: 20,
-  },
-  actions: {
-    padding: 16,
-    gap: 12,
-  },
-  button: {
-    marginBottom: 8,
-  },
-});

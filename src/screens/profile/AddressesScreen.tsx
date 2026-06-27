@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -18,6 +18,7 @@ import {
   useDeleteAddressMutation,
 } from '../../store/api/authApi';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 // LABEL_OPTIONS built inside component
@@ -46,7 +47,250 @@ const emptyForm = (): AddressForm => ({
 
 export const AddressesScreen = () => {
   const { t } = useTranslation();
-  const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.other')];
+    const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listContent: {
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  emptyContainer: {
+    flex: 1,
+  },
+  emptyContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 80,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  emptyTitle: {
+    color: colors.dark,
+    marginBottom: 8,
+  },
+  emptyHint: {
+    color: colors.gray,
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  cardIconWrapper: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: tokens.primary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardIcon: {
+    fontSize: 18,
+  },
+  cardBody: {
+    flex: 1,
+  },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  cardLabel: {
+    color: colors.dark,
+    fontWeight: '600',
+  },
+  defaultBadge: {
+    backgroundColor: tokens.primary,
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  defaultBadgeText: {
+    color: colors.white,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  cardAddress: {
+    color: colors.dark,
+  },
+  cardDetail: {
+    color: colors.gray,
+    marginTop: 2,
+  },
+  cardInstructions: {
+    color: colors.gray,
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  actionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnText: {
+    fontSize: 16,
+  },
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    bottom: spacing.xl,
+    backgroundColor: tokens.primary,
+  },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: spacing.lg,
+    maxHeight: '90%',
+  },
+  modalTitle: {
+    color: colors.dark,
+    fontWeight: '700',
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  label: {
+    color: colors.dark,
+    marginBottom: 4,
+    marginTop: spacing.sm,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: colors.dark,
+    backgroundColor: colors.white,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  radioBtn: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+  },
+  radioBtnActive: {
+    borderColor: tokens.primary,
+    backgroundColor: tokens.primary + '15',
+  },
+  radioBtnText: {
+    color: colors.gray,
+    fontSize: 14,
+  },
+  radioBtnTextActive: {
+    color: tokens.primary,
+    fontWeight: '600',
+  },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: tokens.primary,
+    borderColor: tokens.primary,
+  },
+  checkboxMark: {
+    color: colors.white,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  checkLabel: {
+    color: colors.dark,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  cancelBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  cancelBtnText: {
+    color: colors.gray,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  confirmBtn: {
+    flex: 2,
+    backgroundColor: tokens.primary,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  saveBtnDisabled: {
+    opacity: 0.5,
+  },
+  confirmBtnText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  }), [tokens]);
+const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.other')];
   const { data: addresses = [], isLoading, refetch } = useGetAddressesQuery(undefined);
   const [createAddress, { isLoading: creating }] = useCreateAddressMutation();
   const [updateAddress, { isLoading: updating }] = useUpdateAddressMutation();
@@ -177,7 +421,7 @@ export const AddressesScreen = () => {
     <View style={styles.container}>
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={tokens.primary} />
         </View>
       ) : (
         <FlatList
@@ -325,245 +569,3 @@ export const AddressesScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  centered: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  listContent: {
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  emptyContainer: {
-    flex: 1,
-  },
-  emptyContent: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    color: colors.dark,
-    marginBottom: 8,
-  },
-  emptyHint: {
-    color: colors.gray,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-  },
-  cardIconWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardIcon: {
-    fontSize: 18,
-  },
-  cardBody: {
-    flex: 1,
-  },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 2,
-  },
-  cardLabel: {
-    color: colors.dark,
-    fontWeight: '600',
-  },
-  defaultBadge: {
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-  },
-  defaultBadgeText: {
-    color: colors.white,
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  cardAddress: {
-    color: colors.dark,
-  },
-  cardDetail: {
-    color: colors.gray,
-    marginTop: 2,
-  },
-  cardInstructions: {
-    color: colors.gray,
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  actionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.light,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actionBtnText: {
-    fontSize: 16,
-  },
-  fab: {
-    position: 'absolute',
-    right: spacing.lg,
-    bottom: spacing.xl,
-    backgroundColor: colors.primary,
-  },
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: spacing.lg,
-    maxHeight: '90%',
-  },
-  modalTitle: {
-    color: colors.dark,
-    fontWeight: '700',
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  label: {
-    color: colors.dark,
-    marginBottom: 4,
-    marginTop: spacing.sm,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: colors.dark,
-    backgroundColor: colors.white,
-  },
-  radioGroup: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  radioBtn: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: spacing.md,
-  },
-  radioBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '15',
-  },
-  radioBtnText: {
-    color: colors.gray,
-    fontSize: 14,
-  },
-  radioBtnTextActive: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  checkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  checkboxMark: {
-    color: colors.white,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  checkLabel: {
-    color: colors.dark,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  cancelBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  cancelBtnText: {
-    color: colors.gray,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  confirmBtn: {
-    flex: 2,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  confirmBtnText: {
-    color: colors.white,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-});

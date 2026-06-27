@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,6 +14,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import {
   TransportObjectType,
@@ -28,6 +29,119 @@ import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
 type Props = StackScreenProps<any, 'TransportRequestStep1'>;
 
 export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  title: {
+    color: colors.dark,
+    marginBottom: spacing.lg,
+  },
+  label: {
+    color: colors.dark,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
+  typeButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  typeButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  typeButtonActive: {
+    backgroundColor: tokens.primary,
+    borderColor: tokens.primary,
+  },
+  typeButtonText: {
+    color: colors.dark,
+  },
+  typeButtonTextActive: {
+    color: colors.white,
+    fontWeight: '600',
+  },
+  selectedTypesHint: {
+    color: colors.success,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.sm,
+    fontWeight: '500',
+  },
+  textarea: {
+    backgroundColor: colors.white,
+  },
+  charCount: {
+    textAlign: 'right',
+    color: colors.gray,
+    marginTop: 4,
+  },
+  photoSection: {
+    marginTop: spacing.md,
+  },
+  volumeSection: {
+    marginTop: spacing.md,
+  },
+  volumeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  volumeHelpCard: {
+    marginTop: spacing.sm,
+    backgroundColor: colors.white,
+  },
+  volumeHelpTitle: {
+    color: tokens.primary,
+    marginBottom: spacing.sm,
+  },
+  volumeHelpItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  volumeHelpValue: {
+    color: tokens.primary,
+    fontWeight: '600',
+  },
+  volumeHelpNote: {
+    color: colors.gray,
+    marginTop: spacing.sm,
+    fontStyle: 'italic',
+  },
+  actions: {
+    marginTop: spacing.xl,
+  },
+  nextButton: {
+    paddingVertical: spacing.sm,
+  },
+  uploadingContainer: {
+    alignItems: 'center',
+    padding: spacing.md,
+    marginVertical: spacing.md,
+  },
+  uploadingText: {
+    marginTop: spacing.sm,
+    color: colors.gray,
+    fontSize: 14,
+  },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const { prefill, step2Prefill, step3Prefill } = (route.params ?? {}) as {
     prefill?: { objectTypes: string[]; description: string; estimatedVolume: number };
@@ -177,7 +291,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
         numberOfLines={4}
         maxLength={500}
         outlineColor={colors.border}
-        activeOutlineColor={colors.primary}
+        activeOutlineColor={tokens.primary}
         style={styles.textarea}
       />
       <Text variant="bodySmall" style={styles.charCount}>
@@ -205,7 +319,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
           <IconButton
             icon={showVolumeHelp ? 'chevron-up' : 'help-circle'}
             size={20}
-            iconColor={colors.primary}
+            iconColor={tokens.primary}
             onPress={() => setShowVolumeHelp(!showVolumeHelp)}
           />
         </View>
@@ -220,7 +334,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
           }}
           keyboardType="decimal-pad"
           outlineColor={colors.border}
-          activeOutlineColor={colors.primary}
+          activeOutlineColor={tokens.primary}
           right={<TextInput.Affix text="m³" />}
         />
 
@@ -257,7 +371,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
       {/* Indicateur upload */}
       {uploading && (
         <View style={styles.uploadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={tokens.primary} />
           <Text style={styles.uploadingText}>{uploadProgress}</Text>
         </View>
       )}
@@ -268,7 +382,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
           mode="contained"
           onPress={handleNext}
           disabled={!description.trim() || estimatedVolume <= 0 || uploading}
-          buttonColor={colors.primary}
+          buttonColor={tokens.primary}
           style={styles.nextButton}
           loading={uploading}
         >
@@ -279,113 +393,3 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  title: {
-    color: colors.dark,
-    marginBottom: spacing.lg,
-  },
-  label: {
-    color: colors.dark,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  typeButtons: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  typeButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-  },
-  typeButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  typeButtonText: {
-    color: colors.dark,
-  },
-  typeButtonTextActive: {
-    color: colors.white,
-    fontWeight: '600',
-  },
-  selectedTypesHint: {
-    color: colors.success,
-    marginTop: -spacing.sm,
-    marginBottom: spacing.sm,
-    fontWeight: '500',
-  },
-  textarea: {
-    backgroundColor: colors.white,
-  },
-  charCount: {
-    textAlign: 'right',
-    color: colors.gray,
-    marginTop: 4,
-  },
-  photoSection: {
-    marginTop: spacing.md,
-  },
-  volumeSection: {
-    marginTop: spacing.md,
-  },
-  volumeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  volumeHelpCard: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.white,
-  },
-  volumeHelpTitle: {
-    color: colors.primary,
-    marginBottom: spacing.sm,
-  },
-  volumeHelpItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  volumeHelpValue: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  volumeHelpNote: {
-    color: colors.gray,
-    marginTop: spacing.sm,
-    fontStyle: 'italic',
-  },
-  actions: {
-    marginTop: spacing.xl,
-  },
-  nextButton: {
-    paddingVertical: spacing.sm,
-  },
-  uploadingContainer: {
-    alignItems: 'center',
-    padding: spacing.md,
-    marginVertical: spacing.md,
-  },
-  uploadingText: {
-    marginTop: spacing.sm,
-    color: colors.gray,
-    fontSize: 14,
-  },
-});

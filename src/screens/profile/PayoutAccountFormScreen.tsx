@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, StyleSheet, ScrollView, Alert, TouchableOpacity,
   KeyboardAvoidingView, Platform, Switch,
@@ -16,6 +16,7 @@ import {
   useCreateProAccountMutation,
 } from '../../store/api/payoutAccountsApi';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const PAYOUT_COUNTRIES = SUPPORTED_COUNTRIES.map((c) => ({
@@ -26,7 +27,89 @@ const PAYOUT_COUNTRIES = SUPPORTED_COUNTRIES.map((c) => ({
 
 export const PayoutAccountFormScreen = () => {
   const { t } = useTranslation();
-  const navigation = useNavigation();
+    const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background ?? '#F9FAFB' },
+  content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.gray ?? '#6B7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: colors.white,
+  },
+  chipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '10' },
+  chipText: { fontSize: 14, color: '#374151', fontWeight: '500' },
+  chipTextActive: { color: tokens.primary, fontWeight: '700' },
+  noMethods: { fontSize: 14, color: colors.gray, fontStyle: 'italic', marginVertical: spacing.sm },
+  methodList: { gap: spacing.sm },
+  methodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  methodCardActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '08' },
+  methodRadio: { width: 24, alignItems: 'center' },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOuterActive: { borderColor: tokens.primary },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: tokens.primary,
+  },
+  methodLabel: { fontSize: 15, color: '#374151', fontWeight: '500', flex: 1 },
+  methodLabelActive: { color: tokens.primary, fontWeight: '600' },
+  input: { marginBottom: spacing.sm, backgroundColor: colors.white },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: spacing.md,
+    marginVertical: spacing.sm,
+    gap: spacing.md,
+  },
+  switchLabel: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  switchSub: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  submitBtn: {
+    backgroundColor: tokens.primary,
+    borderRadius: 10,
+    padding: spacing.md,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnText: { color: colors.white, fontSize: 15, fontWeight: '700' },
+  }), [tokens]);
+const navigation = useNavigation();
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
   const isDriver = activeRole === 'driver';
 
@@ -126,7 +209,7 @@ export const PayoutAccountFormScreen = () => {
           <>
             <Text style={styles.sectionLabel}>{t('payout_accounts.form_type')}</Text>
             {loadingMethods ? (
-              <ActivityIndicator color={colors.primary} style={{ marginVertical: spacing.md }} />
+              <ActivityIndicator color={tokens.primary} style={{ marginVertical: spacing.md }} />
             ) : methods.length === 0 ? (
               <Text style={styles.noMethods}>{t('payout_accounts.form_no_methods')}</Text>
             ) : (
@@ -168,7 +251,7 @@ export const PayoutAccountFormScreen = () => {
               onChangeText={setHolderName}
               style={styles.input}
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
             />
 
             {/* Champs spécifiques au type */}
@@ -181,7 +264,7 @@ export const PayoutAccountFormScreen = () => {
                 onChangeText={(v) => setField(field.key, v)}
                 style={styles.input}
                 outlineColor={colors.border}
-                activeOutlineColor={colors.primary}
+                activeOutlineColor={tokens.primary}
                 keyboardType={
                   field.type === 'phone' ? 'phone-pad' :
                   field.type === 'email' ? 'email-address' : 'default'
@@ -199,8 +282,8 @@ export const PayoutAccountFormScreen = () => {
               <Switch
                 value={isDefault}
                 onValueChange={setIsDefault}
-                trackColor={{ false: colors.border, true: colors.primary + '80' }}
-                thumbColor={isDefault ? colors.primary : colors.gray}
+                trackColor={{ false: colors.border, true: tokens.primary + '80' }}
+                thumbColor={isDefault ? tokens.primary : colors.gray}
               />
             </View>
 
@@ -222,84 +305,3 @@ export const PayoutAccountFormScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background ?? '#F9FAFB' },
-  content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.gray ?? '#6B7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: colors.white,
-  },
-  chipActive: { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
-  chipText: { fontSize: 14, color: '#374151', fontWeight: '500' },
-  chipTextActive: { color: colors.primary, fontWeight: '700' },
-  noMethods: { fontSize: 14, color: colors.gray, fontStyle: 'italic', marginVertical: spacing.sm },
-  methodList: { gap: spacing.sm },
-  methodCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
-  methodCardActive: { borderColor: colors.primary, backgroundColor: colors.primary + '08' },
-  methodRadio: { width: 24, alignItems: 'center' },
-  radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioOuterActive: { borderColor: colors.primary },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.primary,
-  },
-  methodLabel: { fontSize: 15, color: '#374151', fontWeight: '500', flex: 1 },
-  methodLabelActive: { color: colors.primary, fontWeight: '600' },
-  input: { marginBottom: spacing.sm, backgroundColor: colors.white },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: spacing.md,
-    marginVertical: spacing.sm,
-    gap: spacing.md,
-  },
-  switchLabel: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  switchSub: { fontSize: 12, color: colors.gray, marginTop: 2 },
-  submitBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    padding: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { color: colors.white, fontSize: 15, fontWeight: '700' },
-});

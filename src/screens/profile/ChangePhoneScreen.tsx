@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -16,11 +16,46 @@ import { useDispatch } from 'react-redux';
 import { updateUser } from '../../store/slices/authSlice';
 import { useSendOtpMeMutation, useChangePhoneMutation } from '../../store/api/authApi';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Step = 'enter_phone' | 'verify';
 
 export const ChangePhoneScreen = ({ navigation }: any) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  content: { padding: spacing.lg, paddingTop: spacing.xl },
+  iconWrapper: { alignItems: 'center', marginBottom: spacing.lg },
+  title: { textAlign: 'center', color: colors.dark, fontWeight: '700', marginBottom: spacing.md },
+  description: { textAlign: 'center', color: colors.gray, marginBottom: spacing.xl, lineHeight: 22 },
+  label: { color: colors.dark, fontSize: 13, fontWeight: '600', marginBottom: 4, marginTop: spacing.sm },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: colors.dark,
+    backgroundColor: colors.white,
+    marginBottom: spacing.sm,
+  },
+  btn: {
+    backgroundColor: tokens.primary,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+  btnDisabled: { opacity: 0.5 },
+  btnText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+  resendBtn: { alignItems: 'center', marginTop: spacing.md },
+  resendText: { color: tokens.primary, fontSize: 14 },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -68,7 +103,7 @@ export const ChangePhoneScreen = ({ navigation }: any) => {
     >
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.iconWrapper}>
-          <Icon name="phone-lock" size={48} color={colors.primary} />
+          <Icon name="phone-lock" size={48} color={tokens.primary} />
         </View>
 
         <Text variant="headlineSmall" style={styles.title}>{t('profile.change_phone')}</Text>
@@ -136,34 +171,3 @@ export const ChangePhoneScreen = ({ navigation }: any) => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.lg, paddingTop: spacing.xl },
-  iconWrapper: { alignItems: 'center', marginBottom: spacing.lg },
-  title: { textAlign: 'center', color: colors.dark, fontWeight: '700', marginBottom: spacing.md },
-  description: { textAlign: 'center', color: colors.gray, marginBottom: spacing.xl, lineHeight: 22 },
-  label: { color: colors.dark, fontSize: 13, fontWeight: '600', marginBottom: 4, marginTop: spacing.sm },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: colors.dark,
-    backgroundColor: colors.white,
-    marginBottom: spacing.sm,
-  },
-  btn: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: spacing.lg,
-  },
-  btnDisabled: { opacity: 0.5 },
-  btnText: { color: colors.white, fontSize: 16, fontWeight: '600' },
-  resendBtn: { alignItems: 'center', marginTop: spacing.md },
-  resendText: { color: colors.primary, fontSize: 14 },
-});

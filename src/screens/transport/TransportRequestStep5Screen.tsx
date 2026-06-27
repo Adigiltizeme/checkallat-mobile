@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, Modal, Dimensions } from 'react-native';
 import { Button, Text, Card, RadioButton, Divider, ActivityIndicator, IconButton, Chip } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import {
   Step1Data,
@@ -18,6 +19,210 @@ import { RootState } from '../../store';
 type Props = StackScreenProps<any, 'TransportRequestStep5'>;
 
 export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  title: {
+    color: colors.dark,
+    marginBottom: spacing.lg,
+  },
+  card: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+  },
+  sectionTitle: {
+    color: tokens.primary,
+    marginBottom: spacing.sm,
+  },
+  value: {
+    color: colors.dark,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  description: {
+    color: colors.dark,
+    marginTop: spacing.xs,
+  },
+  detail: {
+    color: colors.gray,
+    marginTop: 4,
+  },
+  addressRow: {
+    marginVertical: spacing.xs,
+  },
+  addressLabel: {
+    color: colors.gray,
+    marginBottom: 4,
+  },
+  divider: {
+    marginVertical: spacing.sm,
+  },
+  distanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.xs,
+  },
+  service: {
+    color: colors.dark,
+    marginVertical: 4,
+  },
+  priceCard: {
+    marginBottom: spacing.md,
+    backgroundColor: colors.white,
+    borderWidth: 2,
+    borderColor: tokens.primary,
+  },
+  priceTitle: {
+    color: tokens.primary,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: spacing.xs,
+  },
+  totalDivider: {
+    marginVertical: spacing.md,
+    backgroundColor: tokens.primary,
+    height: 2,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalLabel: {
+    color: colors.dark,
+    fontWeight: '700',
+  },
+  totalValue: {
+    color: tokens.primary,
+    fontWeight: '700',
+  },
+  priceLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+  },
+  priceLoadingText: {
+    color: colors.gray,
+  },
+  infoCard: {
+    backgroundColor: '#FFF3CD',
+    marginBottom: spacing.md,
+  },
+  conditions: {
+    color: colors.dark,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  backButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+  },
+  submitButton: {
+    flex: 2,
+    paddingVertical: spacing.sm,
+  },
+  photosSection: {
+    marginTop: spacing.md,
+  },
+  photosLabel: {
+    color: colors.gray,
+    marginBottom: spacing.xs,
+  },
+  photosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  photoThumbnail: {
+    width: 70,
+    height: 70,
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: spacing.sm,
+  },
+  objectChip: {
+    backgroundColor: `${tokens.primary}20`,
+    paddingHorizontal: 8,
+    margin: 0,
+  },
+  objectChipText: {
+    color: tokens.primary,
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  modalTitle: {
+    color: colors.white,
+    fontWeight: '600',
+  },
+  modalImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height * 0.7,
+  },
+  modalNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+  },
+  navButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  navButtonDisabled: {
+    opacity: 0.3,
+  },
+  }), [tokens]);
+
   const { step1Data, step2Data, step3Data, step4Data } = route.params as {
     step1Data: Step1Data;
     step2Data: Step2Data;
@@ -35,38 +240,46 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
 
   // Prix retourné par le backend (source unique de vérité)
   const [priceBreakdown, setPriceBreakdown] = useState<any>(null);
+  const [priceError, setPriceError] = useState(false);
 
   // État pour la modal de visualisation des photos
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Appel API pour récupérer le prix depuis la DB (tarifs gérés dans le web-admin)
-  useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        const result = await calculatePrice({
-          estimatedVolume: step1Data.estimatedVolume,
-          distance: step2Data.distance,
-          pickupFloor: step2Data.pickup.floor || 0,
-          hasElevator: step2Data.pickup.hasElevator || false,
-          deliveryFloor: step2Data.delivery.floor || 0,
-          hasElevatorDelivery: step2Data.delivery.hasElevator || false,
-          needHelpers: step3Data.needHelpers,
-          helpersCount: step3Data.helpersCount,
-          needDisassembly: step3Data.needDisassembly,
-          needReassembly: step3Data.needReassembly,
-          needPacking: step3Data.needPacking,
-          pickupLat: step2Data.pickup.lat,
-          pickupLng: step2Data.pickup.lng,
-          countryCode,
-        }).unwrap();
-        setPriceBreakdown(result);
-      } catch (err) {
-        console.error('Failed to calculate price:', err);
-      }
-    };
-    fetchPrice();
-  }, []);
+  const fetchPrice = useCallback(async () => {
+    setPriceError(false);
+    try {
+      const result = await calculatePrice({
+        estimatedVolume: step1Data.estimatedVolume,
+        distance: step2Data.distance,
+        pickupFloor: step2Data.pickup.floor || 0,
+        hasElevator: step2Data.pickup.hasElevator || false,
+        deliveryFloor: step2Data.delivery.floor || 0,
+        hasElevatorDelivery: step2Data.delivery.hasElevator || false,
+        needHelpers: step3Data.needHelpers,
+        helpersCount: step3Data.helpersCount,
+        needDisassembly: step3Data.needDisassembly,
+        needReassembly: step3Data.needReassembly,
+        needPacking: step3Data.needPacking,
+        pickupLat: step2Data.pickup.lat,
+        pickupLng: step2Data.pickup.lng,
+        countryCode,
+      }).unwrap();
+      setPriceBreakdown(result);
+    } catch (err) {
+      setPriceError(true);
+      Alert.alert(
+        t('common.error'),
+        t('transport.price_fetch_error'),
+        [
+          { text: t('common.retry'), onPress: fetchPrice },
+          { text: t('common.continue_anyway'), style: 'destructive' },
+        ]
+      );
+    }
+  }, [calculatePrice, step1Data, step2Data, step3Data, countryCode, t]);
+
+  useEffect(() => { fetchPrice(); }, []);
 
   const openPhotoViewer = (index: number) => {
     setSelectedPhotoIndex(index);
@@ -342,14 +555,14 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
       )}
 
       {/* Planning */}
-      <Card style={[styles.card, step4Data.isImmediate && { borderColor: colors.primary, borderWidth: 2 }]}>
+      <Card style={[styles.card, step4Data.isImmediate && { borderColor: tokens.primary, borderWidth: 2 }]}>
         <Card.Content>
           <Text variant="labelLarge" style={styles.sectionTitle}>
             {step4Data.isImmediate ? '⚡' : '📅'} {t('transport.planning')}
           </Text>
           {step4Data.isImmediate ? (
             <>
-              <Text variant="bodyLarge" style={[styles.value, { color: colors.primary }]}>
+              <Text variant="bodyLarge" style={[styles.value, { color: tokens.primary }]}>
                 {t('transport.immediate_mode')}
               </Text>
               <Text variant="bodySmall" style={styles.detail}>
@@ -378,7 +591,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
 
           {priceLoading || !priceBreakdown ? (
             <View style={styles.priceLoading}>
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size="small" color={tokens.primary} />
               <Text variant="bodyMedium" style={styles.priceLoadingText}>
                 {t('transport.calculating_price')}
               </Text>
@@ -443,12 +656,12 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
             <RadioButton.Item
               label={t('transport.payment_cash_label')}
               value="cash"
-              color={colors.primary}
+              color={tokens.primary}
             />
             <RadioButton.Item
               label={t('transport.payment_card_label')}
               value="stripe"
-              color={colors.primary}
+              color={tokens.primary}
             />
           </RadioButton.Group>
         </Card.Content>
@@ -547,204 +760,3 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  title: {
-    color: colors.dark,
-    marginBottom: spacing.lg,
-  },
-  card: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-  },
-  sectionTitle: {
-    color: colors.primary,
-    marginBottom: spacing.sm,
-  },
-  value: {
-    color: colors.dark,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  description: {
-    color: colors.dark,
-    marginTop: spacing.xs,
-  },
-  detail: {
-    color: colors.gray,
-    marginTop: 4,
-  },
-  addressRow: {
-    marginVertical: spacing.xs,
-  },
-  addressLabel: {
-    color: colors.gray,
-    marginBottom: 4,
-  },
-  divider: {
-    marginVertical: spacing.sm,
-  },
-  distanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.xs,
-  },
-  service: {
-    color: colors.dark,
-    marginVertical: 4,
-  },
-  priceCard: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  priceTitle: {
-    color: colors.primary,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: spacing.xs,
-  },
-  totalDivider: {
-    marginVertical: spacing.md,
-    backgroundColor: colors.primary,
-    height: 2,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  totalLabel: {
-    color: colors.dark,
-    fontWeight: '700',
-  },
-  totalValue: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  priceLoading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.lg,
-  },
-  priceLoadingText: {
-    color: colors.gray,
-  },
-  infoCard: {
-    backgroundColor: '#FFF3CD',
-    marginBottom: spacing.md,
-  },
-  conditions: {
-    color: colors.dark,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-  },
-  submitButton: {
-    flex: 2,
-    paddingVertical: spacing.sm,
-  },
-  photosSection: {
-    marginTop: spacing.md,
-  },
-  photosLabel: {
-    color: colors.gray,
-    marginBottom: spacing.xs,
-  },
-  photosGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  photoThumbnail: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  thumbnailImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: spacing.sm,
-  },
-  objectChip: {
-    backgroundColor: `${colors.primary}20`,
-    paddingHorizontal: 8,
-    margin: 0,
-  },
-  objectChipText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.md,
-  },
-  modalTitle: {
-    color: colors.white,
-    fontWeight: '600',
-  },
-  modalImageContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalImage: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height * 0.7,
-  },
-  modalNavigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-  },
-  navButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  navButtonDisabled: {
-    opacity: 0.3,
-  },
-});

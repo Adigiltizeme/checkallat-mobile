@@ -13,6 +13,7 @@
     "error": "Error",
     "success": "Success",
     "retry": "Retry",
+    "continue_anyway": "Continue anyway",
     "search": "Search",
     "filter": "Filter",
     "filters": "Filters",
@@ -212,6 +213,7 @@
     "restart_rtl_fallback": "Please close and reopen the app to apply RTL changes."
   },
   "transport": {
+    "price_fetch_error": "Unable to calculate the price. Check your connection and try again.",
     "vehicle_van": "Van",
     "vehicle_small_truck": "Small truck",
     "vehicle_large_truck": "Large truck",
@@ -1284,7 +1286,11 @@
     "time_slot_evening_short": "Evening",
     "photos_section": "Your photos",
     "payment_cash_desc": "Pay in cash when the service is done",
-    "payment_inapp_desc": "Secure payment held in escrow until completion"
+    "payment_inapp_desc": "Secure payment held in escrow until completion",
+    "pro_view_showcase": "View showcase",
+    "pro_no_showcase": "This professional has not added a showcase yet.",
+    "pro_search_placeholder": "Search a professional by name…",
+    "pro_search_no_result": "No professional matches your search."
   },
   "booking_tracking": {
     "title": "Service Tracking",
@@ -1447,5 +1453,17 @@
     "empty_services": "No service bookings",
     "empty_marketplace": "No marketplace orders",
     "order_label": "Order"
+  },
+  "settings": {
+    "theme_title": "Appearance",
+    "theme_subtitle": "Choose the visual theme of the app",
+    "theme_light": "Light",
+    "theme_comfort": "Eye comfort",
+    "theme_dark": "Dark",
+    "theme_system": "System",
+    "theme_system_hint": "The theme automatically follows your device preferences.",
+    "theme_teal": "Original Teal",
+    "section_checkallat": "CheckAll@t Themes",
+    "section_original": "Original Theme"
   }
 }

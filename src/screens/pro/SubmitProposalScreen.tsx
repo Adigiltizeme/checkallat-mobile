@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,8 +13,30 @@ import { useTranslation } from 'react-i18next';
 import { useSubmitProposalMutation } from '../../store/api/proposalsApi';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/ThemeProvider';
 
 export const SubmitProposalScreen = ({ navigation }: any) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  scroll: { flex: 1 },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  header: { marginBottom: spacing.lg },
+  title: { color: colors.dark, fontWeight: '800', marginBottom: spacing.xs },
+  subtitle: { color: colors.gray },
+  section: { gap: spacing.sm },
+  input: { backgroundColor: colors.white },
+  submitBtn: {
+    marginTop: spacing.xl,
+    backgroundColor: tokens.primary,
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnText: { color: colors.white, fontWeight: '700', fontSize: 16 },
+  }), [tokens]);
   const { t } = useTranslation();
   const [submitProposal, { isLoading }] = useSubmitProposalMutation();
 
@@ -138,22 +160,3 @@ export const SubmitProposalScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  scroll: { flex: 1 },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  header: { marginBottom: spacing.lg },
-  title: { color: colors.dark, fontWeight: '800', marginBottom: spacing.xs },
-  subtitle: { color: colors.gray },
-  section: { gap: spacing.sm },
-  input: { backgroundColor: colors.white },
-  submitBtn: {
-    marginTop: spacing.xl,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  submitBtnDisabled: { opacity: 0.6 },
-  submitBtnText: { color: colors.white, fontWeight: '700', fontSize: 16 },
-});

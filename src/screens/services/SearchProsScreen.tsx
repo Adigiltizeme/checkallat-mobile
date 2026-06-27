@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -17,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<HomeStackParamList, 'SearchPros'>;
@@ -36,6 +37,101 @@ const RATING_OPTIONS = [0, 3, 4, 4.5];
 const DISTANCE_OPTIONS = [5, 10, 20, 50];
 
 export const SearchProsScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+
+  filterBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: colors.white, paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border,
+  },
+  categoryPill: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    paddingHorizontal: spacing.md, paddingVertical: 6, borderRadius: 20,
+  },
+  categoryPillText: { fontSize: 13, fontWeight: '600' },
+  filterBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: spacing.md, paddingVertical: 6,
+    borderRadius: 20, borderWidth: 1, borderColor: colors.border,
+  },
+  filterBtnActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '10' },
+  filterBtnText: { fontSize: 13, color: colors.gray },
+  filterBtnTextActive: { color: tokens.primary, fontWeight: '600' },
+
+  list: { padding: spacing.md },
+  separator: { height: spacing.sm },
+
+  proCard: {
+    backgroundColor: colors.white, borderRadius: 16, padding: spacing.md,
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 }, elevation: 2,
+  },
+  avatar: {
+    width: 52, height: 52, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatarLetter: { fontSize: 22, fontWeight: '700' },
+  proInfo: { flex: 1 },
+  proNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
+  proName: { fontSize: 15, fontWeight: '700', color: colors.dark, flex: 1 },
+  companyName: { fontSize: 12, color: colors.gray, marginTop: 1 },
+  badgesRow: { flexDirection: 'row', gap: 4 },
+  badgeStudy: { backgroundColor: '#F59E0B20', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  badgePremium: { backgroundColor: tokens.primary + '20', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  badgeText: { fontSize: 10, fontWeight: '700', color: colors.dark },
+  statsRow: { flexDirection: 'row', gap: spacing.md, marginTop: 6, flexWrap: 'wrap' },
+  stat: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  statText: { fontSize: 12, color: colors.gray },
+  statSub: { fontSize: 11, color: colors.border },
+
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  emptyText: { fontSize: 15, fontWeight: '600', color: colors.dark, textAlign: 'center', marginBottom: spacing.xs },
+  emptyHint: { fontSize: 13, color: colors.gray, textAlign: 'center' },
+
+  // Filter modal
+  modalOverlay: { flex: 1, backgroundColor: '#00000055', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: spacing.lg, paddingBottom: spacing.xl, maxHeight: '80%',
+  },
+  modalHandle: {
+    width: 40, height: 4, backgroundColor: colors.border,
+    borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, marginBottom: spacing.lg },
+  filterLabel: { fontSize: 13, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  chip: {
+    paddingHorizontal: spacing.md, paddingVertical: 8,
+    borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
+  },
+  chipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
+  chipText: { fontSize: 13, color: colors.gray },
+  chipTextActive: { color: tokens.primary, fontWeight: '600' },
+  toggleRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginTop: spacing.md, paddingVertical: spacing.sm,
+  },
+  toggleLabel: { fontSize: 14, color: colors.dark, fontWeight: '500' },
+  toggle: {
+    width: 44, height: 26, borderRadius: 13, backgroundColor: colors.border,
+    justifyContent: 'center', padding: 2,
+  },
+  toggleOn: { backgroundColor: tokens.primary },
+  toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.white },
+  toggleThumbOn: { alignSelf: 'flex-end' },
+  applyBtn: {
+    backgroundColor: tokens.primary, borderRadius: 12,
+    paddingVertical: 14, alignItems: 'center', marginTop: spacing.lg,
+  },
+  applyBtnText: { color: colors.white, fontSize: 15, fontWeight: '700' },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const { category } = route.params;
   const { userLat, userLng } = useSelector((state: RootState) => state.location);
@@ -61,7 +157,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
   useRefetchOnFocus(refetch);
 
   const pros: any[] = data?.pros ?? (Array.isArray(data) ? data : []);
-  const meta = CATEGORY_META[category] ?? { icon: 'briefcase-outline', color: colors.primary };
+  const meta = CATEGORY_META[category] ?? { icon: 'briefcase-outline', color: tokens.primary };
 
   const renderPro = ({ item }: { item: any }) => {
     const pro = item.pro ?? item;
@@ -163,7 +259,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
           <Icon
             name="tune-variant"
             size={18}
-            color={(minRating > 0 || studyltizemeOnly || segment !== 'all') ? colors.primary : colors.gray}
+            color={(minRating > 0 || studyltizemeOnly || segment !== 'all') ? tokens.primary : colors.gray}
           />
           <Text style={[styles.filterBtnText, (minRating > 0 || studyltizemeOnly || segment !== 'all') && styles.filterBtnTextActive]}>
             {t('common.filters')}
@@ -269,95 +365,3 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-
-  filterBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.white, paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border,
-  },
-  categoryPill: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-    paddingHorizontal: spacing.md, paddingVertical: 6, borderRadius: 20,
-  },
-  categoryPillText: { fontSize: 13, fontWeight: '600' },
-  filterBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: spacing.md, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1, borderColor: colors.border,
-  },
-  filterBtnActive: { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
-  filterBtnText: { fontSize: 13, color: colors.gray },
-  filterBtnTextActive: { color: colors.primary, fontWeight: '600' },
-
-  list: { padding: spacing.md },
-  separator: { height: spacing.sm },
-
-  proCard: {
-    backgroundColor: colors.white, borderRadius: 16, padding: spacing.md,
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 }, elevation: 2,
-  },
-  avatar: {
-    width: 52, height: 52, borderRadius: 14,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  avatarLetter: { fontSize: 22, fontWeight: '700' },
-  proInfo: { flex: 1 },
-  proNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
-  proName: { fontSize: 15, fontWeight: '700', color: colors.dark, flex: 1 },
-  companyName: { fontSize: 12, color: colors.gray, marginTop: 1 },
-  badgesRow: { flexDirection: 'row', gap: 4 },
-  badgeStudy: { backgroundColor: '#F59E0B20', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  badgePremium: { backgroundColor: colors.primary + '20', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  badgeText: { fontSize: 10, fontWeight: '700', color: colors.dark },
-  statsRow: { flexDirection: 'row', gap: spacing.md, marginTop: 6, flexWrap: 'wrap' },
-  stat: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  statText: { fontSize: 12, color: colors.gray },
-  statSub: { fontSize: 11, color: colors.border },
-
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  emptyText: { fontSize: 15, fontWeight: '600', color: colors.dark, textAlign: 'center', marginBottom: spacing.xs },
-  emptyHint: { fontSize: 13, color: colors.gray, textAlign: 'center' },
-
-  // Filter modal
-  modalOverlay: { flex: 1, backgroundColor: '#00000055', justifyContent: 'flex-end' },
-  modalSheet: {
-    backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: spacing.lg, paddingBottom: spacing.xl, maxHeight: '80%',
-  },
-  modalHandle: {
-    width: 40, height: 4, backgroundColor: colors.border,
-    borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, marginBottom: spacing.lg },
-  filterLabel: { fontSize: 13, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  chip: {
-    paddingHorizontal: spacing.md, paddingVertical: 8,
-    borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
-  },
-  chipActive: { borderColor: colors.primary, backgroundColor: colors.primary + '15' },
-  chipText: { fontSize: 13, color: colors.gray },
-  chipTextActive: { color: colors.primary, fontWeight: '600' },
-  toggleRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginTop: spacing.md, paddingVertical: spacing.sm,
-  },
-  toggleLabel: { fontSize: 14, color: colors.dark, fontWeight: '500' },
-  toggle: {
-    width: 44, height: 26, borderRadius: 13, backgroundColor: colors.border,
-    justifyContent: 'center', padding: 2,
-  },
-  toggleOn: { backgroundColor: colors.primary },
-  toggleThumb: { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.white },
-  toggleThumbOn: { alignSelf: 'flex-end' },
-  applyBtn: {
-    backgroundColor: colors.primary, borderRadius: 12,
-    paddingVertical: 14, alignItems: 'center', marginTop: spacing.lg,
-  },
-  applyBtnText: { color: colors.white, fontSize: 15, fontWeight: '700' },
-});

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,18 +8,105 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RootState } from '../../store';
 import { setActiveRole, UserRole } from '../../store/slices/authSlice';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-
-const ROLE_CONFIG: Record<UserRole, { icon: string; color: string }> = {
-  client:  { icon: 'account',        color: colors.primary },
-  driver:  { icon: 'truck-delivery', color: '#F59E0B' },
-  pro:     { icon: 'briefcase',      color: '#10B981' },
-  seller:  { icon: 'store',          color: '#8B5CF6' },
-};
 
 export const RoleSelectorScreen = () => {
   const { t } = useTranslation();
-  const dispatch = useDispatch();
+  const { tokens } = useAppTheme();
+
+  const ROLE_CONFIG: Record<UserRole, { icon: string; color: string }> = {
+    client:  { icon: 'account',        color: tokens.primary },
+    driver:  { icon: 'truck-delivery', color: '#F59E0B' },
+    pro:     { icon: 'briefcase',      color: '#10B981' },
+    seller:  { icon: 'store',          color: '#8B5CF6' },
+  };
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    padding: spacing.lg,
+    paddingTop: spacing.xl * 2,
+  },
+  title: {
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    textAlign: 'center',
+    color: colors.gray,
+    marginBottom: spacing.xl,
+  },
+  rolesContainer: {
+    gap: spacing.md,
+  },
+  roleCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: spacing.lg,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleLabel: {
+    fontWeight: '600',
+    flex: 1,
+    color: colors.text.primary,
+  },
+  roleDesc: {
+    color: colors.gray,
+    flex: 1,
+    position: 'absolute',
+    bottom: spacing.sm,
+    left: 92,
+  },
+  defaultBadge: {
+    backgroundColor: tokens.primary + '20',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  defaultBadgeText: {
+    color: tokens.primary,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  checkIcon: {
+    marginLeft: spacing.sm,
+  },
+  defaultToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.xl,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
+  },
+  defaultToggleText: {
+    color: colors.text.primary,
+    fontSize: 14,
+  },
+  confirmBtn: {
+    marginTop: spacing.md,
+    borderRadius: 12,
+  },
+  confirmBtnContent: {
+    paddingVertical: spacing.sm,
+  },
+  }), [tokens]);
+const dispatch = useDispatch();
   const availableRoles = useSelector((state: RootState) => state.auth.availableRoles);
   const defaultRole = useSelector((state: RootState) => state.auth.defaultRole);
 
@@ -83,7 +170,7 @@ export const RoleSelectorScreen = () => {
           <Icon
             name={saveAsDefault ? 'checkbox-marked' : 'checkbox-blank-outline'}
             size={22}
-            color={colors.primary}
+            color={tokens.primary}
           />
           <Text style={styles.defaultToggleText}>{t('role_selector.save_as_default')}</Text>
         </TouchableOpacity>
@@ -101,88 +188,3 @@ export const RoleSelectorScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    paddingTop: spacing.xl * 2,
-  },
-  title: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: spacing.xs,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: colors.gray,
-    marginBottom: spacing.xl,
-  },
-  rolesContainer: {
-    gap: spacing.md,
-  },
-  roleCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: spacing.lg,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  roleLabel: {
-    fontWeight: '600',
-    flex: 1,
-    color: colors.text.primary,
-  },
-  roleDesc: {
-    color: colors.gray,
-    flex: 1,
-    position: 'absolute',
-    bottom: spacing.sm,
-    left: 92,
-  },
-  defaultBadge: {
-    backgroundColor: colors.primary + '20',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  defaultBadgeText: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  checkIcon: {
-    marginLeft: spacing.sm,
-  },
-  defaultToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-    paddingHorizontal: spacing.sm,
-  },
-  defaultToggleText: {
-    color: colors.text.primary,
-    fontSize: 14,
-  },
-  confirmBtn: {
-    marginTop: spacing.md,
-    borderRadius: 12,
-  },
-  confirmBtnContent: {
-    paddingVertical: spacing.sm,
-  },
-});

@@ -1,11 +1,13 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   Platform,
 } from 'react-native';
-import { Text, Button, Switch, Chip, Card } from 'react-native-paper';
+import { Text, Switch, Chip, Card, Button } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -45,6 +47,32 @@ const FREQUENCIES: { value: RecurringFrequency; labelKey: string }[] = [
 ];
 
 export const BookingRequestStep3Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  title: { color: colors.dark, marginBottom: spacing.lg },
+  sectionLabel: { color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
+  modeRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
+  infoCard: { backgroundColor: '#E3F2FD', marginTop: spacing.sm, marginBottom: spacing.sm },
+  warningCard: { backgroundColor: '#FFF3E0', marginTop: spacing.sm, marginBottom: spacing.sm },
+  infoText: { color: colors.dark, lineHeight: 22 },
+  warningText: { color: '#E65100', lineHeight: 20 },
+  recurringCard: { borderRadius: 12, marginTop: spacing.lg, backgroundColor: colors.lightGray },
+  recurringHeader: { flexDirection: 'row', alignItems: 'center' },
+  recurringTexts: { flex: 1 },
+  recurringTitle: { fontSize: 15, fontWeight: '600', color: colors.dark },
+  recurringDesc: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.sm },
+  chip: { backgroundColor: colors.white },
+  chipSelected: { backgroundColor: tokens.primary },
+  chipTextSelected: { color: colors.white },
+  dateBtn: { borderColor: colors.border, marginBottom: spacing.xs },
+  actions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xl },
+  backWrap: { flex: 1 },
+  nextWrap: { flex: 2 },
+  }), [tokens]);
   const { t, i18n } = useTranslation();
   const { categorySlug, step1Data, step2Data } = route.params;
 
@@ -111,7 +139,7 @@ export const BookingRequestStep3Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: tokens.background }]} contentContainerStyle={styles.content}>
       <Text variant="headlineSmall" style={styles.title}>
         {t('booking_request.step3_title')}
       </Text>
@@ -243,48 +271,17 @@ export const BookingRequestStep3Screen = ({ route, navigation }: Props) => {
 
       {/* Navigation */}
       <View style={styles.actions}>
-        <Button
-          mode="outlined"
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          textColor={colors.gray}
-        >
-          {t('booking_request.back')}
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleNext}
-          buttonColor={colors.primary}
-          style={styles.nextButton}
-        >
-          {t('booking_request.next')}
-        </Button>
+        <View style={styles.backWrap}>
+          <ChocolateButton variant="outline" onPress={() => navigation.goBack()}>
+            {t('booking_request.back')}
+          </ChocolateButton>
+        </View>
+        <View style={styles.nextWrap}>
+          <ChocolateButton onPress={handleNext}>
+            {t('booking_request.next')}
+          </ChocolateButton>
+        </View>
       </View>
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  title: { color: colors.dark, marginBottom: spacing.lg },
-  sectionLabel: { color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
-  modeRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
-  infoCard: { backgroundColor: '#E3F2FD', marginTop: spacing.sm, marginBottom: spacing.sm },
-  warningCard: { backgroundColor: '#FFF3E0', marginTop: spacing.sm, marginBottom: spacing.sm },
-  infoText: { color: colors.dark, lineHeight: 22 },
-  warningText: { color: '#E65100', lineHeight: 20 },
-  recurringCard: { borderRadius: 12, marginTop: spacing.lg, backgroundColor: colors.lightGray },
-  recurringHeader: { flexDirection: 'row', alignItems: 'center' },
-  recurringTexts: { flex: 1 },
-  recurringTitle: { fontSize: 15, fontWeight: '600', color: colors.dark },
-  recurringDesc: { fontSize: 12, color: colors.gray, marginTop: 2 },
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.sm },
-  chip: { backgroundColor: colors.white },
-  chipSelected: { backgroundColor: colors.primary },
-  chipTextSelected: { color: colors.white },
-  dateBtn: { borderColor: colors.border, marginBottom: spacing.xs },
-  actions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xl },
-  backButton: { flex: 1, paddingVertical: spacing.sm },
-  nextButton: { flex: 2, paddingVertical: spacing.sm },
-});

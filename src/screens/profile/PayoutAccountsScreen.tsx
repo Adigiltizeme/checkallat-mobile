@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View, StyleSheet, FlatList, Alert, TouchableOpacity,
 } from 'react-native';
@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { ProfileStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import {
   PayoutAccount,
@@ -50,7 +51,81 @@ const ACCOUNT_TYPE_ICONS: Record<string, string> = {
 
 export const PayoutAccountsScreen = () => {
   const { t } = useTranslation();
-  const navigation = useNavigation<NavProp>();
+    const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background ?? '#F9FAFB' },
+  infoBanner: {
+    backgroundColor: '#EFF6FF',
+    borderLeftWidth: 4,
+    borderLeftColor: tokens.primary,
+    margin: spacing.md,
+    padding: spacing.md,
+    borderRadius: 8,
+  },
+  infoText: { fontSize: 13, color: '#1E40AF', lineHeight: 18 },
+  list: { padding: spacing.md, gap: spacing.sm },
+  emptyList: { flex: 1 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+  emptyText: { fontSize: 16, fontWeight: '600', color: '#111827', textAlign: 'center' },
+  emptySubtext: { fontSize: 14, color: colors.gray ?? '#6B7280', marginTop: spacing.sm, textAlign: 'center' },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  cardDefault: { borderColor: tokens.primary, borderWidth: 2 },
+  cardHeader: { flexDirection: 'row', gap: spacing.sm },
+  cardIcon: { fontSize: 28, marginTop: 2 },
+  cardInfo: { flex: 1, gap: 2 },
+  cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs ?? 4, flexWrap: 'wrap' },
+  cardType: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  defaultBadge: {
+    backgroundColor: tokens.primary + '20',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  defaultBadgeText: { fontSize: 10, color: tokens.primary, fontWeight: '600' },
+  verifiedBadge: {
+    backgroundColor: '#D1FAE5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  verifiedBadgeText: { fontSize: 10, color: '#065F46', fontWeight: '600' },
+  cardHolder: { fontSize: 13, color: '#374151', fontWeight: '500' },
+  cardDetail: { fontSize: 13, color: '#6B7280', fontFamily: 'monospace' },
+  cardCountry: { fontSize: 11, color: '#9CA3AF' },
+  cardActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  actionBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: tokens.primary,
+  },
+  actionBtnDanger: { borderColor: '#EF4444' },
+  actionBtnText: { fontSize: 12, color: tokens.primary, fontWeight: '600' },
+  actionBtnTextDanger: { color: '#EF4444' },
+  fab: {
+    position: 'absolute',
+    bottom: spacing.lg,
+    right: spacing.lg,
+    backgroundColor: tokens.primary,
+  },
+  }), [tokens]);
+const navigation = useNavigation<NavProp>();
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
   const isDriver = activeRole === 'driver';
   const isPro = activeRole === 'pro';
@@ -113,7 +188,7 @@ export const PayoutAccountsScreen = () => {
   }
 
   if (isLoading) {
-    return <ActivityIndicator style={{ marginTop: spacing.xl }} color={colors.primary} />;
+    return <ActivityIndicator style={{ marginTop: spacing.xl }} color={tokens.primary} />;
   }
 
   return (
@@ -193,76 +268,3 @@ export const PayoutAccountsScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background ?? '#F9FAFB' },
-  infoBanner: {
-    backgroundColor: '#EFF6FF',
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-    margin: spacing.md,
-    padding: spacing.md,
-    borderRadius: 8,
-  },
-  infoText: { fontSize: 13, color: '#1E40AF', lineHeight: 18 },
-  list: { padding: spacing.md, gap: spacing.sm },
-  emptyList: { flex: 1 },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
-  emptyText: { fontSize: 16, fontWeight: '600', color: '#111827', textAlign: 'center' },
-  emptySubtext: { fontSize: 14, color: colors.gray ?? '#6B7280', marginTop: spacing.sm, textAlign: 'center' },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  cardDefault: { borderColor: colors.primary, borderWidth: 2 },
-  cardHeader: { flexDirection: 'row', gap: spacing.sm },
-  cardIcon: { fontSize: 28, marginTop: 2 },
-  cardInfo: { flex: 1, gap: 2 },
-  cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs ?? 4, flexWrap: 'wrap' },
-  cardType: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  defaultBadge: {
-    backgroundColor: colors.primary + '20',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  defaultBadgeText: { fontSize: 10, color: colors.primary, fontWeight: '600' },
-  verifiedBadge: {
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  verifiedBadgeText: { fontSize: 10, color: '#065F46', fontWeight: '600' },
-  cardHolder: { fontSize: 13, color: '#374151', fontWeight: '500' },
-  cardDetail: { fontSize: 13, color: '#6B7280', fontFamily: 'monospace' },
-  cardCountry: { fontSize: 11, color: '#9CA3AF' },
-  cardActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-  },
-  actionBtn: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  actionBtnDanger: { borderColor: '#EF4444' },
-  actionBtnText: { fontSize: 12, color: colors.primary, fontWeight: '600' },
-  actionBtnTextDanger: { color: '#EF4444' },
-  fab: {
-    position: 'absolute',
-    bottom: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: colors.primary,
-  },
-});

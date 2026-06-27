@@ -29,6 +29,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { useGetCategoriesQuery } from '../../store/api/servicesApi';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -83,7 +84,7 @@ const FEATURES = [
   { icon: 'shield-check',   color: '#27AE60', titleKey: 'home.feat1_title', descKey: 'home.feat1_desc' },
   { icon: 'cash-lock',      color: '#3498DB', titleKey: 'home.feat2_title', descKey: 'home.feat2_desc' },
   { icon: 'star-circle',    color: '#F8B400', titleKey: 'home.feat3_title', descKey: 'home.feat3_desc' },
-  { icon: 'map-marker-radius', color: '#FF6B6B', titleKey: 'home.feat4_title', descKey: 'home.feat4_desc' },
+  // { icon: 'map-marker-radius', color: '#FF6B6B', titleKey: 'home.feat4_title', descKey: 'home.feat4_desc' },
 ];
 
 const STATS = [
@@ -96,6 +97,7 @@ const STATS = [
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
 const PulsingDot = ({ active }: { active: boolean }) => {
+  const { tokens } = useAppTheme();
   const scale = useSharedValue(1);
   useEffect(() => {
     if (active) {
@@ -113,7 +115,7 @@ const PulsingDot = ({ active }: { active: boolean }) => {
     <Animated.View
       style={[
         styles.dot,
-        active ? styles.dotActive : styles.dotInactive,
+        active ? { backgroundColor: tokens.primary, width: 20, borderRadius: 4 } : styles.dotInactive,
         style,
       ]}
     />
@@ -275,6 +277,7 @@ const FeatureCard = ({ item, t, index }: { item: typeof FEATURES[0]; t: any; ind
 );
 
 const StatBadge = ({ value, labelKey, t, index }: { value: string; labelKey: string; t: any; index: number }) => {
+  const { tokens } = useAppTheme();
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(20);
   useEffect(() => {
@@ -285,7 +288,7 @@ const StatBadge = ({ value, labelKey, t, index }: { value: string; labelKey: str
 
   return (
     <Animated.View style={[styles.statBadge, style]}>
-      <Text style={styles.statValue}>{value}</Text>
+      <Text style={[styles.statValue, { color: tokens.primary }]}>{value}</Text>
       <Text style={styles.statLabel}>{t(labelKey)}</Text>
     </Animated.View>
   );
@@ -294,226 +297,6 @@ const StatBadge = ({ value, labelKey, t, index }: { value: string; labelKey: str
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 const KNOWN_SLUGS = new Set(SERVICES.map(s => s.slug));
-
-export const HomeScreen = ({ navigation }: any) => {
-  const { t, i18n } = useTranslation();
-  const user = useSelector((state: RootState) => state.auth.user);
-  const [activeSlide, setActiveSlide] = useState(0);
-
-  const { data: dbCategories = [] } = useGetCategoriesQuery({ activeOnly: true });
-  const newCategories = useMemo(
-    () => dbCategories.filter((c: any) => !KNOWN_SLUGS.has(c.slug)),
-    [dbCategories],
-  );
-  const flatListRef = useRef<FlatList>(null);
-  const headerOpacity = useSharedValue(0);
-  const headerY = useSharedValue(-20);
-
-  useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 600 });
-    headerY.value = withTiming(0, { duration: 600 });
-
-    // Auto-scroll hero
-    const interval = setInterval(() => {
-      setActiveSlide((prev) => {
-        const next = (prev + 1) % HERO_SLIDES.length;
-        flatListRef.current?.scrollToIndex({ index: next, animated: true });
-        return next;
-      });
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const headerStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerY.value }],
-  }));
-
-  const handleTransportPress = () => {
-    if (user?.driver?.status === 'active') {
-      Alert.alert(
-        t('common.access_denied'),
-        t('home.driver_cannot_book_transport'),
-      );
-      return;
-    }
-    navigation.navigate('TransportRequestStep1');
-  };
-
-  const handleServicePress = (slug: string) => {
-    if (slug === 'transport') {
-      handleTransportPress();
-      return;
-    }
-
-    if (slug === 'marketplace') {
-      navigation.navigate('MarketplaceHome');
-      return;
-    }
-
-    // Résoudre depuis la liste statique ou la liste DB
-    const staticEntry = SERVICES.find((s) => s.slug === slug || s.id === slug);
-    const dbEntry = dbCategories.find((c: any) => c.slug === slug);
-
-    const resolvedSlug = staticEntry?.slug ?? dbEntry?.slug ?? slug;
-    const resolvedNameFr = staticEntry?.nameFr ?? dbEntry?.nameFr ?? slug;
-    const resolvedNameEn = staticEntry?.nameEn ?? dbEntry?.nameEn ?? slug;
-    const resolvedNameAr = staticEntry?.nameAr ?? dbEntry?.nameAr ?? slug;
-
-    const proSlugs: string[] = user?.pro?.serviceCategorySlugs ?? [];
-    if (user?.pro?.status === 'active' && proSlugs.includes(resolvedSlug)) {
-      Alert.alert(t('common.access_denied'), t('home.pro_cannot_book_own_category'));
-      return;
-    }
-
-    navigation.navigate('BookingRequestStep1', {
-      categorySlug: resolvedSlug,
-      categoryNameFr: resolvedNameFr,
-      categoryNameEn: resolvedNameEn,
-      categoryNameAr: resolvedNameAr,
-    });
-  };
-
-  return (
-    <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.primary} />
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-
-        {/* ── Header greeting ── */}
-        <Animated.View style={[styles.headerGreeting, headerStyle]}>
-          <View>
-            <Text style={styles.greetingSmall}>{t('home.greeting_label')}</Text>
-            <Text style={styles.greetingName}>
-              {user?.firstName ? `${t('home.hi')} ${user.firstName} 👋` : 'CheckAll@t 👋'}
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.notifBtn}>
-            <Icon name="bell-outline" size={24} color={colors.white} />
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* ── Hero carousel ── */}
-        <FlatList
-          ref={flatListRef}
-          data={HERO_SLIDES}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) => {
-            const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-            setActiveSlide(index);
-          }}
-          renderItem={({ item, index }) => (
-            <HeroSlide item={item} index={index} t={t} />
-          )}
-          scrollEnabled
-        />
-
-        {/* Dots */}
-        <View style={styles.dotsRow}>
-          {HERO_SLIDES.map((_, i) => (
-            <PulsingDot key={i} active={i === activeSlide} />
-          ))}
-        </View>
-
-        {/* ── Stats strip ── */}
-        <Animated.View entering={SlideInLeft.springify()} style={styles.statsStrip}>
-          {STATS.map((s, i) => (
-            <StatBadge key={s.labelKey} value={s.value} labelKey={s.labelKey} t={t} index={i} />
-          ))}
-        </Animated.View>
-
-        {/* ── Services marquee ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('home.services')}</Text>
-          <MarqueeRow
-            items={ROW1_LOOP}
-            copyWidth={ROW1_COPY_WIDTH}
-            direction={1}
-            t={t}
-            onPress={handleServicePress}
-          />
-          <View style={{ height: 10 }} />
-          <MarqueeRow
-            items={ROW2_LOOP}
-            copyWidth={ROW2_COPY_WIDTH}
-            direction={-1}
-            t={t}
-            onPress={handleServicePress}
-          />
-        </View>
-
-        {/* ── Nouvelles catégories depuis l'admin (dynamique) ── */}
-        {newCategories.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('home.new_services')}</Text>
-            <View style={styles.newCatGrid}>
-              {newCategories.map((cat: any) => {
-                const name = i18n.language === 'ar' ? cat.nameAr
-                  : i18n.language === 'en' ? cat.nameEn
-                  : cat.nameFr;
-                return (
-                  <TouchableOpacity
-                    key={cat.slug}
-                    style={styles.newCatCard}
-                    onPress={() => handleServicePress(cat.slug)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.newCatIcon}>{cat.icon}</Text>
-                    <Text style={styles.newCatLabel} numberOfLines={2}>{name}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        )}
-
-        {/* ── My bookings shortcut ── */}
-        <TouchableOpacity
-          style={styles.myBookingsBtn}
-          onPress={() => navigation.navigate('MyBookings')}
-          activeOpacity={0.85}
-        >
-          <Icon name="calendar-check" size={20} color={colors.primary} />
-          <Text style={styles.myBookingsBtnText}>{t('booking.my_bookings')}</Text>
-          <Icon name="chevron-right" size={20} color={colors.gray} />
-        </TouchableOpacity>
-
-        {/* ── Features ── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('home.why_checkallat')}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuresScroll}>
-            {FEATURES.map((item, index) => (
-              <FeatureCard key={item.titleKey} item={item} t={t} index={index} />
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* ── CTA ── */}
-        <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.ctaCard}>
-          <View style={styles.ctaContent}>
-            <Icon name="truck-fast" size={40} color={colors.white} style={{ marginBottom: spacing.sm }} />
-            <Text style={styles.ctaTitle}>{t('home.cta_title')}</Text>
-            <Text style={styles.ctaSubtitle}>{t('home.cta_sub')}</Text>
-            <TouchableOpacity
-              style={styles.ctaBtn}
-              onPress={handleTransportPress}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.ctaBtnText}>{t('home.cta_btn')}</Text>
-              <Icon name="arrow-right" size={18} color={colors.primary} />
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        <View style={{ height: spacing.xl }} />
-      </ScrollView>
-    </View>
-  );
-};
-
-// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   root: {
@@ -806,4 +589,227 @@ const styles = StyleSheet.create({
   newCatLabel: {
     fontSize: 11, color: colors.dark, textAlign: 'center', fontWeight: '500',
   },
-});
+  });
+export const HomeScreen = ({ navigation }: any) => {
+  const { tokens } = useAppTheme();
+
+
+  const { t, i18n } = useTranslation();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  const { data: dbCategories = [] } = useGetCategoriesQuery({ activeOnly: true });
+  const newCategories = useMemo(
+    () => dbCategories.filter((c: any) => !KNOWN_SLUGS.has(c.slug)),
+    [dbCategories],
+  );
+  const flatListRef = useRef<FlatList>(null);
+  const headerOpacity = useSharedValue(0);
+  const headerY = useSharedValue(-20);
+
+  useEffect(() => {
+    headerOpacity.value = withTiming(1, { duration: 600 });
+    headerY.value = withTiming(0, { duration: 600 });
+
+    // Auto-scroll hero
+    const interval = setInterval(() => {
+      setActiveSlide((prev) => {
+        const next = (prev + 1) % HERO_SLIDES.length;
+        flatListRef.current?.scrollToIndex({ index: next, animated: true });
+        return next;
+      });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const headerStyle = useAnimatedStyle(() => ({
+    opacity: headerOpacity.value,
+    transform: [{ translateY: headerY.value }],
+  }));
+
+  const handleTransportPress = () => {
+    if (user?.driver?.status === 'active') {
+      Alert.alert(
+        t('common.access_denied'),
+        t('home.driver_cannot_book_transport'),
+      );
+      return;
+    }
+    navigation.navigate('TransportRequestStep1');
+  };
+
+  const handleServicePress = (slug: string) => {
+    if (slug === 'transport') {
+      handleTransportPress();
+      return;
+    }
+
+    if (slug === 'marketplace') {
+      navigation.navigate('MarketplaceHome');
+      return;
+    }
+
+    // Résoudre depuis la liste statique ou la liste DB
+    const staticEntry = SERVICES.find((s) => s.slug === slug || s.id === slug);
+    const dbEntry = dbCategories.find((c: any) => c.slug === slug);
+
+    const resolvedSlug = staticEntry?.slug ?? dbEntry?.slug ?? slug;
+    const resolvedNameFr = staticEntry?.nameFr ?? dbEntry?.nameFr ?? slug;
+    const resolvedNameEn = staticEntry?.nameEn ?? dbEntry?.nameEn ?? slug;
+    const resolvedNameAr = staticEntry?.nameAr ?? dbEntry?.nameAr ?? slug;
+
+    const proSlugs: string[] = user?.pro?.serviceCategorySlugs ?? [];
+    if (user?.pro?.status === 'active' && proSlugs.includes(resolvedSlug)) {
+      Alert.alert(t('common.access_denied'), t('home.pro_cannot_book_own_category'));
+      return;
+    }
+
+    navigation.navigate('BookingRequestStep1', {
+      categorySlug: resolvedSlug,
+      categoryNameFr: resolvedNameFr,
+      categoryNameEn: resolvedNameEn,
+      categoryNameAr: resolvedNameAr,
+    });
+  };
+
+  return (
+    <View style={[styles.root, { backgroundColor: tokens.background }]}>
+      <StatusBar barStyle="light-content" backgroundColor={tokens.header} />
+      <ScrollView style={[styles.scroll, { backgroundColor: tokens.background }]} showsVerticalScrollIndicator={false}>
+
+        {/* ── Header greeting ── */}
+        <Animated.View style={[styles.headerGreeting, { backgroundColor: tokens.primary }, headerStyle]}>
+          <View>
+            <Text style={styles.greetingSmall}>{t('home.greeting_label')}</Text>
+            <Text style={styles.greetingName}>
+              {user?.firstName ? `${t('home.hi')} ${user.firstName} 👋` : 'CheckAll@t 👋'}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.notifBtn}>
+            <Icon name="bell-outline" size={24} color={colors.white} />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* ── Hero carousel ── */}
+        <FlatList
+          ref={flatListRef}
+          data={HERO_SLIDES}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onMomentumScrollEnd={(e) => {
+            const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+            setActiveSlide(index);
+          }}
+          renderItem={({ item, index }) => (
+            <HeroSlide item={item} index={index} t={t} />
+          )}
+          scrollEnabled
+        />
+
+        {/* Dots */}
+        <View style={styles.dotsRow}>
+          {HERO_SLIDES.map((_, i) => (
+            <PulsingDot key={i} active={i === activeSlide} />
+          ))}
+        </View>
+
+        {/* ── Stats strip ── */}
+        <Animated.View entering={SlideInLeft.springify()} style={styles.statsStrip}>
+          {STATS.map((s, i) => (
+            <StatBadge key={s.labelKey} value={s.value} labelKey={s.labelKey} t={t} index={i} />
+          ))}
+        </Animated.View>
+
+        {/* ── Services marquee ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('home.services')}</Text>
+          <MarqueeRow
+            items={ROW1_LOOP}
+            copyWidth={ROW1_COPY_WIDTH}
+            direction={1}
+            t={t}
+            onPress={handleServicePress}
+          />
+          <View style={{ height: 10 }} />
+          <MarqueeRow
+            items={ROW2_LOOP}
+            copyWidth={ROW2_COPY_WIDTH}
+            direction={-1}
+            t={t}
+            onPress={handleServicePress}
+          />
+        </View>
+
+        {/* ── Nouvelles catégories depuis l'admin (dynamique) ── */}
+        {newCategories.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('home.new_services')}</Text>
+            <View style={styles.newCatGrid}>
+              {newCategories.map((cat: any) => {
+                const name = i18n.language === 'ar' ? cat.nameAr
+                  : i18n.language === 'en' ? cat.nameEn
+                  : cat.nameFr;
+                return (
+                  <TouchableOpacity
+                    key={cat.slug}
+                    style={styles.newCatCard}
+                    onPress={() => handleServicePress(cat.slug)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.newCatIcon}>{cat.icon}</Text>
+                    <Text style={styles.newCatLabel} numberOfLines={2}>{name}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* ── My bookings shortcut ── */}
+        <TouchableOpacity
+          style={styles.myBookingsBtn}
+          onPress={() => navigation.navigate('MyBookings')}
+          activeOpacity={0.85}
+        >
+          <Icon name="calendar-check" size={20} color={tokens.primary} />
+          <Text style={styles.myBookingsBtnText}>{t('booking.my_bookings')}</Text>
+          <Icon name="chevron-right" size={20} color={colors.gray} />
+        </TouchableOpacity>
+
+        {/* ── Features ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('home.why_checkallat')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuresScroll}>
+            {FEATURES.map((item, index) => (
+              <FeatureCard key={item.titleKey} item={item} t={t} index={index} />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* ── CTA ── */}
+        <Animated.View entering={FadeInDown.delay(300).springify()} style={[styles.ctaCard, { backgroundColor: tokens.primary }]}>
+          <View style={styles.ctaContent}>
+            <Icon name="truck-fast" size={40} color={colors.white} style={{ marginBottom: spacing.sm }} />
+            <Text style={styles.ctaTitle}>{t('home.cta_title')}</Text>
+            <Text style={styles.ctaSubtitle}>{t('home.cta_sub')}</Text>
+            <TouchableOpacity
+              style={styles.ctaBtn}
+              onPress={handleTransportPress}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.ctaBtnText, { color: tokens.primary }]}>{t('home.cta_btn')}</Text>
+              <Icon name="arrow-right" size={18} color={tokens.primary} />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        <View style={{ height: spacing.xl }} />
+      </ScrollView>
+    </View>
+  );
+};
+
+// ─── Styles ──────────────────────────────────────────────────────────────────
+

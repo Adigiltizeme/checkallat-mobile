@@ -2,7 +2,8 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { HomeStackParamList } from './types';
-import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { defaultStackScreenOptions } from './stackOptions';
 
 import { HomeScreen } from '../screens/home/HomeScreen';
 import { SearchProsScreen } from '../screens/services/SearchProsScreen';
@@ -33,13 +34,10 @@ const Stack = createStackNavigator<HomeStackParamList>();
 
 export const HomeStack = () => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: colors.primary },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: '600' },
-      }}
+      screenOptions={defaultStackScreenOptions(tokens)}
     >
       <Stack.Screen
         name="HomeScreen"

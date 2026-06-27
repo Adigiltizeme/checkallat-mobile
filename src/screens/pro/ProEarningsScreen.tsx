@@ -7,6 +7,7 @@ import { TFunction } from 'i18next';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { getLocalizedName } from '../../utils/localize';
 import { spacing } from '../../theme/spacing';
 import { formatCurrency, CURRENCY_PRESETS } from '../../config/currency';
@@ -21,7 +22,6 @@ type Props = StackScreenProps<ProStackParamList, 'ProEarnings'>;
 
 interface PeriodRange { start: Date; end: Date; label: string; sublabel?: string }
 
-const PRO_GREEN = '#10B981';
 
 const getPeriodRange = (mode: PeriodMode, offset: number, t: TFunction, locale: string): PeriodRange => {
   const now = new Date();
@@ -53,6 +53,55 @@ const getPeriodRange = (mode: PeriodMode, offset: number, t: TFunction, locale: 
 };
 
 export const ProEarningsScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
+
+  tabsContainer: { flexDirection: 'row', backgroundColor: '#F3F4F6', borderRadius: 10, padding: 4, marginBottom: spacing.md },
+  tab: { flex: 1, paddingVertical: spacing.xs, paddingHorizontal: 4, borderRadius: 8, alignItems: 'center' },
+  tabActive: { backgroundColor: colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+  tabText: { fontSize: 11, color: colors.gray, fontWeight: '500', textAlign: 'center' },
+  tabTextActive: { color: tokens.primary, fontWeight: '700' },
+
+  periodNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.white, borderRadius: 10, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.md, elevation: 2 },
+  navArrow: { padding: 4 },
+  navArrowDisabled: { opacity: 0.3 },
+  periodLabelContainer: { flex: 1, alignItems: 'center' },
+  periodLabel: { fontSize: 15, fontWeight: '700', color: '#111827', textAlign: 'center' },
+  periodSublabel: { fontSize: 12, color: colors.gray, marginTop: 2, textAlign: 'center' },
+
+  totalCard: { marginBottom: spacing.md, backgroundColor: tokens.primary, elevation: 4 },
+  totalLabel: { color: colors.white, marginBottom: spacing.xs },
+  totalAmount: { color: colors.white, fontWeight: 'bold', marginBottom: spacing.xs },
+  totalSubtext: { color: 'rgba(255,255,255,0.8)' },
+
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+  statCard: { width: '48%', backgroundColor: colors.white, elevation: 2 },
+  clickableCard: { backgroundColor: 'transparent', elevation: 0 },
+  statContent: { alignItems: 'center', paddingVertical: spacing.md },
+  statNumber: { fontWeight: 'bold', marginTop: spacing.xs },
+  statLabel: { color: colors.gray, marginTop: spacing.xs, textAlign: 'center' },
+  viewReviewsText: { color: tokens.primary, marginTop: spacing.xs, textAlign: 'center', fontSize: 12 },
+
+  recentSection: { marginTop: spacing.md },
+  sectionTitle: { fontWeight: 'bold', marginBottom: spacing.md },
+  emptyCard: { backgroundColor: colors.white, elevation: 2 },
+  emptyContent: { alignItems: 'center', paddingVertical: spacing.xl },
+  emptyText: { color: colors.gray, marginTop: spacing.md },
+  earningCard: { marginBottom: spacing.sm, backgroundColor: colors.white, elevation: 2 },
+  earningHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
+  earningInfo: { flex: 1 },
+  earningTitle: { fontWeight: 'bold', marginBottom: 2 },
+  earningDate: { color: colors.gray, fontSize: 12 },
+  earningAmount: { fontWeight: 'bold', color: colors.success },
+  earningMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: 6 },
+  earningDetail: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
+  earningDetailText: { color: colors.gray, fontSize: 12, flexShrink: 1 },
+}), [tokens]);
+
   const { t, i18n } = useTranslation();
   const pro = useSelector((state: RootState) => (state.auth.user as any)?.pro);
   const proId: string = pro?.id ?? '';
@@ -118,7 +167,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   );
 
   if (statsLoading || bookingsLoading) {
-    return <View style={styles.centerContainer}><ActivityIndicator size="large" color={PRO_GREEN} /></View>;
+    return <View style={styles.centerContainer}><ActivityIndicator size="large" color={tokens.primary} /></View>;
   }
 
   const PERIOD_TABS: { key: PeriodMode; label: string }[] = [
@@ -146,7 +195,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
       {periodMode !== 'all' && (
         <View style={styles.periodNav}>
           <TouchableOpacity onPress={() => setPeriodOffset(o => o - 1)} style={styles.navArrow}>
-            <Icon name="chevron-left" size={28} color={PRO_GREEN} />
+            <Icon name="chevron-left" size={28} color={tokens.primary} />
           </TouchableOpacity>
           <View style={styles.periodLabelContainer}>
             <Text style={styles.periodLabel}>{period.label}</Text>
@@ -155,7 +204,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
             )}
           </View>
           <TouchableOpacity onPress={() => setPeriodOffset(o => Math.min(o + 1, 0))} style={[styles.navArrow, periodOffset >= 0 && styles.navArrowDisabled]} disabled={periodOffset >= 0}>
-            <Icon name="chevron-right" size={28} color={periodOffset >= 0 ? colors.gray : PRO_GREEN} />
+            <Icon name="chevron-right" size={28} color={periodOffset >= 0 ? colors.gray : tokens.primary} />
           </TouchableOpacity>
         </View>
       )}
@@ -279,8 +328,8 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
                     </View>
                     <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Icon name="chevron-right" size={14} color={PRO_GREEN} />
-                        <Text variant="bodySmall" style={{ color: PRO_GREEN, fontSize: 11 }}>{t('common.details')}</Text>
+                        <Icon name="chevron-right" size={14} color={tokens.primary} />
+                        <Text variant="bodySmall" style={{ color: tokens.primary, fontSize: 11 }}>{t('common.details')}</Text>
                       </View>
                     </View>
                   </Card.Content>
@@ -294,49 +343,3 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-
-  tabsContainer: { flexDirection: 'row', backgroundColor: '#F3F4F6', borderRadius: 10, padding: 4, marginBottom: spacing.md },
-  tab: { flex: 1, paddingVertical: spacing.xs, paddingHorizontal: 4, borderRadius: 8, alignItems: 'center' },
-  tabActive: { backgroundColor: colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
-  tabText: { fontSize: 11, color: colors.gray, fontWeight: '500', textAlign: 'center' },
-  tabTextActive: { color: PRO_GREEN, fontWeight: '700' },
-
-  periodNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.white, borderRadius: 10, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.md, elevation: 2 },
-  navArrow: { padding: 4 },
-  navArrowDisabled: { opacity: 0.3 },
-  periodLabelContainer: { flex: 1, alignItems: 'center' },
-  periodLabel: { fontSize: 15, fontWeight: '700', color: '#111827', textAlign: 'center' },
-  periodSublabel: { fontSize: 12, color: colors.gray, marginTop: 2, textAlign: 'center' },
-
-  totalCard: { marginBottom: spacing.md, backgroundColor: PRO_GREEN, elevation: 4 },
-  totalLabel: { color: colors.white, marginBottom: spacing.xs },
-  totalAmount: { color: colors.white, fontWeight: 'bold', marginBottom: spacing.xs },
-  totalSubtext: { color: 'rgba(255,255,255,0.8)' },
-
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
-  statCard: { width: '48%', backgroundColor: colors.white, elevation: 2 },
-  clickableCard: { backgroundColor: 'transparent', elevation: 0 },
-  statContent: { alignItems: 'center', paddingVertical: spacing.md },
-  statNumber: { fontWeight: 'bold', marginTop: spacing.xs },
-  statLabel: { color: colors.gray, marginTop: spacing.xs, textAlign: 'center' },
-  viewReviewsText: { color: PRO_GREEN, marginTop: spacing.xs, textAlign: 'center', fontSize: 12 },
-
-  recentSection: { marginTop: spacing.md },
-  sectionTitle: { fontWeight: 'bold', marginBottom: spacing.md },
-  emptyCard: { backgroundColor: colors.white, elevation: 2 },
-  emptyContent: { alignItems: 'center', paddingVertical: spacing.xl },
-  emptyText: { color: colors.gray, marginTop: spacing.md },
-  earningCard: { marginBottom: spacing.sm, backgroundColor: colors.white, elevation: 2 },
-  earningHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
-  earningInfo: { flex: 1 },
-  earningTitle: { fontWeight: 'bold', marginBottom: 2 },
-  earningDate: { color: colors.gray, fontSize: 12 },
-  earningAmount: { fontWeight: 'bold', color: colors.success },
-  earningMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: 6 },
-  earningDetail: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
-  earningDetailText: { color: colors.gray, fontSize: 12, flexShrink: 1 },
-});

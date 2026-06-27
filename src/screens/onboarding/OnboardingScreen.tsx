@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View, StyleSheet, FlatList, TouchableOpacity,
   Dimensions, NativeScrollEvent, NativeSyntheticEvent,
@@ -7,6 +7,7 @@ import { Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 export const ONBOARDING_DONE_KEY = '@onboarding_done';
@@ -50,6 +51,36 @@ interface Props {
 }
 
 export const OnboardingScreen = ({ onDone }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.white },
+  skip: { position: 'absolute', top: 56, right: spacing.lg, zIndex: 10 },
+  skipText: { color: colors.gray, fontSize: 14, fontWeight: '500' },
+  slide: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingTop: 80,
+    paddingBottom: 160,
+  },
+  emoji: { fontSize: 80, marginBottom: spacing.xl },
+  title: { fontSize: 26, fontWeight: '800', color: '#111827', textAlign: 'center', marginBottom: spacing.md },
+  subtitle: { fontSize: 16, color: '#6B7280', textAlign: 'center', lineHeight: 24 },
+  dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: spacing.lg },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#D1D5DB' },
+  dotActive: { backgroundColor: tokens.primary, width: 24 },
+  btn: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.xl * 2,
+    backgroundColor: tokens.primary,
+    borderRadius: 12,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  btnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
+  }), [tokens]);
   const { t } = useTranslation();
   const flatRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -114,31 +145,3 @@ export const OnboardingScreen = ({ onDone }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
-  skip: { position: 'absolute', top: 56, right: spacing.lg, zIndex: 10 },
-  skipText: { color: colors.gray, fontSize: 14, fontWeight: '500' },
-  slide: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingTop: 80,
-    paddingBottom: 160,
-  },
-  emoji: { fontSize: 80, marginBottom: spacing.xl },
-  title: { fontSize: 26, fontWeight: '800', color: '#111827', textAlign: 'center', marginBottom: spacing.md },
-  subtitle: { fontSize: 16, color: '#6B7280', textAlign: 'center', lineHeight: 24 },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: spacing.lg },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#D1D5DB' },
-  dotActive: { backgroundColor: colors.primary, width: 24 },
-  btn: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xl * 2,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  btnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-});

@@ -1,21 +1,27 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  Modal,
+  Image,
+  SafeAreaView,
+  PanResponder,
+  TextInput,
 } from 'react-native';
 import { Text, Button, Card, Avatar, ActivityIndicator } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
-import RNMapView, { Marker } from 'react-native-maps';
+import RNMapView, { Marker, Circle } from 'react-native-maps';
 import { HomeStackParamList } from '../../navigation/types';
 import { BookingStep4Data, AssignmentType } from '../../types/booking';
 import { ModePickerCard } from '../../components/shared/ModePickerCard';
 import { useSearchProsQuery } from '../../store/api/prosApi';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep4'>;
@@ -25,11 +31,15 @@ const Mapbox = isExpoGo ? null : require('@rnmapbox/maps').default;
 
 const { height } = Dimensions.get('window');
 
-const DISTANCE_OPTIONS = [
-  { km: 10,  icon: '📍', labelKey: 'booking_request.radius_10' },
-  { km: 20,  icon: '🔍', labelKey: 'booking_request.radius_20' },
-  { km: 50,  icon: '🗺️',  labelKey: 'booking_request.radius_50' },
-  { km: 100, icon: '🌐', labelKey: 'booking_request.radius_100' },
+const RADIUS_MIN = 5;
+const RADIUS_MAX = 100;
+const RADIUS_STEP = 5;
+
+const SLIDER_GRADUATIONS = [
+  { km: 10,  icon: '📍' },
+  { km: 20,  icon: '🔍' },
+  { km: 50,  icon: '🗺️' },
+  { km: 100, icon: '🌐' },
 ];
 
 /** Unwrap ScoredPro → flat object with distanceKm */
@@ -41,6 +51,305 @@ const flattenPro = (item: any) => ({
 });
 
 export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  content: { padding: spacing.sm, paddingHorizontal: spacing.md, paddingBottom: 88 },
+  stepLabel: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
+  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.xs },
+  modeRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
+
+  // ── Radius redesign ──
+  radiusSection: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  radiusHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  radiusTitle: { fontSize: 13, fontWeight: '600', color: colors.dark },
+  radiusValue: { fontSize: 15, fontWeight: '700', color: tokens.primary },
+  sliderTrack: {
+    height: 28,
+    justifyContent: 'center',
+    marginHorizontal: 10,
+  },
+  sliderRail: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: TRACK_H,
+    backgroundColor: colors.lightGray,
+    borderRadius: TRACK_H / 2,
+  },
+  sliderFill: {
+    position: 'absolute',
+    left: 0,
+    height: TRACK_H,
+    backgroundColor: tokens.primary,
+    borderRadius: TRACK_H / 2,
+  },
+  sliderThumb: {
+    position: 'absolute',
+    backgroundColor: colors.white,
+    borderWidth: 2.5,
+    borderColor: tokens.primary,
+    shadowColor: tokens.primary,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  graduationRow: {
+    position: 'relative',
+    height: 44,
+    marginHorizontal: 10,
+    marginTop: 0,
+  },
+  graduation: {
+    position: 'absolute',
+    alignItems: 'center',
+    transform: [{ translateX: -16 }],
+  },
+  graduationTickSmall: {
+    width: 1,
+    height: 3,
+    backgroundColor: colors.border,
+    borderRadius: 1,
+    marginBottom: 2,
+  },
+  graduationTick: {
+    width: 1.5,
+    height: 6,
+    backgroundColor: colors.border,
+    borderRadius: 1,
+    marginBottom: 2,
+  },
+  graduationTickActive: { backgroundColor: tokens.primary },
+  graduationIcon: { fontSize: 13 },
+  graduationKm: { fontSize: 10, color: colors.gray, fontWeight: '500', marginTop: 1 },
+  graduationKmActive: { color: tokens.primary, fontWeight: '700' },
+
+  // ── View toggle ──
+  viewToggle: {
+    flexDirection: 'row',
+    backgroundColor: colors.lightGray,
+    borderRadius: 10,
+    padding: 3,
+    marginBottom: spacing.sm,
+    gap: 3,
+  },
+  viewBtn: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  viewBtnActive: {
+    backgroundColor: colors.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  viewBtnText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  viewBtnTextActive: { color: colors.dark, fontWeight: '600' },
+
+  loadingBox: { alignItems: 'center', padding: spacing.lg, gap: 6 },
+  loadingText: { fontSize: 13, color: colors.gray },
+
+  emptyBox: { alignItems: 'center', padding: spacing.lg, gap: spacing.sm },
+  emptyIcon: { fontSize: 32, marginBottom: 2 },
+  emptyText: { fontSize: 15, fontWeight: '600', color: colors.dark },
+  emptyHint: { fontSize: 13, color: colors.gray, textAlign: 'center' },
+  expandRadiusBtn: {
+    marginTop: spacing.sm,
+    backgroundColor: tokens.primary + '15',
+    borderRadius: 10,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: tokens.primary + '40',
+  },
+  expandRadiusBtnText: { fontSize: 14, color: tokens.primary, fontWeight: '600' },
+
+  mapContainer: { height: height * 0.4, borderRadius: 12, overflow: 'hidden', marginBottom: spacing.md },
+  map: { flex: 1 },
+  clientMarker: { width: 16, height: 16, borderRadius: 8, backgroundColor: tokens.primary, borderWidth: 2, borderColor: colors.white },
+  proMarker: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.proGreen, borderWidth: 2, borderColor: colors.white },
+  proMarkerSelected: { backgroundColor: tokens.secondary, width: 18, height: 18, borderRadius: 9 },
+
+  proList: { gap: spacing.sm },
+  proCard: { borderRadius: 12, borderWidth: 2, borderColor: 'transparent', elevation: 1 },
+  proCardSelected: { borderColor: tokens.primary },
+  proCardContent: { flexDirection: 'row', alignItems: 'center' },
+  proAvatar: { marginRight: spacing.sm },
+  proInfo: { flex: 1 },
+  proName: { fontSize: 15, fontWeight: '600', color: colors.dark },
+  proMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2, flexWrap: 'wrap' },
+  proRating: { fontSize: 13, color: colors.gray },
+  proDistance: { fontSize: 13, color: colors.gray },
+  proBadge: { fontSize: 13, color: '#F59E0B' },
+  proPriceRange: { fontSize: 12, color: tokens.primary, marginTop: 2 },
+  selectedCheck: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: tokens.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedCheckText: { fontSize: 16, color: colors.white, fontWeight: '700' },
+
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: spacing.sm, padding: spacing.md, backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border },
+  backBtn: { flex: 1, borderColor: tokens.primary },
+  nextBtn: { flex: 2, backgroundColor: tokens.primary, borderRadius: 8 },
+  nextBtnDisabled: { backgroundColor: colors.gray },
+  nextBtnLabel: { fontSize: 16, paddingVertical: 4 },
+
+  showcaseBtn: { marginTop: 4 },
+  showcaseBtnText: { fontSize: 12, color: tokens.primary, fontWeight: '600' },
+
+  // ── Modal vitrine ──
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  modalSheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: height * 0.65,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  modalProInfo: { flexDirection: 'row', alignItems: 'center' },
+  modalProName: { fontSize: 15, fontWeight: '700', color: colors.dark },
+  modalProMeta: { fontSize: 13, color: colors.gray, marginTop: 2 },
+  modalClose: { fontSize: 20, color: colors.gray, fontWeight: '600' },
+  modalDisclaimer: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+    backgroundColor: '#FFF3CD',
+    borderLeftWidth: 3,
+    borderLeftColor: '#F59E0B',
+    borderRadius: 6,
+    padding: spacing.sm,
+  },
+  modalDisclaimerText: { fontSize: 12, color: '#92400E', lineHeight: 18 },
+  modalPhotos: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  modalPhoto: {
+    width: (Dimensions.get('window').width - spacing.lg * 2 - 16) / 3,
+    height: (Dimensions.get('window').width - spacing.lg * 2 - 16) / 3,
+    borderRadius: 8,
+    backgroundColor: colors.light,
+  },
+  modalBioBox: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  modalBioLabel: { fontSize: 13, fontWeight: '700', color: colors.dark, marginBottom: 4 },
+  modalBioText: { fontSize: 14, color: colors.gray, lineHeight: 22 },
+  modalEmpty: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
+  },
+  modalEmptyText: { fontSize: 14, color: colors.gray, textAlign: 'center' },
+  modalFooter: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  modalSelectBtn: { backgroundColor: tokens.primary, borderRadius: 10 },
+
+  mapProCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    gap: spacing.sm,
+  },
+  mapProCardInfo: { flex: 1 },
+  mapProSelectBtn: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: tokens.primary,
+    alignItems: 'center',
+    minWidth: 70,
+  },
+  mapProSelectBtnActive: { backgroundColor: tokens.primary },
+  mapProSelectBtnText: { fontSize: 12, color: tokens.primary, fontWeight: '600' },
+  mapProSelectBtnTextActive: { color: colors.white },
+
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 7,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  searchIcon: { fontSize: 16 },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.dark,
+    padding: 0,
+  },
+  searchClear: { fontSize: 14, color: colors.gray, fontWeight: '600' },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const { categorySlug, step1Data, step2Data, step3Data } = route.params;
 
@@ -52,6 +361,7 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
   const [selectedProId, setSelectedProId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [maxDistance, setMaxDistance] = useState<number>(20);
+  const [showcasePro, setShowcasePro] = useState<any | null>(null);
 
   const addressLat = step2Data.address.lat;
   const addressLng = step2Data.address.lng;
@@ -72,8 +382,16 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
     },
   );
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const rawPros: any[] = prosData?.pros ?? (Array.isArray(prosData) ? prosData : []);
   const pros = rawPros.map(flattenPro);
+  const filteredPros = searchQuery.trim()
+    ? pros.filter((p: any) => {
+        const name = `${p.user?.firstName ?? ''} ${p.user?.lastName ?? ''}`.toLowerCase();
+        return name.includes(searchQuery.toLowerCase().trim());
+      })
+    : pros;
 
   const handleNext = () => {
     const selectedPro = pros.find((p: any) => p.id === selectedProId);
@@ -91,10 +409,140 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
 
   const canGoNext = assignMode === 'auto' || (assignMode === 'manual' && !!selectedProId);
 
-  const activeDistIdx = DISTANCE_OPTIONS.findIndex(d => d.km === maxDistance);
+  // ── Slider rayon ──
+  const sliderRef = useRef<View>(null);
+  const sliderGeo = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const mapRef = useRef<any>(null);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      // Ne jamais intercepter la phase de démarrage → le ScrollView conserve la priorité
+      onStartShouldSetPanResponder: () => false,
+      onStartShouldSetPanResponderCapture: () => false,
+      // Prendre la main uniquement si le geste est clairement horizontal
+      onMoveShouldSetPanResponder: (_, gs) =>
+        Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 4,
+      onMoveShouldSetPanResponderCapture: (_, gs) =>
+        Math.abs(gs.dx) > Math.abs(gs.dy) && Math.abs(gs.dx) > 4,
+      onPanResponderGrant: (_, gs) => {
+        const rel = gs.x0 - sliderGeo.current.x;
+        const ratio = Math.max(0, Math.min(1, rel / sliderGeo.current.width));
+        const km = Math.round((RADIUS_MIN + ratio * (RADIUS_MAX - RADIUS_MIN)) / RADIUS_STEP) * RADIUS_STEP;
+        setMaxDistance(km);
+      },
+      onPanResponderMove: (_, gs) => {
+        const { x, y, width, height } = sliderGeo.current;
+        // Arrêt si le doigt sort de la zone verticale du slider (tolérance ±24 px)
+        if (gs.moveY < y - 24 || gs.moveY > y + height + 24) return;
+        const rel = gs.moveX - x;
+        const ratio = Math.max(0, Math.min(1, rel / width));
+        const km = Math.round((RADIUS_MIN + ratio * (RADIUS_MAX - RADIUS_MIN)) / RADIUS_STEP) * RADIUS_STEP;
+        setMaxDistance(km);
+      },
+    })
+  ).current;
+
+  useEffect(() => {
+    if (viewMode !== 'map') return;
+    const delta = Math.max(0.05, (maxDistance * 2) / 111 * 1.6);
+    mapRef.current?.animateToRegion(
+      { latitude: addressLat, longitude: addressLng, latitudeDelta: delta, longitudeDelta: delta },
+      400,
+    );
+  }, [maxDistance, viewMode]);
 
   return (
     <View style={styles.container}>
+      {/* Modal vitrine prestataire */}
+      <Modal
+        visible={!!showcasePro}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowcasePro(null)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            {/* Handle */}
+            <View style={styles.modalHandle} />
+
+            {/* En-tête */}
+            <View style={styles.modalHeader}>
+              <View style={styles.modalProInfo}>
+                <Avatar.Image
+                  size={44}
+                  source={{ uri: showcasePro?.user?.profilePicture ?? 'https://via.placeholder.com/44' }}
+                />
+                <View style={{ marginLeft: spacing.sm }}>
+                  <Text style={styles.modalProName}>
+                    {showcasePro?.user?.firstName} {showcasePro?.user?.lastName}
+                  </Text>
+                  <Text style={styles.modalProMeta}>
+                    ⭐ {(showcasePro?.averageRating || 5).toFixed(1)}
+                    {showcasePro?.distanceKm != null ? `  ·  ${showcasePro.distanceKm.toFixed(1)} km` : ''}
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setShowcasePro(null)} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+              {/* Avertissement */}
+              <View style={styles.modalDisclaimer}>
+                <Text style={styles.modalDisclaimerText}>{t('profile.portfolio_disclaimer')}</Text>
+              </View>
+
+              {/* Photos portfolio */}
+              {(showcasePro?.portfolioPhotos ?? []).length > 0 ? (
+                <View style={styles.modalPhotos}>
+                  {(showcasePro.portfolioPhotos as string[]).map((uri: string, idx: number) => (
+                    <Image
+                      key={idx}
+                      source={{ uri }}
+                      style={styles.modalPhoto}
+                      resizeMode="cover"
+                    />
+                  ))}
+                </View>
+              ) : null}
+
+              {/* Bio */}
+              {showcasePro?.bio ? (
+                <View style={styles.modalBioBox}>
+                  <Text style={styles.modalBioLabel}>{t('profile.bio')}</Text>
+                  <Text style={styles.modalBioText}>{showcasePro.bio}</Text>
+                </View>
+              ) : null}
+
+              {/* Rien à afficher */}
+              {!(showcasePro?.portfolioPhotos?.length) && !showcasePro?.bio && (
+                <View style={styles.modalEmpty}>
+                  <Text style={styles.modalEmptyText}>{t('booking_request.pro_no_showcase')}</Text>
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Bouton sélectionner */}
+            <View style={styles.modalFooter}>
+              <Button
+                mode="contained"
+                onPress={() => {
+                  setSelectedProId(showcasePro.id === selectedProId ? null : showcasePro.id);
+                  setShowcasePro(null);
+                }}
+                style={styles.modalSelectBtn}
+                labelStyle={{ fontSize: 15 }}
+              >
+                {selectedProId === showcasePro?.id
+                  ? t('booking_request.pro_selected')
+                  : t('booking_request.pro_select')}
+              </Button>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.stepLabel}>{t('booking_request.step_of', { current: 4, total: 5 })}</Text>
 
@@ -119,52 +567,66 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
         {/* Sélection manuelle */}
         {assignMode === 'manual' && (
           <>
-            {/* ── Sélecteur de rayon redesigné ── */}
+            {/* ── Sélecteur de rayon (slider) ── */}
             <View style={styles.radiusSection}>
-              <Text style={styles.radiusTitle}>{t('booking_request.radius_label')}</Text>
-
-              {/* Track + stops */}
-              <View style={styles.trackWrapper}>
-                <View style={styles.trackBg} />
-                <View
-                  style={[
-                    styles.trackFill,
-                    { width: `${(activeDistIdx / (DISTANCE_OPTIONS.length - 1)) * 100}%` },
-                  ]}
-                />
-                {DISTANCE_OPTIONS.map((opt, idx) => {
-                  const active = maxDistance === opt.km;
-                  const passed = idx <= activeDistIdx;
-                  return (
-                    <TouchableOpacity
-                      key={opt.km}
-                      style={[styles.stop, { left: `${(idx / (DISTANCE_OPTIONS.length - 1)) * 100}%` as any }]}
-                      onPress={() => setMaxDistance(opt.km)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={[styles.stopDot, passed && styles.stopDotActive, active && styles.stopDotSelected]}>
-                        {active && <View style={styles.stopDotInner} />}
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
+              <View style={styles.radiusHeader}>
+                <Text style={styles.radiusTitle}>{t('booking_request.radius_label')}</Text>
+                <Text style={styles.radiusValue}>{maxDistance} km</Text>
               </View>
 
-              {/* Labels */}
-              <View style={styles.radiusLabels}>
-                {DISTANCE_OPTIONS.map((opt, idx) => {
-                  const active = maxDistance === opt.km;
+              {/* Slider */}
+              <View
+                ref={sliderRef}
+                style={styles.sliderTrack}
+                onLayout={() =>
+                  sliderRef.current?.measure((_fx, _fy, w, h, px, py) => {
+                    sliderGeo.current = { x: px, y: py, width: w, height: h };
+                  })
+                }
+                {...panResponder.panHandlers}
+              >
+                <View style={styles.sliderRail} />
+                <View
+                  style={[
+                    styles.sliderFill,
+                    { width: `${((maxDistance - RADIUS_MIN) / (RADIUS_MAX - RADIUS_MIN)) * 100}%` as any },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.sliderThumb,
+                    { left: `${((maxDistance - RADIUS_MIN) / (RADIUS_MAX - RADIUS_MIN)) * 100}%` as any },
+                  ]}
+                />
+              </View>
+
+              {/* Graduations */}
+              <View style={styles.graduationRow}>
+                {Array.from(
+                  { length: (RADIUS_MAX - RADIUS_MIN) / RADIUS_STEP + 1 },
+                  (_, i) => RADIUS_MIN + i * RADIUS_STEP,
+                ).map((km) => {
+                  const pct = ((km - RADIUS_MIN) / (RADIUS_MAX - RADIUS_MIN)) * 100;
+                  const active = maxDistance >= km;
+                  const exact = maxDistance === km;
+                  const main = SLIDER_GRADUATIONS.find(g => g.km === km);
                   return (
                     <TouchableOpacity
-                      key={opt.km}
-                      style={styles.radiusLabelItem}
-                      onPress={() => setMaxDistance(opt.km)}
+                      key={km}
+                      style={[styles.graduation, { left: `${pct}%` as any }]}
+                      onPress={() => setMaxDistance(km)}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.radiusIcon}>{opt.icon}</Text>
-                      <Text style={[styles.radiusKm, active && styles.radiusKmActive]}>
-                        {opt.km} km
-                      </Text>
+                      <View style={[
+                        main ? styles.graduationTick : styles.graduationTickSmall,
+                        active && styles.graduationTickActive,
+                      ]} />
+                      {main && <Text style={styles.graduationIcon}>{main.icon}</Text>}
+                      {main && (
+                        <Text style={[styles.graduationKm, exact && styles.graduationKmActive]}>
+                          {km} km
+                        </Text>
+                      )}
                     </TouchableOpacity>
                   );
                 })}
@@ -193,74 +655,122 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
               </TouchableOpacity>
             </View>
 
+            {/* Barre de recherche manuelle */}
+            <View style={styles.searchBar}>
+              <Text style={styles.searchIcon}>🔎</Text>
+              <TextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder={t('booking_request.pro_search_placeholder')}
+                placeholderTextColor={colors.gray}
+                returnKeyType="search"
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setSearchQuery('')}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.searchClear}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
             {(isLoading || isFetching) && (
               <View style={styles.loadingBox}>
-                <ActivityIndicator color={colors.primary} />
+                <ActivityIndicator color={tokens.primary} />
                 <Text style={styles.loadingText}>{t('booking_request.searching_pros')}</Text>
               </View>
             )}
 
+            {/* Aucun pro dans la zone */}
             {!isLoading && !isFetching && pros.length === 0 && (
               <View style={styles.emptyBox}>
                 <Text style={styles.emptyIcon}>🔍</Text>
                 <Text style={styles.emptyText}>{t('booking_request.no_pros_found')}</Text>
                 <Text style={styles.emptyHint}>{t('booking_request.no_pros_hint')}</Text>
-                {activeDistIdx < DISTANCE_OPTIONS.length - 1 && (
+                {maxDistance < RADIUS_MAX && (
                   <TouchableOpacity
                     style={styles.expandRadiusBtn}
-                    onPress={() => setMaxDistance(DISTANCE_OPTIONS[activeDistIdx + 1].km)}
+                    onPress={() => setMaxDistance(prev => Math.min(RADIUS_MAX, prev + RADIUS_STEP))}
                     activeOpacity={0.8}
                   >
                     <Text style={styles.expandRadiusBtnText}>
-                      {DISTANCE_OPTIONS[activeDistIdx + 1].icon}{' '}
-                      {t('booking_request.expand_radius')} → {DISTANCE_OPTIONS[activeDistIdx + 1].km} km
+                      {t('booking_request.expand_radius')} → {Math.min(RADIUS_MAX, maxDistance + RADIUS_STEP)} km
                     </Text>
                   </TouchableOpacity>
                 )}
               </View>
             )}
 
+            {/* Aucun résultat pour la recherche */}
+            {!isLoading && !isFetching && pros.length > 0 && filteredPros.length === 0 && (
+              <View style={styles.emptyBox}>
+                <Text style={styles.emptyIcon}>🙅</Text>
+                <Text style={styles.emptyText}>{t('booking_request.pro_search_no_result')}</Text>
+                <TouchableOpacity
+                  style={styles.expandRadiusBtn}
+                  onPress={() => setSearchQuery('')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.expandRadiusBtnText}>✕ {t('common.cancel')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Vue carte */}
-            {viewMode === 'map' && pros.length > 0 && (
+            {viewMode === 'map' && (pros.length > 0 || filteredPros.length > 0) && (
               <View style={styles.mapContainer}>
                 {isExpoGo || !Mapbox ? (
                   <RNMapView
+                    ref={mapRef}
                     style={styles.map}
                     initialRegion={{
                       latitude: addressLat,
                       longitude: addressLng,
-                      latitudeDelta: 0.15,
-                      longitudeDelta: 0.15,
+                      latitudeDelta: 0.18,
+                      longitudeDelta: 0.18,
                     }}
                   >
-                    <Marker coordinate={{ latitude: addressLat, longitude: addressLng }} pinColor={colors.primary} />
-                    {pros.map((pro: any) => pro.lat && pro.lng ? (
+                    {/* Cercle de rayon */}
+                    <Circle
+                      center={{ latitude: addressLat, longitude: addressLng }}
+                      radius={maxDistance * 1000}
+                      strokeColor={tokens.primary}
+                      fillColor={tokens.primary + '18'}
+                      strokeWidth={1.5}
+                    />
+                    <Marker coordinate={{ latitude: addressLat, longitude: addressLng }} pinColor={tokens.primary} />
+                    {filteredPros.map((pro: any) => pro.lat && pro.lng ? (
                       <Marker
                         key={pro.id}
                         coordinate={{ latitude: pro.lat, longitude: pro.lng }}
-                        pinColor={selectedProId === pro.id ? colors.secondary : colors.proGreen}
-                        title={`${pro.user?.firstName} ${pro.user?.lastName}`}
-                        description={`⭐ ${(pro.averageRating ?? 0).toFixed(1)}`}
-                        onPress={() => setSelectedProId(pro.id)}
+                        pinColor={selectedProId === pro.id ? tokens.secondary : colors.proGreen}
+                        title={`${pro.user?.firstName} ${pro.user?.lastName}${pro.isStudyltizemeGraduate ? ' ✦' : ''}`}
+                        description={`⭐ ${(pro.averageRating || 5).toFixed(1)}${pro.distanceKm != null ? `  ·  ${pro.distanceKm.toFixed(1)} km` : ''}`}
+                        onPress={() => setSelectedProId(pro.id === selectedProId ? null : pro.id)}
                       />
                     ) : null)}
                   </RNMapView>
                 ) : (
                   <Mapbox.MapView style={styles.map}>
-                    <Mapbox.Camera centerCoordinate={[addressLng, addressLat]} zoomLevel={12} />
+                    <Mapbox.Camera
+                      centerCoordinate={[addressLng, addressLat]}
+                      zoomLevel={Math.max(4, Math.log2(11742 / maxDistance))}
+                      animationMode="easeTo"
+                      animationDuration={400}
+                    />
                     <Mapbox.PointAnnotation id="client" coordinate={[addressLng, addressLat]}>
                       <View style={styles.clientMarker} />
-                      <Mapbox.Callout title={t('booking_request.address_label')} />
                     </Mapbox.PointAnnotation>
-                    {pros.map((pro: any) => pro.lat && pro.lng ? (
+                    {filteredPros.map((pro: any) => pro.lat && pro.lng ? (
                       <Mapbox.PointAnnotation
                         key={pro.id}
                         id={pro.id}
                         coordinate={[pro.lng, pro.lat]}
-                        onSelected={() => setSelectedProId(pro.id)}
+                        onSelected={() => setSelectedProId(pro.id === selectedProId ? null : pro.id)}
                       >
                         <View style={[styles.proMarker, selectedProId === pro.id && styles.proMarkerSelected]} />
-                        <Mapbox.Callout title={`${pro.user?.firstName} ${pro.user?.lastName}`} />
                       </Mapbox.PointAnnotation>
                     ) : null)}
                   </Mapbox.MapView>
@@ -268,15 +778,64 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
               </View>
             )}
 
+            {/* Fiche pro sélectionné (vue carte) */}
+            {viewMode === 'map' && (() => {
+              const mapPro = pros.find((p: any) => p.id === selectedProId);
+              if (!mapPro) return null;
+              return (
+                <View style={styles.mapProCard}>
+                  <Avatar.Image
+                    size={48}
+                    source={{ uri: mapPro.user?.profilePicture ?? 'https://via.placeholder.com/48' }}
+                  />
+                  <View style={styles.mapProCardInfo}>
+                    <Text style={proCardStyles.proName}>{mapPro.user?.firstName} {mapPro.user?.lastName}</Text>
+                    <View style={proCardStyles.proMeta}>
+                      <Text style={proCardStyles.proRating}>⭐ {(mapPro.averageRating || 5).toFixed(1)}</Text>
+                      {mapPro.distanceKm != null && (
+                        <Text style={proCardStyles.proDistance}> · {mapPro.distanceKm.toFixed(1)} km</Text>
+                      )}
+                      {mapPro.isStudyltizemeGraduate && (
+                        <Text style={proCardStyles.proBadge}> · ✦</Text>
+                      )}
+                    </View>
+                    {mapPro.serviceOfferings?.[0] && (
+                      <Text style={[proCardStyles.proPriceRange, { color: tokens.primary }]}>
+                        {mapPro.serviceOfferings[0].priceMin}–{mapPro.serviceOfferings[0].priceMax}
+                      </Text>
+                    )}
+                    <TouchableOpacity
+                      onPress={() => setShowcasePro(mapPro)}
+                      style={proCardStyles.showcaseBtn}
+                      activeOpacity={0.7}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Text style={proCardStyles.showcaseBtnText}>{t('booking_request.pro_view_showcase')} →</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setSelectedProId(mapPro.id === selectedProId ? null : mapPro.id)}
+                    style={[styles.mapProSelectBtn, selectedProId === mapPro.id && styles.mapProSelectBtnActive]}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.mapProSelectBtnText, selectedProId === mapPro.id && styles.mapProSelectBtnTextActive]}>
+                      {selectedProId === mapPro.id ? '✓' : t('booking_request.pro_select')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })()}
+
             {/* Vue liste */}
-            {viewMode === 'list' && pros.length > 0 && (
+            {viewMode === 'list' && filteredPros.length > 0 && (
               <View style={styles.proList}>
-                {pros.map((pro: any) => (
+                {filteredPros.map((pro: any) => (
                   <ProCard
                     key={pro.id}
                     pro={pro}
                     selected={selectedProId === pro.id}
                     onSelect={() => setSelectedProId(pro.id === selectedProId ? null : pro.id)}
+                    onViewShowcase={() => setShowcasePro(pro)}
                     t={t}
                   />
                 ))}
@@ -304,201 +863,61 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
   );
 };
 
-const ProCard = ({ pro, selected, onSelect, t }: any) => (
-  <Card style={[styles.proCard, selected && styles.proCardSelected]} onPress={onSelect}>
-    <Card.Content style={styles.proCardContent}>
-      <Avatar.Image
-        size={48}
-        source={{ uri: pro.user?.profilePicture ?? 'https://via.placeholder.com/48' }}
-        style={styles.proAvatar}
-      />
-      <View style={styles.proInfo}>
-        <Text style={styles.proName}>{pro.user?.firstName} {pro.user?.lastName}</Text>
-        <View style={styles.proMeta}>
-          <Text style={styles.proRating}>⭐ {(pro.averageRating ?? 0).toFixed(1)}</Text>
-          {pro.distanceKm != null && (
-            <Text style={styles.proDistance}> · {pro.distanceKm.toFixed(1)} km</Text>
-          )}
-          {pro.isStudyltizemeGraduate && (
-            <Text style={styles.proBadge}> · ✦</Text>
-          )}
-        </View>
-        {pro.serviceOfferings?.[0] && (
-          <Text style={styles.proPriceRange}>
-            {pro.serviceOfferings[0].priceMin}–{pro.serviceOfferings[0].priceMax}
-          </Text>
-        )}
-      </View>
-      {selected && <View style={styles.selectedCheck}><Text style={styles.selectedCheckText}>✓</Text></View>}
-    </Card.Content>
-  </Card>
-);
-
-const TRACK_H = 4;
-const DOT_SIZE = 18;
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, paddingBottom: 100 },
-  stepLabel: { fontSize: 12, color: colors.gray, marginBottom: spacing.md },
-  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
-  modeRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
-
-  // ── Radius redesign ──
-  radiusSection: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  radiusTitle: { fontSize: 13, fontWeight: '600', color: colors.dark, marginBottom: 24 },
-  trackWrapper: {
-    height: DOT_SIZE,
-    marginHorizontal: DOT_SIZE / 2,
-    justifyContent: 'center',
-    marginBottom: 8,
-    position: 'relative',
-  },
-  trackBg: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    height: TRACK_H,
-    backgroundColor: colors.lightGray,
-    borderRadius: TRACK_H / 2,
-  },
-  trackFill: {
-    position: 'absolute',
-    left: 0,
-    height: TRACK_H,
-    backgroundColor: colors.primary,
-    borderRadius: TRACK_H / 2,
-  },
-  stop: {
-    position: 'absolute',
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    marginLeft: -(DOT_SIZE / 2),
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stopDot: {
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
-    backgroundColor: colors.lightGray,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stopDotActive: {
-    backgroundColor: colors.primary + '40',
-    borderColor: colors.primary,
-  },
-  stopDotSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-    width: DOT_SIZE + 4,
-    height: DOT_SIZE + 4,
-    borderRadius: (DOT_SIZE + 4) / 2,
-  },
-  stopDotInner: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.white,
-  },
-  radiusLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  radiusLabelItem: { alignItems: 'center', flex: 1 },
-  radiusIcon: { fontSize: 16, marginBottom: 2 },
-  radiusKm: { fontSize: 11, color: colors.gray, fontWeight: '500' },
-  radiusKmActive: { color: colors.primary, fontWeight: '700' },
-
-  // ── View toggle ──
-  viewToggle: {
-    flexDirection: 'row',
-    backgroundColor: colors.lightGray,
-    borderRadius: 10,
-    padding: 3,
-    marginBottom: spacing.md,
-    gap: 3,
-  },
-  viewBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  viewBtnActive: {
-    backgroundColor: colors.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  viewBtnText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
-  viewBtnTextActive: { color: colors.dark, fontWeight: '600' },
-
-  loadingBox: { alignItems: 'center', padding: spacing.xl, gap: 8 },
-  loadingText: { fontSize: 13, color: colors.gray },
-
-  emptyBox: { alignItems: 'center', padding: spacing.xl, gap: spacing.sm },
-  emptyIcon: { fontSize: 40, marginBottom: 4 },
-  emptyText: { fontSize: 15, fontWeight: '600', color: colors.dark },
-  emptyHint: { fontSize: 13, color: colors.gray, textAlign: 'center' },
-  expandRadiusBtn: {
-    marginTop: spacing.sm,
-    backgroundColor: colors.primary + '15',
-    borderRadius: 10,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.primary + '40',
-  },
-  expandRadiusBtnText: { fontSize: 14, color: colors.primary, fontWeight: '600' },
-
-  mapContainer: { height: height * 0.4, borderRadius: 12, overflow: 'hidden', marginBottom: spacing.md },
-  map: { flex: 1 },
-  clientMarker: { width: 16, height: 16, borderRadius: 8, backgroundColor: colors.primary, borderWidth: 2, borderColor: colors.white },
-  proMarker: { width: 14, height: 14, borderRadius: 7, backgroundColor: colors.proGreen, borderWidth: 2, borderColor: colors.white },
-  proMarkerSelected: { backgroundColor: colors.secondary, width: 18, height: 18, borderRadius: 9 },
-
-  proList: { gap: spacing.sm },
+const proCardStyles = StyleSheet.create({
   proCard: { borderRadius: 12, borderWidth: 2, borderColor: 'transparent', elevation: 1 },
-  proCardSelected: { borderColor: colors.primary },
   proCardContent: { flexDirection: 'row', alignItems: 'center' },
   proAvatar: { marginRight: spacing.sm },
   proInfo: { flex: 1 },
-  proName: { fontSize: 15, fontWeight: '600', color: colors.dark },
+  proName: { fontSize: 15, fontWeight: '700', color: colors.dark },
   proMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2, flexWrap: 'wrap' },
   proRating: { fontSize: 13, color: colors.gray },
   proDistance: { fontSize: 13, color: colors.gray },
   proBadge: { fontSize: 13, color: '#F59E0B' },
-  proPriceRange: { fontSize: 12, color: colors.primary, marginTop: 2 },
-  selectedCheck: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  proPriceRange: { fontSize: 12, marginTop: 2 },
   selectedCheckText: { fontSize: 16, color: colors.white, fontWeight: '700' },
-
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: spacing.sm, padding: spacing.md, backgroundColor: colors.background, borderTopWidth: 1, borderTopColor: colors.border },
-  backBtn: { flex: 1, borderColor: colors.primary },
-  nextBtn: { flex: 2, backgroundColor: colors.primary, borderRadius: 8 },
-  nextBtnDisabled: { backgroundColor: colors.gray },
-  nextBtnLabel: { fontSize: 16, paddingVertical: 4 },
+  selectedCheck: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  showcaseBtn: { marginTop: 4 },
+  showcaseBtnText: { fontSize: 12, fontWeight: '600' },
 });
+const ProCard = ({ pro, selected, onSelect, onViewShowcase, t }: any) => {
+  const { tokens: pcTokens } = useAppTheme();
+  return (
+
+  <Card style={[proCardStyles.proCard, selected && { borderColor: pcTokens.primary }]} onPress={onSelect}>
+    <Card.Content style={proCardStyles.proCardContent}>
+      <Avatar.Image
+        size={48}
+        source={{ uri: pro.user?.profilePicture ?? 'https://via.placeholder.com/48' }}
+        style={proCardStyles.proAvatar}
+      />
+      <View style={proCardStyles.proInfo}>
+        <Text style={proCardStyles.proName}>{pro.user?.firstName} {pro.user?.lastName}</Text>
+        <View style={proCardStyles.proMeta}>
+          <Text style={proCardStyles.proRating}>⭐ {(pro.averageRating || 5).toFixed(1)}</Text>
+          {pro.distanceKm != null && (
+            <Text style={proCardStyles.proDistance}> · {pro.distanceKm.toFixed(1)} km</Text>
+          )}
+          {pro.isStudyltizemeGraduate && (
+            <Text style={proCardStyles.proBadge}> · ✦</Text>
+          )}
+        </View>
+        {pro.serviceOfferings?.[0] && (
+          <Text style={[proCardStyles.proPriceRange, { color: pcTokens.primary }]}>
+            {pro.serviceOfferings[0].priceMin}–{pro.serviceOfferings[0].priceMax}
+          </Text>
+        )}
+        <TouchableOpacity
+          onPress={(e) => { e.stopPropagation?.(); onViewShowcase(); }}
+          style={proCardStyles.showcaseBtn}
+          activeOpacity={0.7}
+          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+        >
+          <Text style={proCardStyles.showcaseBtnText}>{t('booking_request.pro_view_showcase')} →</Text>
+        </TouchableOpacity>
+      </View>
+      {selected && <View style={[proCardStyles.selectedCheck, { backgroundColor: pcTokens.primary }]}><Text style={proCardStyles.selectedCheckText}>✓</Text></View>}
+    </Card.Content>
+  </Card>
+  );
+};
+const TRACK_H = 4;

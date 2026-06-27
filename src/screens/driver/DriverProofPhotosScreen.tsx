@@ -4,6 +4,7 @@ import { Text, Button } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { DriverStackParamList } from '../../navigation/types';
 import {
@@ -18,6 +19,7 @@ import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
 type Props = StackScreenProps<DriverStackParamList, 'DriverProofPhotos'>;
 
 export const DriverProofPhotosScreen = ({ navigation, route }: Props) => {
+  const { tokens } = useAppTheme();
   const { t } = useTranslation();
   const { requestId, type, nextStatus } = route.params;
 
@@ -121,7 +123,7 @@ export const DriverProofPhotosScreen = ({ navigation, route }: Props) => {
           onPress={handleConfirm}
           loading={isLoading}
           disabled={isLoading || photos.length === 0}
-          buttonColor={colors.primary}
+          buttonColor={tokens.primary}
           style={styles.submitButton}
         >
           {isLoading

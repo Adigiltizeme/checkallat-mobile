@@ -1,7 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { proStackScreenOptions } from './stackOptions';
 
 import { ProDemandesScreen } from '../screens/pro/ProDemandesScreen';
 import { ProBookingDetailsScreen } from '../screens/pro/ProBookingDetailsScreen';
@@ -25,17 +26,13 @@ export type ProDemandesStackParamList = {
 
 const Stack = createStackNavigator<ProDemandesStackParamList>();
 
-const PRO_COLOR = '#10B981';
 
 export const ProDemandesStack = () => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: PRO_COLOR },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: '600' },
-      }}
+      screenOptions={proStackScreenOptions(tokens)}
     >
       <Stack.Screen
         name="ProDemandesHome"

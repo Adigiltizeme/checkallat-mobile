@@ -13,6 +13,7 @@
     "error": "Erreur",
     "success": "Succès",
     "retry": "Réessayer",
+    "continue_anyway": "Continuer quand même",
     "search": "Rechercher",
     "filter": "Filtres",
     "filters": "Filtres",
@@ -212,6 +213,7 @@
     "restart_rtl_fallback": "Veuillez fermer et rouvrir l'application pour appliquer les changements RTL."
   },
   "transport": {
+    "price_fetch_error": "Impossible de calculer le prix. Vérifiez votre connexion et réessayez.",
     "vehicle_van": "Camionnette",
     "vehicle_small_truck": "Petit camion",
     "vehicle_large_truck": "Grand camion",
@@ -1284,7 +1286,11 @@
     "time_slot_evening_short": "Soir",
     "photos_section": "Vos photos",
     "payment_cash_desc": "Payez en espèces à la fin de la prestation",
-    "payment_inapp_desc": "Paiement sécurisé bloqué jusqu'à la fin de la prestation"
+    "payment_inapp_desc": "Paiement sécurisé bloqué jusqu'à la fin de la prestation",
+    "pro_view_showcase": "Voir la vitrine",
+    "pro_no_showcase": "Ce prestataire n'a pas encore ajouté de vitrine.",
+    "pro_search_placeholder": "Rechercher un prestataire par nom…",
+    "pro_search_no_result": "Aucun prestataire ne correspond à votre recherche."
   },
   "booking_tracking": {
     "title": "Suivi de prestation",
@@ -1447,5 +1453,17 @@
     "empty_services": "Aucune réservation de service",
     "empty_marketplace": "Aucune commande marketplace",
     "order_label": "Commande"
+  },
+  "settings": {
+    "theme_title": "Apparence",
+    "theme_subtitle": "Choisissez le thème visuel de l'application",
+    "theme_light": "Clair",
+    "theme_comfort": "Repos visuel",
+    "theme_dark": "Sombre",
+    "theme_system": "Système",
+    "theme_system_hint": "Le thème suit automatiquement les préférences de votre appareil.",
+    "theme_teal": "Teal original",
+    "section_checkallat": "Thèmes CheckAll@t",
+    "section_original": "Thème original"
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -22,11 +22,68 @@ import {
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingChat'>;
 
 export const BookingChatScreen = ({ route, navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container:   { flex: 1, backgroundColor: '#F0F2F5' },
+  centered:    { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  emptyText:   { color: colors.gray, fontSize: 14 },
+
+  privacyBanner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 6, backgroundColor: '#F0FDF4',
+    borderBottomWidth: 1, borderBottomColor: '#BBF7D0',
+  },
+  privacyText: { fontSize: 11, color: '#166534' },
+
+  messageList: { padding: spacing.md, paddingBottom: spacing.sm },
+
+  messageRow:   { flexDirection: 'row', marginBottom: spacing.sm, alignItems: 'flex-end', gap: 8 },
+  messageRowMe: { justifyContent: 'flex-end' },
+
+  avatarBubble: {
+    width: 30, height: 30, borderRadius: 15,
+    backgroundColor: tokens.primary + '30',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatarLetter: { fontSize: 12, fontWeight: '700', color: tokens.primary },
+
+  bubble:      { maxWidth: '75%', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 },
+  bubbleOther: { backgroundColor: colors.white, borderBottomLeftRadius: 4 },
+  bubbleMe:    { backgroundColor: tokens.primary, borderBottomRightRadius: 4 },
+
+  bubbleText:   { fontSize: 14, color: colors.dark, lineHeight: 20 },
+  bubbleTextMe: { color: colors.white },
+
+  bubbleTime:   { fontSize: 10, color: colors.gray, marginTop: 4, textAlign: 'right' },
+  bubbleTimeMe: { color: 'rgba(255,255,255,0.7)' },
+
+  inputRow: {
+    flexDirection: 'row', alignItems: 'flex-end', gap: 8,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+    backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border,
+  },
+  input: {
+    flex: 1, minHeight: 40, maxHeight: 100,
+    borderRadius: 20, borderWidth: 1, borderColor: colors.border,
+    paddingHorizontal: 16, paddingVertical: 8,
+    fontSize: 14, color: colors.dark, backgroundColor: '#F9FAFB',
+  },
+  sendBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: tokens.primary,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sendBtnDisabled: { backgroundColor: colors.gray },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const { entityType, entityId, otherPartyName } = route.params;
   const currentUserId = useSelector((state: RootState) => state.auth.user?.id);
@@ -100,7 +157,7 @@ export const BookingChatScreen = ({ route, navigation }: Props) => {
       {/* Messages */}
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator color={colors.primary} />
+          <ActivityIndicator color={tokens.primary} />
         </View>
       ) : messages.length === 0 ? (
         <View style={styles.centered}>
@@ -143,56 +200,3 @@ export const BookingChatScreen = ({ route, navigation }: Props) => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container:   { flex: 1, backgroundColor: '#F0F2F5' },
-  centered:    { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  emptyText:   { color: colors.gray, fontSize: 14 },
-
-  privacyBanner: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 6, backgroundColor: '#F0FDF4',
-    borderBottomWidth: 1, borderBottomColor: '#BBF7D0',
-  },
-  privacyText: { fontSize: 11, color: '#166534' },
-
-  messageList: { padding: spacing.md, paddingBottom: spacing.sm },
-
-  messageRow:   { flexDirection: 'row', marginBottom: spacing.sm, alignItems: 'flex-end', gap: 8 },
-  messageRowMe: { justifyContent: 'flex-end' },
-
-  avatarBubble: {
-    width: 30, height: 30, borderRadius: 15,
-    backgroundColor: colors.primary + '30',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  avatarLetter: { fontSize: 12, fontWeight: '700', color: colors.primary },
-
-  bubble:      { maxWidth: '75%', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 },
-  bubbleOther: { backgroundColor: colors.white, borderBottomLeftRadius: 4 },
-  bubbleMe:    { backgroundColor: colors.primary, borderBottomRightRadius: 4 },
-
-  bubbleText:   { fontSize: 14, color: colors.dark, lineHeight: 20 },
-  bubbleTextMe: { color: colors.white },
-
-  bubbleTime:   { fontSize: 10, color: colors.gray, marginTop: 4, textAlign: 'right' },
-  bubbleTimeMe: { color: 'rgba(255,255,255,0.7)' },
-
-  inputRow: {
-    flexDirection: 'row', alignItems: 'flex-end', gap: 8,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border,
-  },
-  input: {
-    flex: 1, minHeight: 40, maxHeight: 100,
-    borderRadius: 20, borderWidth: 1, borderColor: colors.border,
-    paddingHorizontal: 16, paddingVertical: 8,
-    fontSize: 14, color: colors.dark, backgroundColor: '#F9FAFB',
-  },
-  sendBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  sendBtnDisabled: { backgroundColor: colors.gray },
-});

@@ -35,6 +35,7 @@ export type ProfileStackParamList = {
   EditProfile: undefined;
   Addresses: undefined;
   Language: undefined;
+  Appearance: undefined;
   Support: undefined;
   ChangePassword: undefined;
   ChangePhone: undefined;

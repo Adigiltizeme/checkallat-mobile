@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,6 +15,7 @@ import { I18nManager } from 'react-native';
 import { setLanguage } from '../../store/slices/authSlice';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/ThemeProvider';
 
 export const LANGUAGE_PICKER_DISMISSED_KEY = 'languagePickerDismissed';
 
@@ -30,6 +31,77 @@ interface Props {
 }
 
 export const LanguagePickerModal = ({ visible, onDismiss }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  sheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: spacing.xl,
+    paddingBottom: spacing.xl + 8,
+  },
+  title: {
+    fontWeight: 'bold',
+    color: colors.dark,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  subtitle: {
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  langList: {
+    gap: 8,
+    marginBottom: spacing.lg,
+  },
+  langRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    gap: 12,
+  },
+  langRowActive: {
+    borderColor: tokens.primary,
+    backgroundColor: tokens.primary + '10',
+  },
+  flag: {
+    fontSize: 24,
+  },
+  langLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.dark,
+  },
+  langLabelActive: {
+    fontWeight: '600',
+    color: tokens.primary,
+  },
+  activeDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: tokens.primary,
+  },
+  dismissBtn: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  dismissText: {
+    fontSize: 13,
+    color: '#9CA3AF',
+    textDecorationLine: 'underline',
+  },
+  }), [tokens]);
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
 
@@ -106,72 +178,3 @@ export const LanguagePickerModal = ({ visible, onDismiss }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: spacing.xl,
-    paddingBottom: spacing.xl + 8,
-  },
-  title: {
-    fontWeight: 'bold',
-    color: colors.dark,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  subtitle: {
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  langList: {
-    gap: 8,
-    marginBottom: spacing.lg,
-  },
-  langRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    gap: 12,
-  },
-  langRowActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '10',
-  },
-  flag: {
-    fontSize: 24,
-  },
-  langLabel: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.dark,
-  },
-  langLabelActive: {
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  activeDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.primary,
-  },
-  dismissBtn: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  dismissText: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    textDecorationLine: 'underline',
-  },
-});

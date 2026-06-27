@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -26,13 +26,69 @@ import { useGetCategoriesQuery } from '../../store/api/servicesApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<ProStackParamList, 'ProOfferings'>;
 
-const PRO_COLOR = '#10B981';
 
 export const ProOfferingsScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  list: { padding: spacing.md, paddingBottom: 100 },
+
+  offeringCard: {
+    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
+    borderWidth: 1, borderColor: colors.border,
+  },
+  offeringTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  offeringName: { fontSize: 14, fontWeight: '700', color: colors.dark },
+  offeringDesc: { fontSize: 12, color: colors.gray, marginTop: 2, marginBottom: 4 },
+  offeringPrice: { fontSize: 13, fontWeight: '600', color: tokens.primary },
+  offeringActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  deleteBtn: { padding: 6 },
+  unavailableBadge: {
+    marginTop: spacing.sm, backgroundColor: colors.error + '15',
+    borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start',
+  },
+  unavailableText: { fontSize: 11, color: colors.error, fontWeight: '600' },
+
+  emptyState: { alignItems: 'center', paddingTop: spacing.xxl, gap: spacing.sm },
+  emptyText: { fontSize: 15, fontWeight: '600', color: colors.dark },
+  emptyHint: { fontSize: 13, color: colors.gray, textAlign: 'center' },
+
+  fab: {
+    position: 'absolute', bottom: 24, right: 24,
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: tokens.primary, alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6,
+  },
+
+  modalOverlay: { flex: 1, backgroundColor: '#00000055', justifyContent: 'flex-end' },
+  modalSheet: {
+    backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: spacing.lg, paddingBottom: spacing.xl, maxHeight: '85%',
+  },
+  modalHandle: { width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, marginBottom: spacing.lg },
+
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.dark, marginBottom: spacing.xs },
+  catChip: {
+    paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: 20,
+    borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
+  },
+  catChipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
+  catChipText: { fontSize: 13, color: colors.gray },
+
+  createBtn: {
+    backgroundColor: tokens.primary, borderRadius: 12, paddingVertical: 14,
+    alignItems: 'center', marginBottom: spacing.md,
+  },
+  createBtnText: { color: colors.white, fontSize: 15, fontWeight: '700' },
+}), [tokens]);
+
   const { t, i18n } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
   const proId = user?.pro?.id ?? '';
@@ -131,8 +187,8 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
             <Switch
               value={isAvailable}
               onValueChange={() => handleToggleAvailability(item.id, isAvailable)}
-              trackColor={{ false: colors.border, true: PRO_COLOR + '80' }}
-              thumbColor={isAvailable ? PRO_COLOR : colors.gray}
+              trackColor={{ false: colors.border, true: tokens.primary + '80' }}
+              thumbColor={isAvailable ? tokens.primary : colors.gray}
             />
             <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteBtn}>
               <Icon name="trash-can-outline" size={18} color={colors.error} />
@@ -194,7 +250,7 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
                         style={[styles.catChip, sel && styles.catChipActive]}
                         onPress={() => setSelectedCategoryId(cat.id)}
                       >
-                        <Text style={[styles.catChipText, sel && { color: PRO_COLOR, fontWeight: '700' }]}>
+                        <Text style={[styles.catChipText, sel && { color: tokens.primary, fontWeight: '700' }]}>
                           {getLocalizedName(cat, i18n.language)}
                         </Text>
                       </TouchableOpacity>
@@ -212,7 +268,7 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
                 keyboardType="numeric"
                 placeholder="Ex: 200"
                 outlineColor={colors.border}
-                activeOutlineColor={PRO_COLOR}
+                activeOutlineColor={tokens.primary}
                 style={{ backgroundColor: colors.white, marginBottom: spacing.md }}
                 right={<TextInput.Affix text="EGP" />}
               />
@@ -227,7 +283,7 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
                 keyboardType="numeric"
                 placeholder="Ex: 500"
                 outlineColor={colors.border}
-                activeOutlineColor={PRO_COLOR}
+                activeOutlineColor={tokens.primary}
                 style={{ backgroundColor: colors.white, marginBottom: spacing.md }}
                 right={<TextInput.Affix text="EGP" />}
               />
@@ -244,7 +300,7 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
                 multiline
                 numberOfLines={2}
                 outlineColor={colors.border}
-                activeOutlineColor={PRO_COLOR}
+                activeOutlineColor={tokens.primary}
                 style={{ backgroundColor: colors.white, marginBottom: spacing.lg }}
               />
 
@@ -265,56 +321,3 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  list: { padding: spacing.md, paddingBottom: 100 },
-
-  offeringCard: {
-    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
-    borderWidth: 1, borderColor: colors.border,
-  },
-  offeringTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  offeringName: { fontSize: 14, fontWeight: '700', color: colors.dark },
-  offeringDesc: { fontSize: 12, color: colors.gray, marginTop: 2, marginBottom: 4 },
-  offeringPrice: { fontSize: 13, fontWeight: '600', color: PRO_COLOR },
-  offeringActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  deleteBtn: { padding: 6 },
-  unavailableBadge: {
-    marginTop: spacing.sm, backgroundColor: colors.error + '15',
-    borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start',
-  },
-  unavailableText: { fontSize: 11, color: colors.error, fontWeight: '600' },
-
-  emptyState: { alignItems: 'center', paddingTop: spacing.xxl, gap: spacing.sm },
-  emptyText: { fontSize: 15, fontWeight: '600', color: colors.dark },
-  emptyHint: { fontSize: 13, color: colors.gray, textAlign: 'center' },
-
-  fab: {
-    position: 'absolute', bottom: 24, right: 24,
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: PRO_COLOR, alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6,
-  },
-
-  modalOverlay: { flex: 1, backgroundColor: '#00000055', justifyContent: 'flex-end' },
-  modalSheet: {
-    backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: spacing.lg, paddingBottom: spacing.xl, maxHeight: '85%',
-  },
-  modalHandle: { width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, marginBottom: spacing.lg },
-
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.dark, marginBottom: spacing.xs },
-  catChip: {
-    paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: 20,
-    borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
-  },
-  catChipActive: { borderColor: PRO_COLOR, backgroundColor: PRO_COLOR + '15' },
-  catChipText: { fontSize: 13, color: colors.gray },
-
-  createBtn: {
-    backgroundColor: PRO_COLOR, borderRadius: 12, paddingVertical: 14,
-    alignItems: 'center', marginBottom: spacing.md,
-  },
-  createBtnText: { color: colors.white, fontSize: 15, fontWeight: '700' },
-});

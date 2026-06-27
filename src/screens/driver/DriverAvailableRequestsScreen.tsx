@@ -19,6 +19,7 @@ import {
 } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { formatCurrency } from '../../config/currency';
 
@@ -26,6 +27,7 @@ type Props = StackScreenProps<DriverStackParamList, 'DriverAvailableRequests'>;
 
 export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
   const { t, i18n } = useTranslation();
+  const { tokens } = useAppTheme();
 
   const { data: requests = [], isLoading, isFetching, refetch } = useGetAvailableRequestsQuery(undefined, {
     pollingInterval: 8000,
@@ -100,7 +102,7 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
           {/* Route */}
           <View style={styles.routeSection}>
             <View style={styles.routeRow}>
-              <Icon name="map-marker" size={18} color={colors.primary} />
+              <Icon name="map-marker" size={18} color={tokens.primary} />
               <View style={styles.routeText}>
                 <Text variant="bodySmall" style={styles.routeLabel}>{t('driver.loading_point_label')}</Text>
                 <Text variant="bodyMedium" numberOfLines={2}>{item.pickup?.address || item.pickupAddress}</Text>
@@ -234,7 +236,7 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
             <Button
               mode="contained"
               onPress={() => handleAccept(item.id)}
-              buttonColor={colors.primary}
+              buttonColor={tokens.primary}
               style={styles.acceptBtn}
               icon="check"
               loading={accepting}
@@ -251,7 +253,7 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
   if (isLoading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tokens.primary} />
       </View>
     );
   }
@@ -264,7 +266,7 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
       refreshControl={
-        <RefreshControl refreshing={isFetching} onRefresh={refetch} colors={[colors.primary]} />
+        <RefreshControl refreshing={isFetching} onRefresh={refetch} colors={[tokens.primary]} />
       }
       ListEmptyComponent={
         <View style={styles.emptyContainer}>

@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image, Dimensions } from 'react-native';
+
+const LOGO_SIZE = Dimensions.get('window').width * 0.75;
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,6 +11,7 @@ import { useDispatch } from 'react-redux';
 import { useRegisterMutation } from '../../store/api/authApi';
 import { setCredentials } from '../../store/slices/authSlice';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 
@@ -24,6 +27,55 @@ interface RegisterForm {
 type Props = StackScreenProps<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  scrollContent: {
+    padding: 24,
+    paddingTop: 60,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logo: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+  },
+  title: {
+    marginBottom: 24,
+    color: colors.dark,
+    textAlign: 'center',
+  },
+  input: {
+    marginBottom: 16,
+    backgroundColor: colors.white,
+  },
+  button: {
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  linkButton: {
+    marginTop: 8,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 12,
+    marginBottom: 8,
+    marginTop: -8,
+  },
+  helperText: {
+    color: colors.gray,
+    fontSize: 11,
+    marginBottom: 8,
+    marginTop: -8,
+    lineHeight: 16,
+  },
+  }), [tokens]);
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const [register, { isLoading, error }] = useRegisterMutation();
@@ -72,6 +124,13 @@ export const RegisterScreen = ({ navigation }: Props) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../../assets/splash.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
         <Text variant="headlineLarge" style={styles.title}>
           {t('auth.register_title')}
         </Text>
@@ -88,7 +147,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
             />
           )}
         />
@@ -108,7 +167,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
             />
           )}
         />
@@ -130,7 +189,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               keyboardType="phone-pad"
               placeholder={t('auth.phone_placeholder')}
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
             />
           )}
         />
@@ -151,7 +210,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               mode="outlined"
               keyboardType="email-address"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
             />
           )}
         />
@@ -172,7 +231,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               right={
                 <TextInput.Icon
                   icon={showPassword ? 'eye-off' : 'eye'}
@@ -205,7 +264,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               right={
                 <TextInput.Icon
                   icon={showConfirmPassword ? 'eye-off' : 'eye'}
@@ -231,7 +290,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
           onPress={handleSubmit(onSubmit)}
           loading={isLoading}
           style={styles.button}
-          buttonColor={colors.primary}
+          buttonColor={tokens.primary}
         >
           {t('auth.register_btn')}
         </Button>
@@ -248,42 +307,3 @@ export const RegisterScreen = ({ navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingTop: 60,
-  },
-  title: {
-    marginBottom: 32,
-    color: colors.primary,
-    textAlign: 'center',
-  },
-  input: {
-    marginBottom: 16,
-    backgroundColor: colors.white,
-  },
-  button: {
-    marginTop: 16,
-    paddingVertical: 8,
-  },
-  linkButton: {
-    marginTop: 8,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 12,
-    marginBottom: 8,
-    marginTop: -8,
-  },
-  helperText: {
-    color: colors.gray,
-    fontSize: 11,
-    marginBottom: 8,
-    marginTop: -8,
-    lineHeight: 16,
-  },
-});

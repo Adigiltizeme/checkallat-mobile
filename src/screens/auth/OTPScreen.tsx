@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image, Dimensions } from 'react-native';
+
+const LOGO_SIZE = Dimensions.get('window').width * 0.58;
 import { TextInput, Button, Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useVerifyOTPMutation, useSendOTPMutation } from '../../store/api/authApi';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../store/slices/authSlice';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 
@@ -13,6 +16,7 @@ type Props = StackScreenProps<AuthStackParamList, 'OTP'>;
 
 export const OTPScreen = ({ route }: Props) => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   const { phone } = route.params;
   const [otp, setOtp] = useState('');
   const [verifyOTP, { isLoading, error }] = useVerifyOTPMutation();
@@ -39,6 +43,13 @@ export const OTPScreen = ({ route }: Props) => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.logoContainer}>
+        <Image
+          source={require('../../../assets/splash.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
       <Text variant="headlineMedium" style={styles.title}>
         {t('auth.otp_title')}
       </Text>
@@ -55,7 +66,7 @@ export const OTPScreen = ({ route }: Props) => {
         style={styles.input}
         mode="outlined"
         outlineColor={colors.border}
-        activeOutlineColor={colors.primary}
+        activeOutlineColor={tokens.primary}
       />
 
       {error && (
@@ -70,7 +81,7 @@ export const OTPScreen = ({ route }: Props) => {
         loading={isLoading}
         disabled={otp.length !== 6}
         style={styles.button}
-        buttonColor={colors.primary}
+        buttonColor={tokens.primary}
       >
         {t('auth.verify_btn')}
       </Button>
@@ -93,6 +104,14 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'center',
     backgroundColor: colors.white,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logo: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
   },
   title: {
     marginBottom: 16,

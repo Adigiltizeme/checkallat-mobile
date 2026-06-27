@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -20,10 +20,257 @@ import { useUpdateProfileMutation } from '../../store/api/authApi';
 import { useUpdateDriverProfileMutation } from '../../store/api/transportApi';
 import { useUpdateProProfileMutation } from '../../store/api/prosApi';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { API_CONFIG } from '../../config/api';
 
 export const EditProfileScreen = ({ navigation }: any) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light,
+  },
+  avatarSection: {
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  avatarWrapper: {
+    position: 'relative',
+  },
+  avatarImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 2,
+    borderColor: tokens.primary,
+  },
+  avatarPlaceholder: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: tokens.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    color: colors.white,
+    fontSize: 32,
+    fontWeight: '700',
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  avatarEditIcon: {
+    fontSize: 14,
+  },
+  section: {
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    color: tokens.primary,
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  label: {
+    color: colors.dark,
+    marginBottom: 4,
+    marginTop: spacing.sm,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: colors.dark,
+    backgroundColor: colors.white,
+  },
+  textArea: {
+    height: 100,
+    paddingTop: 10,
+  },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: tokens.primary,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    backgroundColor: colors.white,
+  },
+  phoneText: {
+    fontSize: 15,
+    color: colors.dark,
+    flex: 1,
+  },
+  phoneChevron: {
+    fontSize: 20,
+    color: tokens.primary,
+    fontWeight: '600',
+  },
+  hint: {
+    color: colors.gray,
+    marginTop: 4,
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  capacityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  capacityUnit: {
+    fontSize: 15,
+    color: colors.gray,
+    fontWeight: '600',
+  },
+  docsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.md,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: tokens.primary,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+  },
+  docsLinkText: {
+    color: tokens.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  docsChevron: {
+    fontSize: 20,
+    color: tokens.primary,
+    fontWeight: '600',
+  },
+  radioBtn: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+  },
+  radioBtnActive: {
+    borderColor: tokens.primary,
+    backgroundColor: tokens.primary + '15',
+  },
+  radioBtnText: {
+    color: colors.gray,
+    fontSize: 14,
+  },
+  radioBtnTextActive: {
+    color: tokens.primary,
+    fontWeight: '600',
+  },
+  disclaimerBox: {
+    backgroundColor: '#FFF3CD',
+    borderLeftWidth: 3,
+    borderLeftColor: '#F59E0B',
+    borderRadius: 6,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    marginTop: spacing.xs ?? 4,
+  },
+  disclaimerText: {
+    color: '#92400E',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  photoSlots: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: spacing.sm,
+  },
+  photoSlot: {
+    width: 88,
+    height: 88,
+    position: 'relative',
+  },
+  photoSlotImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 8,
+    backgroundColor: colors.light,
+  },
+  photoSlotRemove: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: colors.error ?? '#EF4444',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoSlotRemoveText: {
+    color: colors.white,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  photoSlotAdd: {
+    width: 88,
+    height: 88,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: tokens.primary,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoSlotAddIcon: {
+    fontSize: 28,
+    color: tokens.primary,
+    fontWeight: '300',
+  },
+  saveBtn: {
+    backgroundColor: tokens.primary,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  saveBtnDisabled: {
+    opacity: 0.5,
+  },
+  saveBtnText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  }), [tokens]);
+
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
@@ -294,7 +541,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
             <Text style={styles.avatarEditIcon}>📷</Text>
           </View>
         </TouchableOpacity>
-        {uploadingPhoto && <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 8 }} />}
+        {uploadingPhoto && <ActivityIndicator size="small" color={tokens.primary} style={{ marginTop: 8 }} />}
       </View>
 
       {/* Infos personnelles */}
@@ -490,7 +737,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
           )}
 
           {uploadingPortfolio && (
-            <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 8 }} />
+            <ActivityIndicator size="small" color={tokens.primary} style={{ marginTop: 8 }} />
           )}
         </View>
       )}
@@ -515,246 +762,3 @@ export const EditProfileScreen = ({ navigation }: any) => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.light,
-  },
-  avatarSection: {
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  avatarWrapper: {
-    position: 'relative',
-  },
-  avatarImage: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  avatarPlaceholder: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarInitials: {
-    color: colors.white,
-    fontSize: 32,
-    fontWeight: '700',
-  },
-  avatarEditBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  avatarEditIcon: {
-    fontSize: 14,
-  },
-  section: {
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    color: colors.primary,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-  },
-  label: {
-    color: colors.dark,
-    marginBottom: 4,
-    marginTop: spacing.sm,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: colors.dark,
-    backgroundColor: colors.white,
-  },
-  textArea: {
-    height: 100,
-    paddingTop: 10,
-  },
-  phoneRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    backgroundColor: colors.white,
-  },
-  phoneText: {
-    fontSize: 15,
-    color: colors.dark,
-    flex: 1,
-  },
-  phoneChevron: {
-    fontSize: 20,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  hint: {
-    color: colors.gray,
-    marginTop: 4,
-  },
-  radioGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
-  },
-  capacityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  capacityUnit: {
-    fontSize: 15,
-    color: colors.gray,
-    fontWeight: '600',
-  },
-  docsLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: spacing.md,
-    paddingVertical: 12,
-    paddingHorizontal: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 8,
-    backgroundColor: colors.white,
-  },
-  docsLinkText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  docsChevron: {
-    fontSize: 20,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  radioBtn: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: spacing.md,
-  },
-  radioBtnActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary + '15',
-  },
-  radioBtnText: {
-    color: colors.gray,
-    fontSize: 14,
-  },
-  radioBtnTextActive: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  disclaimerBox: {
-    backgroundColor: '#FFF3CD',
-    borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
-    borderRadius: 6,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-    marginTop: spacing.xs ?? 4,
-  },
-  disclaimerText: {
-    color: '#92400E',
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  photoSlots: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: spacing.sm,
-  },
-  photoSlot: {
-    width: 88,
-    height: 88,
-    position: 'relative',
-  },
-  photoSlotImage: {
-    width: 88,
-    height: 88,
-    borderRadius: 8,
-    backgroundColor: colors.light,
-  },
-  photoSlotRemove: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    backgroundColor: colors.error ?? '#EF4444',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoSlotRemoveText: {
-    color: colors.white,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  photoSlotAdd: {
-    width: 88,
-    height: 88,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoSlotAddIcon: {
-    fontSize: 28,
-    color: colors.primary,
-    fontWeight: '300',
-  },
-  saveBtn: {
-    backgroundColor: colors.primary,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

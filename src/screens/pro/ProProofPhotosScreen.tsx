@@ -5,6 +5,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { ProStackParamList } from '../../navigation/types';
 import { useUploadBookingPhotosMutation, useMarkStartedMutation, useConfirmBookingCompletionMutation } from '../../store/api/bookingsApi';
@@ -15,6 +16,7 @@ import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
 type Props = StackScreenProps<ProStackParamList, 'ProProofPhotos'>;
 
 export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
+  const { tokens } = useAppTheme();
   const { t } = useTranslation();
   const { bookingId, type, nextAction, isCash } = route.params;
 
@@ -123,7 +125,7 @@ export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
               keyboardType="numeric"
               placeholder="0.00"
               outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
+              activeOutlineColor={tokens.primary}
               style={{ backgroundColor: colors.white, marginTop: spacing.xs }}
               right={<TextInput.Affix text="EGP" />}
             />
@@ -145,7 +147,7 @@ export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
           onPress={handleConfirm}
           loading={uploading}
           disabled={uploading || photos.length === 0}
-          buttonColor={colors.primary}
+          buttonColor={tokens.primary}
           style={styles.submitButton}
         >
           {uploading ? uploadProgress : t('driver.confirm_photos_and_continue')}

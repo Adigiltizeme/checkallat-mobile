@@ -2,7 +2,8 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { ProStackParamList } from './types';
-import { colors } from '../theme/colors';
+import { useAppTheme } from '../theme/ThemeProvider';
+import { proStackScreenOptions } from './stackOptions';
 
 import { ProHomeScreen } from '../screens/pro/ProHomeScreen';
 import { ProBookingDetailsScreen } from '../screens/pro/ProBookingDetailsScreen';
@@ -18,17 +19,13 @@ import { BookingDisputeScreen } from '../screens/services/BookingDisputeScreen';
 
 const Stack = createStackNavigator<ProStackParamList>();
 
-const PRO_COLOR = '#10B981';
 
 export const ProStack = () => {
   const { t } = useTranslation();
+  const { tokens } = useAppTheme();
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerStyle: { backgroundColor: PRO_COLOR },
-        headerTintColor: colors.white,
-        headerTitleStyle: { fontWeight: '600' },
-      }}
+      screenOptions={proStackScreenOptions(tokens)}
     >
       <Stack.Screen
         name="ProHome"

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,14 +19,14 @@ import { useCreateProProfileMutation, useDeleteProProfileMutation } from '../../
 import { useGetCategoriesQuery } from '../../store/api/servicesApi';
 import { useGetProfileQuery } from '../../store/api/authApi';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
-const PRO_COLOR = '#10B981';
 
 const isMCIconName = (s?: string | null) => !!s && /^[a-z0-9-]+$/.test(s);
 
 // ─── Suivi candidature ───────────────────────────────────────────────────────
-const ApplicationTracking = ({ navigation }: { navigation: any }) => {
+const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; styles: any; tokens: any }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
@@ -108,7 +108,7 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.statusHeader}>
           <View style={[styles.statusIcon, { backgroundColor: '#D1FAE5' }]}>
-            <Icon name="briefcase-check" size={40} color={PRO_COLOR} />
+            <Icon name="briefcase-check" size={40} color={tokens.primary} />
           </View>
           <Text style={styles.statusTitle}>{t('pro_apply.status_active')}</Text>
           <Text style={styles.statusDesc}>{t('pro_apply.status_active_desc')}</Text>
@@ -119,8 +119,8 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
             <Text style={styles.infoCardTitle}>{t('pro_apply.submitted_categories')}</Text>
             <View style={styles.categoriesWrap}>
               {pro.serviceCategories.map((slug: string) => (
-                <View key={slug} style={[styles.categoryChip, { backgroundColor: PRO_COLOR + '15' }]}>
-                  <Text style={[styles.categoryChipText, { color: PRO_COLOR }]}>{slug}</Text>
+                <View key={slug} style={[styles.categoryChip, { backgroundColor: tokens.primary + '15' }]}>
+                  <Text style={[styles.categoryChipText, { color: tokens.primary }]}>{slug}</Text>
                 </View>
               ))}
             </View>
@@ -228,6 +228,86 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
 
 // ─── Formulaire candidature ──────────────────────────────────────────────────
 export const ProApplicationScreen = ({ navigation }: any) => {
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.light },
+  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+
+  // Tracking
+  statusHeader: { alignItems: 'center', paddingVertical: spacing.xl },
+  statusIcon: { width: 80, height: 80, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  statusTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, textAlign: 'center', marginBottom: spacing.sm },
+  statusDesc: { fontSize: 14, color: colors.gray, textAlign: 'center', lineHeight: 22 },
+  reasonCard: {
+    backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa',
+    borderRadius: 12, padding: spacing.md, marginBottom: spacing.lg,
+  },
+  reasonLabel: { fontSize: 11, fontWeight: '700', color: '#92400E', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
+  reasonText: { fontSize: 14, color: '#78350F', lineHeight: 20 },
+  infoCard: {
+    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
+    marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border,
+  },
+  infoCardTitle: { fontSize: 13, fontWeight: '600', color: colors.gray, marginBottom: spacing.sm },
+  cancelBtn: {
+    borderWidth: 1.5, borderColor: colors.error, borderRadius: 12,
+    paddingVertical: 14, alignItems: 'center', marginBottom: spacing.sm,
+  },
+  cancelBtnText: { color: colors.error, fontSize: 14, fontWeight: '700' },
+  reapplyBtn: {
+    backgroundColor: tokens.primary, borderRadius: 12, paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
+  },
+  reapplyBtnText: { color: colors.white, fontSize: 14, fontWeight: '700' },
+
+  // Form
+  formHeader: { alignItems: 'center', paddingVertical: spacing.lg },
+  formHeaderIcon: { width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
+  formTitle: { fontSize: 20, fontWeight: '700', color: colors.dark, textAlign: 'center', marginBottom: spacing.xs },
+  formSubtitle: { fontSize: 13, color: colors.gray, textAlign: 'center', lineHeight: 20 },
+
+  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.xs },
+  sectionHint: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
+  errorHint: { fontSize: 12, color: colors.error, marginTop: 4 },
+
+  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xs },
+  categoryCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    backgroundColor: colors.white, borderRadius: 10, padding: spacing.sm,
+    borderWidth: 1.5, borderColor: colors.border, position: 'relative',
+  },
+  categoryCardActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '08' },
+  categoryCardText: { fontSize: 13, color: colors.dark },
+  categoryCheckmark: { position: 'absolute', top: -6, right: -6 },
+
+  categoriesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
+  categoryChip: { backgroundColor: tokens.primary + '15', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  categoryChipText: { fontSize: 12, color: tokens.primary, fontWeight: '600' },
+
+  radiusRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginBottom: spacing.xs },
+  radiusChip: {
+    paddingHorizontal: spacing.md, paddingVertical: 8,
+    borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
+  },
+  radiusChipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
+  radiusChipText: { fontSize: 13, color: colors.gray },
+
+  reviewNote: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
+    backgroundColor: colors.white, borderRadius: 10, padding: spacing.md,
+    marginTop: spacing.lg, borderWidth: 1, borderColor: colors.border,
+  },
+  reviewNoteText: { flex: 1, fontSize: 12, color: colors.gray, lineHeight: 18 },
+
+  submitBtn: {
+    backgroundColor: tokens.primary, borderRadius: 14, paddingVertical: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, marginTop: spacing.lg,
+  },
+  submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
+}), [tokens]);
+
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
@@ -246,7 +326,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   const hasApplication = !!pro;
 
   if (hasApplication) {
-    return <ApplicationTracking navigation={navigation} />;
+    return <ApplicationTracking navigation={navigation} styles={styles} tokens={tokens} />;
   }
 
   const toggleCategory = (slug: string) => {
@@ -288,8 +368,8 @@ export const ProApplicationScreen = ({ navigation }: any) => {
 
         {/* Header */}
         <View style={styles.formHeader}>
-          <View style={[styles.formHeaderIcon, { backgroundColor: PRO_COLOR + '20' }]}>
-            <Icon name="briefcase-check" size={36} color={PRO_COLOR} />
+          <View style={[styles.formHeaderIcon, { backgroundColor: tokens.primary + '20' }]}>
+            <Icon name="briefcase-check" size={36} color={tokens.primary} />
           </View>
           <Text style={styles.formTitle}>{t('pro_apply.title')}</Text>
           <Text style={styles.formSubtitle}>{t('pro_apply.subtitle')}</Text>
@@ -312,17 +392,17 @@ export const ProApplicationScreen = ({ navigation }: any) => {
                   <Icon
                     name={cat.icon}
                     size={22}
-                    color={selected ? PRO_COLOR : colors.gray}
+                    color={selected ? tokens.primary : colors.gray}
                   />
                 ) : (
                   <Text style={{ fontSize: 22 }}>{cat.icon || '📁'}</Text>
                 )}
-                <Text style={[styles.categoryCardText, selected && { color: PRO_COLOR, fontWeight: '700' }]}>
+                <Text style={[styles.categoryCardText, selected && { color: tokens.primary, fontWeight: '700' }]}>
                   {getLocalizedName(cat, i18n.language)}
                 </Text>
                 {selected && (
                   <View style={styles.categoryCheckmark}>
-                    <Icon name="check-circle" size={16} color={PRO_COLOR} />
+                    <Icon name="check-circle" size={16} color={tokens.primary} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -343,7 +423,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
           multiline
           numberOfLines={4}
           outlineColor={colors.border}
-          activeOutlineColor={PRO_COLOR}
+          activeOutlineColor={tokens.primary}
           style={{ backgroundColor: colors.white, minHeight: 100 }}
         />
         {submitted && bio.trim().length < 20 && (
@@ -360,7 +440,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
           onChangeText={setCompanyName}
           placeholder={t('pro_apply.company_placeholder')}
           outlineColor={colors.border}
-          activeOutlineColor={PRO_COLOR}
+          activeOutlineColor={tokens.primary}
           style={{ backgroundColor: colors.white }}
         />
 
@@ -373,7 +453,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
               style={[styles.radiusChip, serviceAreaRadius === r && styles.radiusChipActive]}
               onPress={() => setServiceAreaRadius(r)}
             >
-              <Text style={[styles.radiusChipText, serviceAreaRadius === r && { color: PRO_COLOR, fontWeight: '700' }]}>
+              <Text style={[styles.radiusChipText, serviceAreaRadius === r && { color: tokens.primary, fontWeight: '700' }]}>
                 {r} km
               </Text>
             </TouchableOpacity>
@@ -404,80 +484,3 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-
-  // Tracking
-  statusHeader: { alignItems: 'center', paddingVertical: spacing.xl },
-  statusIcon: { width: 80, height: 80, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
-  statusTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, textAlign: 'center', marginBottom: spacing.sm },
-  statusDesc: { fontSize: 14, color: colors.gray, textAlign: 'center', lineHeight: 22 },
-  reasonCard: {
-    backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa',
-    borderRadius: 12, padding: spacing.md, marginBottom: spacing.lg,
-  },
-  reasonLabel: { fontSize: 11, fontWeight: '700', color: '#92400E', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
-  reasonText: { fontSize: 14, color: '#78350F', lineHeight: 20 },
-  infoCard: {
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
-    marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border,
-  },
-  infoCardTitle: { fontSize: 13, fontWeight: '600', color: colors.gray, marginBottom: spacing.sm },
-  cancelBtn: {
-    borderWidth: 1.5, borderColor: colors.error, borderRadius: 12,
-    paddingVertical: 14, alignItems: 'center', marginBottom: spacing.sm,
-  },
-  cancelBtnText: { color: colors.error, fontSize: 14, fontWeight: '700' },
-  reapplyBtn: {
-    backgroundColor: PRO_COLOR, borderRadius: 12, paddingVertical: 14,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm,
-  },
-  reapplyBtnText: { color: colors.white, fontSize: 14, fontWeight: '700' },
-
-  // Form
-  formHeader: { alignItems: 'center', paddingVertical: spacing.lg },
-  formHeaderIcon: { width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
-  formTitle: { fontSize: 20, fontWeight: '700', color: colors.dark, textAlign: 'center', marginBottom: spacing.xs },
-  formSubtitle: { fontSize: 13, color: colors.gray, textAlign: 'center', lineHeight: 20 },
-
-  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.xs },
-  sectionHint: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
-  errorHint: { fontSize: 12, color: colors.error, marginTop: 4 },
-
-  categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xs },
-  categoryCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-    backgroundColor: colors.white, borderRadius: 10, padding: spacing.sm,
-    borderWidth: 1.5, borderColor: colors.border, position: 'relative',
-  },
-  categoryCardActive: { borderColor: PRO_COLOR, backgroundColor: PRO_COLOR + '08' },
-  categoryCardText: { fontSize: 13, color: colors.dark },
-  categoryCheckmark: { position: 'absolute', top: -6, right: -6 },
-
-  categoriesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  categoryChip: { backgroundColor: PRO_COLOR + '15', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  categoryChipText: { fontSize: 12, color: PRO_COLOR, fontWeight: '600' },
-
-  radiusRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginBottom: spacing.xs },
-  radiusChip: {
-    paddingHorizontal: spacing.md, paddingVertical: 8,
-    borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
-  },
-  radiusChipActive: { borderColor: PRO_COLOR, backgroundColor: PRO_COLOR + '15' },
-  radiusChipText: { fontSize: 13, color: colors.gray },
-
-  reviewNote: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
-    backgroundColor: colors.white, borderRadius: 10, padding: spacing.md,
-    marginTop: spacing.lg, borderWidth: 1, borderColor: colors.border,
-  },
-  reviewNoteText: { flex: 1, fontSize: 12, color: colors.gray, lineHeight: 18 },
-
-  submitBtn: {
-    backgroundColor: PRO_COLOR, borderRadius: 14, paddingVertical: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: spacing.sm, marginTop: spacing.lg,
-  },
-  submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
-});

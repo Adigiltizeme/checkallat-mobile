@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -15,6 +15,7 @@ import { useGetProposalByIdQuery, useReplyToProposalMutation, useMarkProposalRea
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { API_CONFIG } from '../../config/api';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const RDV_URL = 'https://digiltizeme-portfolio.vercel.app/rdv';
@@ -27,6 +28,103 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export const ProposalDetailScreen = ({ navigation, route }: any) => {
+  const { tokens } = useAppTheme();
+
+
+  const styles = useMemo(() => StyleSheet.create({
+  flex: { flex: 1, backgroundColor: colors.background },
+  scroll: { flex: 1 },
+  content: { padding: spacing.md, paddingBottom: spacing.xxl },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  gray: { color: colors.gray, fontSize: 13 },
+  header: { marginBottom: spacing.md },
+  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: spacing.sm },
+  statusText: { fontWeight: '700', fontSize: 12 },
+  title: { fontSize: 20, fontWeight: '800', color: colors.dark, marginBottom: 2 },
+  subtitle: { fontSize: 13, color: colors.gray, marginBottom: 2 },
+  date: { fontSize: 11, color: colors.gray },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  label: { fontSize: 11, fontWeight: '700', color: colors.gray, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  value: { fontSize: 14, color: colors.dark, lineHeight: 20 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: colors.dark, marginBottom: spacing.sm },
+  messages: { gap: spacing.sm },
+  bubble: { maxWidth: '80%', borderRadius: 12, padding: spacing.sm },
+  bubbleAdmin: { alignSelf: 'flex-start', backgroundColor: '#EFF6FF' },
+  bubbleUser: { alignSelf: 'flex-end', backgroundColor: tokens.primary },
+  bubbleText: { fontSize: 14, lineHeight: 20 },
+  bubbleTextAdmin: { color: '#1e40af' },
+  bubbleTextUser: { color: colors.white },
+  bubbleDate: { fontSize: 10, marginTop: 2 },
+  bubbleDateAdmin: { color: '#93C5FD', textAlign: 'left' },
+  bubbleDateUser: { color: 'rgba(255,255,255,0.7)', textAlign: 'right' },
+  contactCard: {
+    backgroundColor: '#F5F3FF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#DDD6FE',
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  contactTitle: { fontWeight: '700', color: '#5B21B6', fontSize: 14, marginBottom: 4 },
+  contactSubtitle: { color: '#7C3AED', fontSize: 12, marginBottom: spacing.md },
+  contactBtns: { flexDirection: 'row', gap: spacing.sm },
+  whatsappBtn: {
+    flex: 1,
+    backgroundColor: '#25D366',
+    borderRadius: 10,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  whatsappBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
+  rdvBtn: {
+    flex: 1,
+    backgroundColor: tokens.primary,
+    borderRadius: 10,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+  },
+  rdvBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
+  replyBar: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    padding: spacing.sm,
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  replyInput: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 10,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxHeight: 90,
+  },
+  sendBtn: {
+    backgroundColor: tokens.primary,
+    borderRadius: 10,
+    paddingHorizontal: spacing.md,
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+    paddingVertical: spacing.sm,
+  },
+  sendBtnDisabled: { opacity: 0.5 },
+  sendBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
+  }), [tokens]);
+
   const { proposalId } = route.params;
   const { t } = useTranslation();
   const [reply, setReply] = useState('');
@@ -138,7 +236,7 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
             {proposal.status === 'accepted' && !!proposal.createdCategorySlug && (
               <>
                 <Text style={[styles.label, { marginTop: spacing.sm }]}>{t('proposal.category_created')}</Text>
-                <Text style={[styles.value, { color: colors.primary, fontWeight: '700' }]}>{proposal.createdCategorySlug}</Text>
+                <Text style={[styles.value, { color: tokens.primary, fontWeight: '700' }]}>{proposal.createdCategorySlug}</Text>
               </>
             )}
           </View>
@@ -222,97 +320,3 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
-  scroll: { flex: 1 },
-  content: { padding: spacing.md, paddingBottom: spacing.xxl },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  gray: { color: colors.gray, fontSize: 13 },
-  header: { marginBottom: spacing.md },
-  statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: spacing.sm },
-  statusText: { fontWeight: '700', fontSize: 12 },
-  title: { fontSize: 20, fontWeight: '800', color: colors.dark, marginBottom: 2 },
-  subtitle: { fontSize: 13, color: colors.gray, marginBottom: 2 },
-  date: { fontSize: 11, color: colors.gray },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  label: { fontSize: 11, fontWeight: '700', color: colors.gray, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
-  value: { fontSize: 14, color: colors.dark, lineHeight: 20 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: colors.dark, marginBottom: spacing.sm },
-  messages: { gap: spacing.sm },
-  bubble: { maxWidth: '80%', borderRadius: 12, padding: spacing.sm },
-  bubbleAdmin: { alignSelf: 'flex-start', backgroundColor: '#EFF6FF' },
-  bubbleUser: { alignSelf: 'flex-end', backgroundColor: colors.primary },
-  bubbleText: { fontSize: 14, lineHeight: 20 },
-  bubbleTextAdmin: { color: '#1e40af' },
-  bubbleTextUser: { color: colors.white },
-  bubbleDate: { fontSize: 10, marginTop: 2 },
-  bubbleDateAdmin: { color: '#93C5FD', textAlign: 'left' },
-  bubbleDateUser: { color: 'rgba(255,255,255,0.7)', textAlign: 'right' },
-  contactCard: {
-    backgroundColor: '#F5F3FF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#DDD6FE',
-    padding: spacing.md,
-    marginTop: spacing.sm,
-  },
-  contactTitle: { fontWeight: '700', color: '#5B21B6', fontSize: 14, marginBottom: 4 },
-  contactSubtitle: { color: '#7C3AED', fontSize: 12, marginBottom: spacing.md },
-  contactBtns: { flexDirection: 'row', gap: spacing.sm },
-  whatsappBtn: {
-    flex: 1,
-    backgroundColor: '#25D366',
-    borderRadius: 10,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  whatsappBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
-  rdvBtn: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  rdvBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
-  replyBar: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    padding: spacing.sm,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  replyInput: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 10,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    maxHeight: 90,
-  },
-  sendBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingHorizontal: spacing.md,
-    justifyContent: 'center',
-    alignSelf: 'flex-end',
-    paddingVertical: spacing.sm,
-  },
-  sendBtnDisabled: { opacity: 0.5 },
-  sendBtnText: { color: colors.white, fontWeight: '700', fontSize: 13 },
-});

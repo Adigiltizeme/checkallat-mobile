@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -16,16 +16,63 @@ import {
 } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const ENTITY_ICON: Record<string, string> = {
-  booking:   'briefcase-check',
+  booking: 'briefcase-check',
   transport: 'truck-fast',
-  order:     'store',
+  order: 'store',
 };
 
 export const MessagesScreen = () => {
   const { t, i18n } = useTranslation();
+  const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.white },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+    emptyText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
+
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: 14,
+      backgroundColor: colors.white,
+      gap: spacing.sm,
+    },
+    avatar: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: `${tokens.primary}15`,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarActive: { backgroundColor: tokens.primary },
+
+    rowBody: { flex: 1 },
+    rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
+    name: { fontSize: 15, color: colors.dark, flex: 1, marginRight: 8 },
+    nameBold: { fontWeight: '700' },
+    time: { fontSize: 11, color: colors.gray },
+    preview: { fontSize: 13, color: colors.gray },
+    previewBold: { color: colors.dark, fontWeight: '600' },
+
+    badge: {
+      minWidth: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: tokens.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
+    badgeText: { color: colors.white, fontSize: 11, fontWeight: '700' },
+
+    separator: { height: 1, backgroundColor: colors.light, marginLeft: 74 },
+  }), [tokens]);
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -48,9 +95,9 @@ export const MessagesScreen = () => {
     const hasUnread = item.unreadCount > 0;
     const timeLabel = item.lastMessageAt
       ? new Date(item.lastMessageAt).toLocaleTimeString(i18n.language, {
-          hour: '2-digit',
-          minute: '2-digit',
-        })
+        hour: '2-digit',
+        minute: '2-digit',
+      })
       : '';
 
     return (
@@ -66,7 +113,7 @@ export const MessagesScreen = () => {
         }
       >
         <View style={[styles.avatar, hasUnread && styles.avatarActive]}>
-          <Icon name={icon} size={22} color={hasUnread ? colors.white : colors.primary} />
+          <Icon name={icon} size={22} color={hasUnread ? colors.white : tokens.primary} />
         </View>
 
         <View style={styles.rowBody}>
@@ -93,7 +140,7 @@ export const MessagesScreen = () => {
   if (isLoading && items.length === 0) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={colors.primary} />
+        <ActivityIndicator color={tokens.primary} />
       </View>
     );
   }
@@ -113,55 +160,10 @@ export const MessagesScreen = () => {
       data={items}
       keyExtractor={(item) => `${item.entityType}-${item.entityId}`}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[tokens.primary]} />
       }
       renderItem={renderItem}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
     />
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
-  centered:  { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-  emptyText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
-
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
-    backgroundColor: colors.white,
-    gap: spacing.sm,
-  },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: `${colors.primary}15`,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarActive: { backgroundColor: colors.primary },
-
-  rowBody: { flex: 1 },
-  rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-  name: { fontSize: 15, color: colors.dark, flex: 1, marginRight: 8 },
-  nameBold: { fontWeight: '700' },
-  time: { fontSize: 11, color: colors.gray },
-  preview: { fontSize: 13, color: colors.gray },
-  previewBold: { color: colors.dark, fontWeight: '600' },
-
-  badge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: { color: colors.white, fontSize: 11, fontWeight: '700' },
-
-  separator: { height: 1, backgroundColor: colors.light, marginLeft: 74 },
-});
