@@ -362,21 +362,53 @@ export const EditProfileScreen = ({ navigation }: any) => {
     return json.url as string;
   };
 
-  const handlePickPhoto = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(t('common.error'), t('profile.gallery_permission'));
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets[0]) {
-      setPhotoUri(result.assets[0].uri);
-    }
+  const handlePickPhoto = () => {
+    Alert.alert(
+      t('transport.add_photo'),
+      '',
+      [
+        {
+          text: t('driver.take_photo_btn'),
+          onPress: async () => {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert(t('common.error'), t('transport.camera_permission_msg'));
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ['images'],
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets[0]) {
+              setPhotoUri(result.assets[0].uri);
+            }
+          },
+        },
+        {
+          text: t('driver.gallery_btn'),
+          onPress: async () => {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert(t('common.error'), t('profile.gallery_permission'));
+              return;
+            }
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets[0]) {
+              setPhotoUri(result.assets[0].uri);
+            }
+          },
+        },
+        { text: t('common.cancel'), style: 'cancel' },
+      ],
+      { cancelable: true }
+    );
   };
 
   const uploadPhoto = async (uri: string): Promise<string | null> => {
@@ -391,21 +423,52 @@ export const EditProfileScreen = ({ navigation }: any) => {
     }
   };
 
-  const handlePickPortfolioPhoto = async () => {
+  const handlePickPortfolioPhoto = () => {
     if (portfolioPhotos.length >= 3) return;
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(t('common.error'), t('profile.gallery_permission'));
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets[0]) {
-      setPortfolioPhotos(prev => [...prev, result.assets[0].uri]);
-    }
+    Alert.alert(
+      t('transport.add_photo'),
+      '',
+      [
+        {
+          text: t('driver.take_photo_btn'),
+          onPress: async () => {
+            const { status } = await ImagePicker.requestCameraPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert(t('common.error'), t('transport.camera_permission_msg'));
+              return;
+            }
+            const result = await ImagePicker.launchCameraAsync({
+              mediaTypes: ['images'],
+              allowsEditing: true,
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets[0]) {
+              setPortfolioPhotos(prev => [...prev, result.assets[0].uri]);
+            }
+          },
+        },
+        {
+          text: t('driver.gallery_btn'),
+          onPress: async () => {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+              Alert.alert(t('common.error'), t('profile.gallery_permission'));
+              return;
+            }
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ['images'],
+              allowsEditing: true,
+              quality: 0.8,
+            });
+            if (!result.canceled && result.assets[0]) {
+              setPortfolioPhotos(prev => [...prev, result.assets[0].uri]);
+            }
+          },
+        },
+        { text: t('common.cancel'), style: 'cancel' },
+      ],
+      { cancelable: true }
+    );
   };
 
   const handleRemovePortfolioPhoto = (index: number) => {
