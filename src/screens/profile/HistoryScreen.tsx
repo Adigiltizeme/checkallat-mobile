@@ -38,27 +38,27 @@ export const HistoryScreen = () => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   centerContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   header: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
   headerTitle: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '600',
     marginBottom: 4,
   },
   headerSubtitle: {
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   filtersContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     marginBottom: spacing.sm,
     borderRadius: 12,
     overflow: 'hidden',
@@ -70,8 +70,8 @@ export const HistoryScreen = () => {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+  chevron: { fontSize: 12, color: tokens.text.secondary },
   tabsRow: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
@@ -82,7 +82,7 @@ export const HistoryScreen = () => {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: 20,
-    backgroundColor: colors.lightGray,
+    backgroundColor: tokens.backgroundAlt,
     marginRight: spacing.xs,
   },
   tabActive: {
@@ -90,7 +90,7 @@ export const HistoryScreen = () => {
   },
   tabText: {
     fontSize: 13,
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontWeight: '500',
   },
   tabTextActive: {
@@ -108,8 +108,8 @@ export const HistoryScreen = () => {
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.lightGray,
+    borderColor: tokens.border,
+    backgroundColor: tokens.backgroundAlt,
   },
   dateModeBtnActive: {
     backgroundColor: `${tokens.primary}20`,
@@ -117,7 +117,7 @@ export const HistoryScreen = () => {
   },
   dateModeBtnText: {
     fontSize: 12,
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   dateModeBtnTextActive: {
     color: tokens.primary,
@@ -132,27 +132,27 @@ export const HistoryScreen = () => {
   },
   dateLabel: {
     fontSize: 13,
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   dateInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 8,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     fontSize: 13,
-    color: colors.dark,
-    backgroundColor: colors.lightGray,
+    color: tokens.text.primary,
+    backgroundColor: tokens.backgroundAlt,
   },
   clearBtn: {
     fontSize: 16,
-    color: colors.gray,
+    color: tokens.text.secondary,
     paddingHorizontal: spacing.xs,
   },
   countText: {
     fontSize: 12,
-    color: colors.gray,
+    color: tokens.text.secondary,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
   },
@@ -161,7 +161,7 @@ export const HistoryScreen = () => {
   },
   card: {
     marginBottom: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   cardContent: {
     flexDirection: 'row',
@@ -181,19 +181,19 @@ export const HistoryScreen = () => {
     flex: 1,
   },
   title: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '600',
     marginBottom: 4,
   },
   date: {
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   rightContainer: {
     alignItems: 'flex-end',
     paddingBottom: 4,
   },
   amount: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '600',
     marginBottom: 4,
   },
@@ -205,12 +205,12 @@ export const HistoryScreen = () => {
     paddingVertical: spacing.xxl * 2,
   },
   emptyText: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
   },
   emptySubtext: {
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   }), [tokens]);
 const isDriver = useSelector((state: RootState) => state.auth.isDriver);
@@ -361,7 +361,7 @@ const isDriver = useSelector((state: RootState) => state.auth.isDriver);
             value={dateSingle}
             onChangeText={setDateSingle}
             placeholder={t('common.date_placeholder')}
-            placeholderTextColor={colors.gray}
+            placeholderTextColor={tokens.text.secondary}
             keyboardType="numeric"
             maxLength={10}
           />
@@ -373,7 +373,7 @@ const isDriver = useSelector((state: RootState) => state.auth.isDriver);
               value={dateStart}
               onChangeText={setDateStart}
               placeholder={t('common.date_placeholder')}
-              placeholderTextColor={colors.gray}
+              placeholderTextColor={tokens.text.secondary}
               keyboardType="numeric"
               maxLength={10}
             />
@@ -383,7 +383,7 @@ const isDriver = useSelector((state: RootState) => state.auth.isDriver);
               value={dateEnd}
               onChangeText={setDateEnd}
               placeholder={t('common.date_placeholder')}
-              placeholderTextColor={colors.gray}
+              placeholderTextColor={tokens.text.secondary}
               keyboardType="numeric"
               maxLength={10}
             />
@@ -484,7 +484,7 @@ const isDriver = useSelector((state: RootState) => state.auth.isDriver);
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="history" size={64} color={colors.gray} />
+            <Icon name="history" size={64} color={tokens.text.secondary} />
             <Text variant="titleMedium" style={styles.emptyText}>
               {t('history.empty')}
             </Text>

@@ -30,12 +30,12 @@ export const PayoutAccountFormScreen = () => {
     const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background ?? '#F9FAFB' },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
   sectionLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.gray ?? '#6B7280',
+    color: tokens.text.secondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginTop: spacing.lg,
@@ -47,21 +47,21 @@ export const PayoutAccountFormScreen = () => {
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: colors.white,
+    borderColor: tokens.border,
+    backgroundColor: tokens.card,
   },
   chipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '10' },
-  chipText: { fontSize: 14, color: '#374151', fontWeight: '500' },
+  chipText: { fontSize: 14, color: tokens.text.primary, fontWeight: '500' },
   chipTextActive: { color: tokens.primary, fontWeight: '700' },
-  noMethods: { fontSize: 14, color: colors.gray, fontStyle: 'italic', marginVertical: spacing.sm },
+  noMethods: { fontSize: 14, color: tokens.text.secondary, fontStyle: 'italic', marginVertical: spacing.sm },
   methodList: { gap: spacing.sm },
   methodCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+    borderColor: tokens.border,
     padding: spacing.md,
     gap: spacing.sm,
   },
@@ -72,7 +72,7 @@ export const PayoutAccountFormScreen = () => {
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
+    borderColor: tokens.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -83,22 +83,22 @@ export const PayoutAccountFormScreen = () => {
     borderRadius: 5,
     backgroundColor: tokens.primary,
   },
-  methodLabel: { fontSize: 15, color: '#374151', fontWeight: '500', flex: 1 },
+  methodLabel: { fontSize: 15, color: tokens.text.primary, fontWeight: '500', flex: 1 },
   methodLabelActive: { color: tokens.primary, fontWeight: '600' },
-  input: { marginBottom: spacing.sm, backgroundColor: colors.white },
+  input: { marginBottom: spacing.sm, backgroundColor: tokens.backgroundAlt },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokens.border,
     padding: spacing.md,
     marginVertical: spacing.sm,
     gap: spacing.md,
   },
-  switchLabel: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  switchSub: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  switchLabel: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+  switchSub: { fontSize: 12, color: tokens.text.secondary, marginTop: 2 },
   submitBtn: {
     backgroundColor: tokens.primary,
     borderRadius: 10,
@@ -250,7 +250,7 @@ const navigation = useNavigation();
               value={holderName}
               onChangeText={setHolderName}
               style={styles.input}
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
             />
 
@@ -263,7 +263,7 @@ const navigation = useNavigation();
                 value={fieldValues[field.key] ?? ''}
                 onChangeText={(v) => setField(field.key, v)}
                 style={styles.input}
-                outlineColor={colors.border}
+                outlineColor={tokens.border}
                 activeOutlineColor={tokens.primary}
                 keyboardType={
                   field.type === 'phone' ? 'phone-pad' :
@@ -282,8 +282,8 @@ const navigation = useNavigation();
               <Switch
                 value={isDefault}
                 onValueChange={setIsDefault}
-                trackColor={{ false: colors.border, true: tokens.primary + '80' }}
-                thumbColor={isDefault ? tokens.primary : colors.gray}
+                trackColor={{ false: tokens.border, true: tokens.primary + '80' }}
+                thumbColor={isDefault ? tokens.primary : tokens.text.secondary}
               />
             </View>
 

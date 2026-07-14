@@ -22,15 +22,15 @@ export const MyProposalsScreen = ({ navigation }: any) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: tokens.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  gray: { color: colors.gray },
+  gray: { color: tokens.text.secondary },
   list: { padding: spacing.md, gap: spacing.sm },
   emptyContainer: { flexGrow: 1 },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  emptyText: { color: colors.gray, textAlign: 'center', marginBottom: spacing.lg },
+  emptyText: { color: tokens.text.secondary, textAlign: 'center', marginBottom: spacing.lg },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     padding: spacing.md,
     shadowColor: '#000',
@@ -41,14 +41,14 @@ export const MyProposalsScreen = ({ navigation }: any) => {
     marginBottom: spacing.sm,
   },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: colors.dark, flex: 1, marginRight: spacing.sm },
+  cardTitle: { fontSize: 15, fontWeight: '700', color: tokens.text.primary, flex: 1, marginRight: spacing.sm },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12 },
   badgeText: { fontSize: 11, fontWeight: '700' },
-  cardDesc: { color: colors.gray, fontSize: 13, marginBottom: spacing.sm },
+  cardDesc: { color: tokens.text.secondary, fontSize: 13, marginBottom: spacing.sm },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardDate: { fontSize: 11, color: colors.gray },
+  cardDate: { fontSize: 11, color: tokens.text.secondary },
   msgCount: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  msgCountText: { fontSize: 11, color: colors.gray },
+  msgCountText: { fontSize: 11, color: tokens.text.secondary },
   unreadDot: {
     width: 16, height: 16, borderRadius: 8,
     backgroundColor: tokens.primary,

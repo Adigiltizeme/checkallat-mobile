@@ -10,7 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Text, Chip, Button, ActivityIndicator } from 'react-native-paper';
+import { Text, Chip } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
@@ -30,31 +31,31 @@ export const SupportScreen = () => {
 
   const styles = useMemo(() => StyleSheet.create({
   flex: { flex: 1 },
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  container: { flex: 1, backgroundColor: tokens.background },
 
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokens.card,
     alignItems: 'center',
     padding: spacing.xl,
     marginBottom: spacing.md,
   },
   headerTitle: {
     fontWeight: 'bold',
-    color: '#111827',
+    color: tokens.text.primary,
     marginTop: spacing.sm,
   },
   headerSubtitle: {
-    color: '#6B7280',
+    color: tokens.text.secondary,
     marginTop: 4,
     textAlign: 'center',
   },
 
   tabs: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokens.card,
     marginBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: tokens.border,
   },
   tab: {
     flex: 1,
@@ -69,18 +70,18 @@ export const SupportScreen = () => {
   tabActive: {
     borderBottomColor: tokens.primary,
   },
-  tabLabel: { color: colors.gray },
+  tabLabel: { color: tokens.text.secondary },
   tabLabelActive: { color: tokens.primary, fontWeight: '600' },
 
   section: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: tokens.card,
     padding: spacing.lg,
     borderRadius: 12,
     marginHorizontal: spacing.md,
   },
 
   fieldLabel: {
-    color: '#374151',
+    color: tokens.text.primary,
     fontWeight: '600',
     marginBottom: spacing.sm,
     marginTop: spacing.md,
@@ -92,35 +93,35 @@ export const SupportScreen = () => {
     marginBottom: spacing.sm,
   },
   categoryChip: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: tokens.backgroundAlt,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokens.border,
   },
   categoryChipSelected: {
-    backgroundColor: '#EEF2FF',
+    backgroundColor: tokens.primary + '15',
     borderColor: tokens.primary,
   },
-  categoryChipText: { color: '#374151', fontSize: 13 },
+  categoryChipText: { color: tokens.text.primary, fontSize: 13 },
   categoryChipTextSelected: { color: tokens.primary, fontWeight: '600' },
 
   messageInput: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: tokens.border,
     borderRadius: 10,
     padding: spacing.md,
-    color: '#111827',
+    color: tokens.text.primary,
     fontSize: 14,
     minHeight: 120,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: tokens.backgroundAlt,
   },
   inputError: { borderColor: colors.error },
   errorText: { color: colors.error, marginTop: 4 },
 
-  sendBtn: { marginTop: spacing.lg, borderRadius: 10 },
+  sendBtn: { marginTop: spacing.lg },
 
   sentContainer: { alignItems: 'center', paddingVertical: spacing.xl },
-  sentTitle: { fontWeight: 'bold', color: '#111827', marginTop: spacing.md },
-  sentMsg: { color: '#6B7280', textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 },
+  sentTitle: { fontWeight: 'bold', color: tokens.text.primary, marginTop: spacing.md },
+  sentMsg: { color: tokens.text.secondary, textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 },
 
   warningBox: {
     flexDirection: 'row',
@@ -132,7 +133,7 @@ export const SupportScreen = () => {
     alignItems: 'flex-start',
   },
   warningText: { color: '#92400E', flex: 1, lineHeight: 18 },
-  hoursLabel: { color: '#6B7280', marginBottom: spacing.md, textAlign: 'center' },
+  hoursLabel: { color: tokens.text.secondary, marginBottom: spacing.md, textAlign: 'center' },
 
   contactCard: {
     flexDirection: 'row',
@@ -140,10 +141,10 @@ export const SupportScreen = () => {
     gap: spacing.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokens.border,
     borderRadius: 12,
     marginBottom: spacing.md,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: tokens.card,
   },
   contactIcon: {
     width: 52,
@@ -153,8 +154,8 @@ export const SupportScreen = () => {
     justifyContent: 'center',
   },
   contactInfo: { flex: 1 },
-  contactTitle: { fontWeight: '600', color: '#111827' },
-  contactSubtitle: { color: '#6B7280', marginTop: 2 },
+  contactTitle: { fontWeight: '600', color: tokens.text.primary },
+  contactSubtitle: { color: tokens.text.secondary, marginTop: 2 },
   }), [tokens]);
 const [activeTab, setActiveTab] = useState<Tab>('written');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -236,7 +237,7 @@ const [activeTab, setActiveTab] = useState<Tab>('written');
               <Icon
                 name={tab === 'written' ? 'email-edit-outline' : 'phone'}
                 size={18}
-                color={activeTab === tab ? tokens.primary : colors.gray}
+                color={activeTab === tab ? tokens.primary : tokens.text.secondary}
               />
               <Text
                 variant="bodyMedium"
@@ -256,13 +257,13 @@ const [activeTab, setActiveTab] = useState<Tab>('written');
                 <Icon name="check-circle" size={64} color={colors.success} />
                 <Text variant="titleMedium" style={styles.sentTitle}>{t('support.sent_title')}</Text>
                 <Text variant="bodyMedium" style={styles.sentMsg}>{t('support.sent_msg')}</Text>
-                <Button
-                  mode="outlined"
+                <ChocolateButton
+                  variant="outline"
                   onPress={() => { setSent(false); setSelectedCategory(null); setMessage(''); }}
                   style={{ marginTop: spacing.lg }}
                 >
                   {t('common.back')}
-                </Button>
+                </ChocolateButton>
               </View>
             ) : (
               <>
@@ -292,7 +293,7 @@ const [activeTab, setActiveTab] = useState<Tab>('written');
                 <TextInput
                   style={[styles.messageInput, showError && !message.trim() && styles.inputError]}
                   placeholder={t('support.reason_placeholder')}
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={tokens.text.secondary}
                   value={message}
                   onChangeText={(v) => { setMessage(v); setShowError(false); }}
                   multiline
@@ -304,17 +305,14 @@ const [activeTab, setActiveTab] = useState<Tab>('written');
                   <Text variant="bodySmall" style={styles.errorText}>{t('support.reason_required')}</Text>
                 )}
 
-                <Button
-                  mode="contained"
+                <ChocolateButton
                   onPress={handleSend}
                   loading={isLoading}
                   disabled={isLoading}
-                  buttonColor={tokens.primary}
-                  icon="send"
                   style={styles.sendBtn}
                 >
                   {isLoading ? t('support.sending') : t('support.send_btn')}
-                </Button>
+                </ChocolateButton>
               </>
             )}
           </View>
@@ -340,7 +338,7 @@ const [activeTab, setActiveTab] = useState<Tab>('written');
                 <Text variant="titleSmall" style={styles.contactTitle}>{t('support.phone_title')}</Text>
                 <Text variant="bodySmall" style={styles.contactSubtitle}>{supportPhone || '—'}</Text>
               </View>
-              <Icon name="chevron-right" size={22} color={colors.gray} />
+              <Icon name="chevron-right" size={22} color={tokens.text.secondary} />
             </TouchableOpacity>
 
             {/* WhatsApp */}
@@ -352,7 +350,7 @@ const [activeTab, setActiveTab] = useState<Tab>('written');
                 <Text variant="titleSmall" style={styles.contactTitle}>{t('support.whatsapp_title')}</Text>
                 <Text variant="bodySmall" style={styles.contactSubtitle}>{t('support.whatsapp_subtitle')}</Text>
               </View>
-              <Icon name="chevron-right" size={22} color={colors.gray} />
+              <Icon name="chevron-right" size={22} color={tokens.text.secondary} />
             </TouchableOpacity>
 
             {/* Email */}
@@ -364,7 +362,7 @@ const [activeTab, setActiveTab] = useState<Tab>('written');
                 <Text variant="titleSmall" style={styles.contactTitle}>{t('support.email_title')}</Text>
                 <Text variant="bodySmall" style={styles.contactSubtitle}>{supportEmail || '—'}</Text>
               </View>
-              <Icon name="chevron-right" size={22} color={colors.gray} />
+              <Icon name="chevron-right" size={22} color={tokens.text.secondary} />
             </TouchableOpacity>
           </View>
         )}

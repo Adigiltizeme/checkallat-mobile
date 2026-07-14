@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { Text, Button, ActivityIndicator, Card } from 'react-native-paper';
+import { Text, ActivityIndicator, Card } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useStripe } from '@stripe/stripe-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +23,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: tokens.background,
     padding: 16,
   },
   amountCard: {
@@ -34,7 +35,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
   },
   secureLabel: {
     marginTop: 12,
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   amount: {
     marginTop: 8,
@@ -43,7 +44,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
   },
   escrowNote: {
     marginTop: 8,
-    color: colors.gray,
+    color: tokens.text.secondary,
     textAlign: 'center',
   },
   stateContainer: {
@@ -53,7 +54,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
     gap: 16,
   },
   stateText: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontSize: 16,
     marginTop: 12,
   },
@@ -63,7 +64,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
     textAlign: 'center',
   },
   errorMsg: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     textAlign: 'center',
     paddingHorizontal: 24,
   },
@@ -85,16 +86,13 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
     marginBottom: 8,
   },
   stripeInfoText: {
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   button: {
     marginBottom: 4,
   },
   payButton: {
     marginBottom: 8,
-  },
-  payButtonContent: {
-    paddingVertical: 8,
   },
   }), [tokens]);
 
@@ -233,14 +231,12 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
           <Text variant="bodyMedium" style={styles.errorMsg}>
             {errorMessage}
           </Text>
-          <Button
-            mode="contained"
+          <ChocolateButton
             onPress={initializePayment}
             style={styles.button}
-            icon="refresh"
           >
             {t('common.retry')}
-          </Button>
+          </ChocolateButton>
         </View>
       )}
 
@@ -256,33 +252,29 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
       {(paymentState === 'ready' || paymentState === 'processing') && (
         <View style={styles.actionsContainer}>
           <View style={styles.stripeInfo}>
-            <Icon name="lock" size={16} color={colors.gray} />
+            <Icon name="lock" size={16} color={tokens.text.secondary} />
             <Text variant="bodySmall" style={styles.stripeInfoText}>
               {t('payment.powered_by_stripe')}
             </Text>
           </View>
 
-          <Button
-            mode="contained"
+          <ChocolateButton
             onPress={handlePay}
             loading={paymentState === 'processing'}
             disabled={paymentState === 'processing'}
             style={[styles.button, styles.payButton]}
-            icon="credit-card"
-            buttonColor={tokens.primary}
-            contentStyle={styles.payButtonContent}
           >
             {t('payment.pay_now')}
-          </Button>
+          </ChocolateButton>
 
-          <Button
-            mode="outlined"
+          <ChocolateButton
+            variant="outline"
             onPress={handleCancel}
             disabled={paymentState === 'processing'}
             style={styles.button}
           >
             {t('common.cancel')}
-          </Button>
+          </ChocolateButton>
         </View>
       )}
     </View>

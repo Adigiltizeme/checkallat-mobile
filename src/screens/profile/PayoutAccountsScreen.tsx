@@ -54,7 +54,7 @@ export const PayoutAccountsScreen = () => {
     const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background ?? '#F9FAFB' },
+  container: { flex: 1, backgroundColor: tokens.background },
   infoBanner: {
     backgroundColor: '#EFF6FF',
     borderLeftWidth: 4,
@@ -68,21 +68,21 @@ export const PayoutAccountsScreen = () => {
   emptyList: { flex: 1 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
-  emptyText: { fontSize: 16, fontWeight: '600', color: '#111827', textAlign: 'center' },
-  emptySubtext: { fontSize: 14, color: colors.gray ?? '#6B7280', marginTop: spacing.sm, textAlign: 'center' },
+  emptyText: { fontSize: 16, fontWeight: '600', color: tokens.text.primary, textAlign: 'center' },
+  emptySubtext: { fontSize: 14, color: tokens.text.secondary, marginTop: spacing.sm, textAlign: 'center' },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: tokens.border,
   },
   cardDefault: { borderColor: tokens.primary, borderWidth: 2 },
   cardHeader: { flexDirection: 'row', gap: spacing.sm },
   cardIcon: { fontSize: 28, marginTop: 2 },
   cardInfo: { flex: 1, gap: 2 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs ?? 4, flexWrap: 'wrap' },
-  cardType: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  cardType: { fontSize: 15, fontWeight: '700', color: tokens.text.primary },
   defaultBadge: {
     backgroundColor: tokens.primary + '20',
     paddingHorizontal: 6,
@@ -97,16 +97,16 @@ export const PayoutAccountsScreen = () => {
     borderRadius: 4,
   },
   verifiedBadgeText: { fontSize: 10, color: '#065F46', fontWeight: '600' },
-  cardHolder: { fontSize: 13, color: '#374151', fontWeight: '500' },
-  cardDetail: { fontSize: 13, color: '#6B7280', fontFamily: 'monospace' },
-  cardCountry: { fontSize: 11, color: '#9CA3AF' },
+  cardHolder: { fontSize: 13, color: tokens.text.primary, fontWeight: '500' },
+  cardDetail: { fontSize: 13, color: tokens.text.secondary, fontFamily: 'monospace' },
+  cardCountry: { fontSize: 11, color: tokens.text.secondary },
   cardActions: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
+    borderTopColor: tokens.border,
   },
   actionBtn: {
     paddingHorizontal: spacing.md,

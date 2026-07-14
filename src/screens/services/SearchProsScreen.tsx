@@ -41,12 +41,12 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
 
   filterBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.white, paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border,
+    backgroundColor: tokens.card, paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: tokens.border,
   },
   categoryPill: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
@@ -56,17 +56,17 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
   filterBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: spacing.md, paddingVertical: 6,
-    borderRadius: 20, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 20, borderWidth: 1, borderColor: tokens.border,
   },
   filterBtnActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '10' },
-  filterBtnText: { fontSize: 13, color: colors.gray },
+  filterBtnText: { fontSize: 13, color: tokens.text.secondary },
   filterBtnTextActive: { color: tokens.primary, fontWeight: '600' },
 
   list: { padding: spacing.md },
   separator: { height: spacing.sm },
 
   proCard: {
-    backgroundColor: colors.white, borderRadius: 16, padding: spacing.md,
+    backgroundColor: tokens.card, borderRadius: 16, padding: spacing.md,
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
     shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 }, elevation: 2,
@@ -78,48 +78,48 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
   avatarLetter: { fontSize: 22, fontWeight: '700' },
   proInfo: { flex: 1 },
   proNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, flexWrap: 'wrap' },
-  proName: { fontSize: 15, fontWeight: '700', color: colors.dark, flex: 1 },
-  companyName: { fontSize: 12, color: colors.gray, marginTop: 1 },
+  proName: { fontSize: 15, fontWeight: '700', color: tokens.text.primary, flex: 1 },
+  companyName: { fontSize: 12, color: tokens.text.secondary, marginTop: 1 },
   badgesRow: { flexDirection: 'row', gap: 4 },
   badgeStudy: { backgroundColor: '#F59E0B20', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   badgePremium: { backgroundColor: tokens.primary + '20', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  badgeText: { fontSize: 10, fontWeight: '700', color: colors.dark },
+  badgeText: { fontSize: 10, fontWeight: '700', color: tokens.text.primary },
   statsRow: { flexDirection: 'row', gap: spacing.md, marginTop: 6, flexWrap: 'wrap' },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  statText: { fontSize: 12, color: colors.gray },
-  statSub: { fontSize: 11, color: colors.border },
+  statText: { fontSize: 12, color: tokens.text.secondary },
+  statSub: { fontSize: 11, color: tokens.border },
 
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  emptyText: { fontSize: 15, fontWeight: '600', color: colors.dark, textAlign: 'center', marginBottom: spacing.xs },
-  emptyHint: { fontSize: 13, color: colors.gray, textAlign: 'center' },
+  emptyText: { fontSize: 15, fontWeight: '600', color: tokens.text.primary, textAlign: 'center', marginBottom: spacing.xs },
+  emptyHint: { fontSize: 13, color: tokens.text.secondary, textAlign: 'center' },
 
   // Filter modal
   modalOverlay: { flex: 1, backgroundColor: '#00000055', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: tokens.modal, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: spacing.lg, paddingBottom: spacing.xl, maxHeight: '80%',
   },
   modalHandle: {
-    width: 40, height: 4, backgroundColor: colors.border,
+    width: 40, height: 4, backgroundColor: tokens.border,
     borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md,
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, marginBottom: spacing.lg },
-  filterLabel: { fontSize: 13, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.lg },
+  filterLabel: { fontSize: 13, fontWeight: '600', color: tokens.text.primary, marginBottom: spacing.sm, marginTop: spacing.md },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
     paddingHorizontal: spacing.md, paddingVertical: 8,
-    borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
+    borderRadius: 20, borderWidth: 1, borderColor: tokens.border, backgroundColor: tokens.card,
   },
   chipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
-  chipText: { fontSize: 13, color: colors.gray },
+  chipText: { fontSize: 13, color: tokens.text.secondary },
   chipTextActive: { color: tokens.primary, fontWeight: '600' },
   toggleRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     marginTop: spacing.md, paddingVertical: spacing.sm,
   },
-  toggleLabel: { fontSize: 14, color: colors.dark, fontWeight: '500' },
+  toggleLabel: { fontSize: 14, color: tokens.text.primary, fontWeight: '500' },
   toggle: {
-    width: 44, height: 26, borderRadius: 13, backgroundColor: colors.border,
+    width: 44, height: 26, borderRadius: 13, backgroundColor: tokens.border,
     justifyContent: 'center', padding: 2,
   },
   toggleOn: { backgroundColor: tokens.primary },
@@ -218,7 +218,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
             {/* Distance */}
             {distance !== undefined && (
               <View style={styles.stat}>
-                <Icon name="map-marker-outline" size={13} color={colors.gray} />
+                <Icon name="map-marker-outline" size={13} color={tokens.text.secondary} />
                 <Text style={styles.statText}>{distance.toFixed(1)} km</Text>
               </View>
             )}
@@ -229,7 +229,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
               const minPrice = mins.length > 0 ? Math.min(...mins) : null;
               return minPrice !== null ? (
                 <View style={styles.stat}>
-                  <Icon name="tag-outline" size={13} color={colors.gray} />
+                  <Icon name="tag-outline" size={13} color={tokens.text.secondary} />
                   <Text style={styles.statText}>{t('services.from_price', { price: minPrice, currency: 'EGP' })}</Text>
                 </View>
               ) : null;
@@ -237,7 +237,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
           </View>
         </View>
 
-        <Icon name="chevron-right" size={20} color={colors.border} />
+        <Icon name="chevron-right" size={20} color={tokens.border} />
       </TouchableOpacity>
     );
   };
@@ -259,7 +259,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
           <Icon
             name="tune-variant"
             size={18}
-            color={(minRating > 0 || studyltizemeOnly || segment !== 'all') ? tokens.primary : colors.gray}
+            color={(minRating > 0 || studyltizemeOnly || segment !== 'all') ? tokens.primary : tokens.text.secondary}
           />
           <Text style={[styles.filterBtnText, (minRating > 0 || studyltizemeOnly || segment !== 'all') && styles.filterBtnTextActive]}>
             {t('common.filters')}
@@ -273,7 +273,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
         </View>
       ) : pros.length === 0 ? (
         <View style={styles.centered}>
-          <Icon name="account-search-outline" size={56} color={colors.border} style={{ marginBottom: spacing.md }} />
+          <Icon name="account-search-outline" size={56} color={tokens.border} style={{ marginBottom: spacing.md }} />
           <Text style={styles.emptyText}>{t('services.no_pros')}</Text>
           <Text style={styles.emptyHint}>{t('services.no_pros_hint')}</Text>
         </View>

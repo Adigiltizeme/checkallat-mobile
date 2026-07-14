@@ -15,7 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
 import { RootState } from '../../store';
 import { clearProRecord, updateUser, refreshProfile } from '../../store/slices/authSlice';
-import { useCreateProProfileMutation, useDeleteProProfileMutation } from '../../store/api/prosApi';
+import { useCreateProProfileMutation, useDeleteProProfileMutation, useUpdateProProfileMutation } from '../../store/api/prosApi';
 import { useGetCategoriesQuery } from '../../store/api/servicesApi';
 import { useGetProfileQuery } from '../../store/api/authApi';
 import { colors } from '../../theme/colors';
@@ -27,11 +27,17 @@ const isMCIconName = (s?: string | null) => !!s && /^[a-z0-9-]+$/.test(s);
 
 // ─── Suivi candidature ───────────────────────────────────────────────────────
 const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; styles: any; tokens: any }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const pro = user?.pro;
   const [deleteProProfile, { isLoading: isCancelling }] = useDeleteProProfileMutation();
+  const [updateProProfile, { isLoading: isUpdating }] = useUpdateProProfileMutation();
+
+  const { data: allCategories = [] } = useGetCategoriesQuery({ activeOnly: true });
+
+  const [addingCategories, setAddingCategories] = useState(false);
+  const [newSlugs, setNewSlugs] = useState<string[]>([]);
 
   // Polling du profil pour détecter l'acceptation/refus par l'admin sans redémarrer l'app
   const prevStatusRef = useRef<string | null>(pro?.status ?? null);
@@ -102,8 +108,33 @@ const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; 
     );
   };
 
+  const getCategoryName = (slug: string) => {
+    const cat = allCategories.find((c: any) => c.slug === slug);
+    return cat ? getLocalizedName(cat, i18n.language) : slug;
+  };
+
+  const handleAddCategories = async () => {
+    if (newSlugs.length === 0) return;
+    const existing: string[] = pro?.serviceCategories ?? [];
+    const merged = Array.from(new Set([...existing, ...newSlugs]));
+    try {
+      const result = await updateProProfile({ id: pro.id, serviceCategories: merged }).unwrap();
+      dispatch(updateUser({ pro: { ...pro, ...result, serviceCategories: merged } }));
+      setAddingCategories(false);
+      setNewSlugs([]);
+      Alert.alert(t('pro_apply.add_categories_success_title'), t('pro_apply.add_categories_success_msg'));
+    } catch {
+      Alert.alert(t('common.error'), t('pro_apply.add_categories_error'));
+    }
+  };
+
   // ── Profil actif ──
   if (isActive) {
+    const currentSlugs: string[] = pro?.serviceCategories ?? [];
+    const availableToAdd = (allCategories as any[]).filter(
+      (c: any) => !currentSlugs.includes(c.slug),
+    );
+
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <View style={styles.statusHeader}>
@@ -114,25 +145,95 @@ const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; 
           <Text style={styles.statusDesc}>{t('pro_apply.status_active_desc')}</Text>
         </View>
 
-        {pro?.serviceCategories?.length > 0 && (
+        {currentSlugs.length > 0 && (
           <View style={styles.infoCard}>
             <Text style={styles.infoCardTitle}>{t('pro_apply.submitted_categories')}</Text>
             <View style={styles.categoriesWrap}>
-              {pro.serviceCategories.map((slug: string) => (
+              {currentSlugs.map((slug: string) => (
                 <View key={slug} style={[styles.categoryChip, { backgroundColor: tokens.primary + '15' }]}>
-                  <Text style={[styles.categoryChipText, { color: tokens.primary }]}>{slug}</Text>
+                  <Text style={[styles.categoryChipText, { color: tokens.primary }]}>
+                    {getCategoryName(slug)}
+                  </Text>
                 </View>
               ))}
             </View>
           </View>
         )}
 
+        {/* Formulaire ajout catégories */}
+        {!addingCategories && availableToAdd.length > 0 && (
+          <TouchableOpacity
+            style={[styles.reapplyBtn, { backgroundColor: tokens.primary + 'DD', marginBottom: spacing.sm }]}
+            onPress={() => setAddingCategories(true)}
+          >
+            <Icon name="plus-circle-outline" size={18} color={colors.white} />
+            <Text style={styles.reapplyBtnText}>{t('pro_apply.add_categories_btn')}</Text>
+          </TouchableOpacity>
+        )}
+
+        {addingCategories && (
+          <View style={styles.infoCard}>
+            <Text style={styles.infoCardTitle}>{t('pro_apply.add_categories_title')}</Text>
+            <Text style={[styles.infoCardTitle, { fontWeight: '400', textTransform: 'none', marginBottom: spacing.sm }]}>
+              {t('pro_apply.add_categories_hint')}
+            </Text>
+            <View style={styles.categoriesGrid}>
+              {availableToAdd.map((cat: any) => {
+                const selected = newSlugs.includes(cat.slug);
+                return (
+                  <TouchableOpacity
+                    key={cat.slug}
+                    style={[styles.categoryCard, selected && styles.categoryCardActive]}
+                    onPress={() =>
+                      setNewSlugs((prev) =>
+                        prev.includes(cat.slug) ? prev.filter((s) => s !== cat.slug) : [...prev, cat.slug],
+                      )
+                    }
+                    activeOpacity={0.8}
+                  >
+                    {cat.icon && /^[a-z0-9-]+$/.test(cat.icon) ? (
+                      <Icon name={cat.icon} size={20} color={selected ? tokens.primary : tokens.text.secondary} />
+                    ) : (
+                      <Text style={{ fontSize: 20 }}>{cat.icon || '📁'}</Text>
+                    )}
+                    <Text style={[styles.categoryCardText, selected && { color: tokens.primary, fontWeight: '700' }]}>
+                      {getLocalizedName(cat, i18n.language)}
+                    </Text>
+                    {selected && (
+                      <View style={styles.categoryCheckmark}>
+                        <Icon name="check-circle" size={16} color={tokens.primary} />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+              <TouchableOpacity
+                style={[styles.cancelBtn, { flex: 1, marginBottom: 0 }]}
+                onPress={() => { setAddingCategories(false); setNewSlugs([]); }}
+              >
+                <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.reapplyBtn, { flex: 2 }, (newSlugs.length === 0 || isUpdating) && { opacity: 0.5 }]}
+                onPress={handleAddCategories}
+                disabled={newSlugs.length === 0 || isUpdating}
+              >
+                <Icon name="check" size={18} color={colors.white} />
+                <Text style={styles.reapplyBtnText}>
+                  {isUpdating ? t('common.loading') : t('pro_apply.add_categories_confirm')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         <TouchableOpacity
-          style={styles.reapplyBtn}
+          style={[styles.cancelBtn, { marginTop: spacing.sm }]}
           onPress={() => navigation.goBack()}
         >
-          <Icon name="arrow-left" size={18} color={colors.white} />
-          <Text style={styles.reapplyBtnText}>{t('common.back')}</Text>
+          <Text style={styles.cancelBtnText}>{t('common.back')}</Text>
         </TouchableOpacity>
       </ScrollView>
     );
@@ -191,7 +292,7 @@ const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; 
           <View style={styles.categoriesWrap}>
             {pro.serviceCategories.map((slug: string) => (
               <View key={slug} style={styles.categoryChip}>
-                <Text style={styles.categoryChipText}>{slug}</Text>
+                <Text style={styles.categoryChipText}>{getCategoryName(slug)}</Text>
               </View>
             ))}
           </View>
@@ -231,14 +332,14 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
 
   // Tracking
   statusHeader: { alignItems: 'center', paddingVertical: spacing.xl },
   statusIcon: { width: 80, height: 80, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
-  statusTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, textAlign: 'center', marginBottom: spacing.sm },
-  statusDesc: { fontSize: 14, color: colors.gray, textAlign: 'center', lineHeight: 22 },
+  statusTitle: { fontSize: 18, fontWeight: '700', color: tokens.text.primary, textAlign: 'center', marginBottom: spacing.sm },
+  statusDesc: { fontSize: 14, color: tokens.text.secondary, textAlign: 'center', lineHeight: 22 },
   reasonCard: {
     backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#fed7aa',
     borderRadius: 12, padding: spacing.md, marginBottom: spacing.lg,
@@ -246,10 +347,10 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   reasonLabel: { fontSize: 11, fontWeight: '700', color: '#92400E', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 },
   reasonText: { fontSize: 14, color: '#78350F', lineHeight: 20 },
   infoCard: {
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
-    marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: tokens.card, borderRadius: 12, padding: spacing.md,
+    marginBottom: spacing.lg, borderWidth: 1, borderColor: tokens.border,
   },
-  infoCardTitle: { fontSize: 13, fontWeight: '600', color: colors.gray, marginBottom: spacing.sm },
+  infoCardTitle: { fontSize: 13, fontWeight: '600', color: tokens.text.secondary, marginBottom: spacing.sm },
   cancelBtn: {
     borderWidth: 1.5, borderColor: colors.error, borderRadius: 12,
     paddingVertical: 14, alignItems: 'center', marginBottom: spacing.sm,
@@ -264,21 +365,21 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   // Form
   formHeader: { alignItems: 'center', paddingVertical: spacing.lg },
   formHeaderIcon: { width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md },
-  formTitle: { fontSize: 20, fontWeight: '700', color: colors.dark, textAlign: 'center', marginBottom: spacing.xs },
-  formSubtitle: { fontSize: 13, color: colors.gray, textAlign: 'center', lineHeight: 20 },
+  formTitle: { fontSize: 20, fontWeight: '700', color: tokens.text.primary, textAlign: 'center', marginBottom: spacing.xs },
+  formSubtitle: { fontSize: 13, color: tokens.text.secondary, textAlign: 'center', lineHeight: 20 },
 
-  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.xs },
-  sectionHint: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
+  sectionLabel: { fontSize: 14, fontWeight: '600', color: tokens.text.primary, marginBottom: spacing.xs },
+  sectionHint: { fontSize: 12, color: tokens.text.secondary, marginBottom: spacing.sm },
   errorHint: { fontSize: 12, color: colors.error, marginTop: 4 },
 
   categoriesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xs },
   categoryCard: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-    backgroundColor: colors.white, borderRadius: 10, padding: spacing.sm,
-    borderWidth: 1.5, borderColor: colors.border, position: 'relative',
+    backgroundColor: tokens.card, borderRadius: 10, padding: spacing.sm,
+    borderWidth: 1.5, borderColor: tokens.border, position: 'relative',
   },
   categoryCardActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '08' },
-  categoryCardText: { fontSize: 13, color: colors.dark },
+  categoryCardText: { fontSize: 13, color: tokens.text.primary },
   categoryCheckmark: { position: 'absolute', top: -6, right: -6 },
 
   categoriesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
@@ -288,17 +389,17 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   radiusRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginBottom: spacing.xs },
   radiusChip: {
     paddingHorizontal: spacing.md, paddingVertical: 8,
-    borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
+    borderRadius: 20, borderWidth: 1, borderColor: tokens.border, backgroundColor: tokens.card,
   },
   radiusChipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
-  radiusChipText: { fontSize: 13, color: colors.gray },
+  radiusChipText: { fontSize: 13, color: tokens.text.secondary },
 
   reviewNote: {
     flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
-    backgroundColor: colors.white, borderRadius: 10, padding: spacing.md,
-    marginTop: spacing.lg, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: tokens.card, borderRadius: 10, padding: spacing.md,
+    marginTop: spacing.lg, borderWidth: 1, borderColor: tokens.border,
   },
-  reviewNoteText: { flex: 1, fontSize: 12, color: colors.gray, lineHeight: 18 },
+  reviewNoteText: { flex: 1, fontSize: 12, color: tokens.text.secondary, lineHeight: 18 },
 
   submitBtn: {
     backgroundColor: tokens.primary, borderRadius: 14, paddingVertical: 16,
@@ -392,7 +493,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
                   <Icon
                     name={cat.icon}
                     size={22}
-                    color={selected ? tokens.primary : colors.gray}
+                    color={selected ? tokens.primary : tokens.text.secondary}
                   />
                 ) : (
                   <Text style={{ fontSize: 22 }}>{cat.icon || '📁'}</Text>
@@ -422,9 +523,9 @@ export const ProApplicationScreen = ({ navigation }: any) => {
           placeholder={t('pro_apply.bio_placeholder')}
           multiline
           numberOfLines={4}
-          outlineColor={colors.border}
+          outlineColor={tokens.border}
           activeOutlineColor={tokens.primary}
-          style={{ backgroundColor: colors.white, minHeight: 100 }}
+          style={{ backgroundColor: tokens.card, minHeight: 100 }}
         />
         {submitted && bio.trim().length < 20 && (
           <Text style={styles.errorHint}>{t('pro_apply.bio_min')}</Text>
@@ -432,14 +533,14 @@ export const ProApplicationScreen = ({ navigation }: any) => {
 
         {/* Nom société */}
         <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>
-          {t('pro_apply.company_label')} <Text style={{ color: colors.gray, fontWeight: '400' }}>({t('common.optional')})</Text>
+          {t('pro_apply.company_label')} <Text style={{ color: tokens.text.secondary, fontWeight: '400' }}>({t('common.optional')})</Text>
         </Text>
         <TextInput
           mode="outlined"
           value={companyName}
           onChangeText={setCompanyName}
           placeholder={t('pro_apply.company_placeholder')}
-          outlineColor={colors.border}
+          outlineColor={tokens.border}
           activeOutlineColor={tokens.primary}
           style={{ backgroundColor: colors.white }}
         />
@@ -462,7 +563,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
 
         {/* Note légale */}
         <View style={styles.reviewNote}>
-          <Icon name="information-outline" size={16} color={colors.gray} />
+          <Icon name="information-outline" size={16} color={tokens.text.secondary} />
           <Text style={styles.reviewNoteText}>{t('pro_apply.review_note')}</Text>
         </View>
 

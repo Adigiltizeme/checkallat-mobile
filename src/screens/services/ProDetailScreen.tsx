@@ -41,17 +41,17 @@ export const ProDetailScreen = ({ route, navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.light },
+  root: { flex: 1, backgroundColor: tokens.background },
   content: { paddingBottom: spacing.xl },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: colors.gray, fontSize: 14 },
+  loadingText: { color: tokens.text.secondary, fontSize: 14 },
 
   // Header
   header: {
-    backgroundColor: colors.white, alignItems: 'center',
+    backgroundColor: tokens.card, alignItems: 'center',
     paddingTop: spacing.xl, paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1, borderBottomColor: colors.border,
+    borderBottomWidth: 1, borderBottomColor: tokens.border,
   },
   avatarWrap: {
     width: 72, height: 72, borderRadius: 20,
@@ -59,11 +59,11 @@ export const ProDetailScreen = ({ route, navigation }: Props) => {
     alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm,
   },
   avatarLetter: { fontSize: 30, fontWeight: '700', color: tokens.primary },
-  proName: { fontSize: 20, fontWeight: '700', color: colors.dark, textAlign: 'center' },
-  companyName: { fontSize: 13, color: colors.gray, marginTop: 2, textAlign: 'center' },
+  proName: { fontSize: 20, fontWeight: '700', color: tokens.text.primary, textAlign: 'center' },
+  companyName: { fontSize: 13, color: tokens.text.secondary, marginTop: 2, textAlign: 'center' },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm },
-  ratingText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  reviewsCount: { fontSize: 12, color: colors.gray },
+  ratingText: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+  reviewsCount: { fontSize: 12, color: tokens.text.secondary },
   badgesRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm, flexWrap: 'wrap', justifyContent: 'center' },
   badgeStudy: { backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   badgeText: { fontSize: 12, fontWeight: '700', color: '#92400E' },
@@ -72,49 +72,49 @@ export const ProDetailScreen = ({ route, navigation }: Props) => {
 
   // Section
   section: { padding: spacing.lg },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.dark, marginBottom: spacing.md },
-  bioText: { fontSize: 14, color: colors.gray, lineHeight: 22 },
-  emptyText: { fontSize: 13, color: colors.gray, fontStyle: 'italic' },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.md },
+  bioText: { fontSize: 14, color: tokens.text.secondary, lineHeight: 22 },
+  emptyText: { fontSize: 13, color: tokens.text.secondary, fontStyle: 'italic' },
 
   // Stats grid
   statsGrid: {
     flexDirection: 'row', padding: spacing.lg, gap: spacing.md,
-    backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border,
+    backgroundColor: tokens.card, borderTopWidth: 1, borderTopColor: tokens.border,
   },
   statCard: {
-    flex: 1, alignItems: 'center', backgroundColor: colors.light,
+    flex: 1, alignItems: 'center', backgroundColor: tokens.backgroundAlt,
     borderRadius: 12, padding: spacing.md,
   },
-  statValue: { fontSize: 16, fontWeight: '700', color: colors.dark, marginTop: 4 },
-  statLabel: { fontSize: 11, color: colors.gray, textAlign: 'center', marginTop: 2 },
+  statValue: { fontSize: 16, fontWeight: '700', color: tokens.text.primary, marginTop: 4 },
+  statLabel: { fontSize: 11, color: tokens.text.secondary, textAlign: 'center', marginTop: 2 },
 
   // Offerings
   offeringCard: {
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
+    backgroundColor: tokens.card, borderRadius: 12, padding: spacing.md,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border,
+    marginBottom: spacing.sm, borderWidth: 1, borderColor: tokens.border,
   },
   offeringInfo: { flex: 1, marginRight: spacing.sm },
-  offeringName: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  offeringDesc: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  offeringName: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+  offeringDesc: { fontSize: 12, color: tokens.text.secondary, marginTop: 2 },
   offeringPriceWrap: { flexDirection: 'row', alignItems: 'baseline', gap: 2 },
   offeringPrice: { fontSize: 15, fontWeight: '700', color: tokens.primary },
-  offeringCurrency: { fontSize: 11, color: colors.gray },
+  offeringCurrency: { fontSize: 11, color: tokens.text.secondary },
 
   // Reviews
   reviewCard: {
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
-    marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: tokens.card, borderRadius: 12, padding: spacing.md,
+    marginBottom: spacing.sm, borderWidth: 1, borderColor: tokens.border,
   },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs },
-  reviewerName: { fontSize: 13, fontWeight: '600', color: colors.dark },
-  reviewComment: { fontSize: 13, color: colors.gray, lineHeight: 20 },
+  reviewerName: { fontSize: 13, fontWeight: '600', color: tokens.text.primary },
+  reviewComment: { fontSize: 13, color: tokens.text.secondary, lineHeight: 20 },
 
   // CTA
   ctaBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: colors.white, padding: spacing.md,
-    borderTopWidth: 1, borderTopColor: colors.border,
+    backgroundColor: tokens.card, padding: spacing.md,
+    borderTopWidth: 1, borderTopColor: tokens.border,
   },
   ctaBtn: {
     backgroundColor: tokens.primary, borderRadius: 14, paddingVertical: 14,
@@ -255,7 +255,7 @@ export const ProDetailScreen = ({ route, navigation }: Props) => {
                   {offering.priceMin && (
                     <Text style={styles.offeringCurrency}>EGP</Text>
                   )}
-                  <Icon name="chevron-right" size={18} color={colors.border} style={{ marginLeft: 4 }} />
+                  <Icon name="chevron-right" size={18} color={tokens.border} style={{ marginLeft: 4 }} />
                 </View>
               </TouchableOpacity>
             ))

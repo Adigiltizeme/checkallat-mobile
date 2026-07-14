@@ -46,6 +46,7 @@ export interface BookingStep4Data {
   proName?: string;
   serviceOfferingId?: string;
   estimatedPrice?: number;
+  estimatedCurrency?: string;
 }
 
 /** Payload final envoyé à l'API */

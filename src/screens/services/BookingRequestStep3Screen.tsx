@@ -5,7 +5,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { Text, Switch, Chip, Card, Button } from 'react-native-paper';
+import { Text, Switch, Chip, Card } from 'react-native-paper';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -50,25 +50,25 @@ export const BookingRequestStep3Screen = ({ route, navigation }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  title: { color: colors.dark, marginBottom: spacing.lg },
-  sectionLabel: { color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
+  title: { color: tokens.text.primary, marginBottom: spacing.lg },
+  sectionLabel: { color: tokens.text.primary, marginBottom: spacing.sm, marginTop: spacing.md },
   modeRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
   infoCard: { backgroundColor: '#E3F2FD', marginTop: spacing.sm, marginBottom: spacing.sm },
   warningCard: { backgroundColor: '#FFF3E0', marginTop: spacing.sm, marginBottom: spacing.sm },
-  infoText: { color: colors.dark, lineHeight: 22 },
+  infoText: { color: tokens.text.primary, lineHeight: 22 },
   warningText: { color: '#E65100', lineHeight: 20 },
-  recurringCard: { borderRadius: 12, marginTop: spacing.lg, backgroundColor: colors.lightGray },
+  recurringCard: { borderRadius: 12, marginTop: spacing.lg, backgroundColor: tokens.backgroundAlt },
   recurringHeader: { flexDirection: 'row', alignItems: 'center' },
   recurringTexts: { flex: 1 },
-  recurringTitle: { fontSize: 15, fontWeight: '600', color: colors.dark },
-  recurringDesc: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  recurringTitle: { fontSize: 15, fontWeight: '600', color: tokens.text.primary },
+  recurringDesc: { fontSize: 12, color: tokens.text.secondary, marginTop: 2 },
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.sm },
-  chip: { backgroundColor: colors.white },
+  chip: { backgroundColor: tokens.card },
   chipSelected: { backgroundColor: tokens.primary },
   chipTextSelected: { color: colors.white },
-  dateBtn: { borderColor: colors.border, marginBottom: spacing.xs },
+  dateBtn: { borderColor: tokens.border, marginBottom: spacing.xs },
   actions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xl },
   backWrap: { flex: 1 },
   nextWrap: { flex: 2 },
@@ -139,7 +139,7 @@ export const BookingRequestStep3Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: tokens.background }]} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text variant="headlineSmall" style={styles.title}>
         {t('booking_request.step3_title')}
       </Text>
@@ -241,15 +241,13 @@ export const BookingRequestStep3Screen = ({ route, navigation }: Props) => {
                     <Text style={[styles.sectionLabel, { marginTop: spacing.md }]}>
                       {t('booking_request.recurring_end_label')}
                     </Text>
-                    <Button
-                      mode="outlined"
+                    <ChocolateButton
+                      variant="outline"
                       onPress={() => setShowEndDatePicker(true)}
                       style={styles.dateBtn}
-                      icon="calendar-end"
-                      textColor={colors.dark}
                     >
                       {recurringEndDate.toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </Button>
+                    </ChocolateButton>
                     {showEndDatePicker && (
                       <DateTimePicker
                         value={recurringEndDate}

@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image, Dimensions } from 'react-native';
 
 const LOGO_SIZE = Dimensions.get('window').width * 0.75;
-import { TextInput, Button, Text } from 'react-native-paper';
+import { TextInput, Text } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -32,7 +33,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.background,
   },
   scrollContent: {
     padding: 24,
@@ -48,16 +49,15 @@ export const RegisterScreen = ({ navigation }: Props) => {
   },
   title: {
     marginBottom: 24,
-    color: colors.dark,
+    color: tokens.text.primary,
     textAlign: 'center',
   },
   input: {
     marginBottom: 16,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.backgroundAlt,
   },
   button: {
     marginTop: 16,
-    paddingVertical: 8,
   },
   linkButton: {
     marginTop: 8,
@@ -69,7 +69,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
     marginTop: -8,
   },
   helperText: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontSize: 11,
     marginBottom: 8,
     marginTop: -8,
@@ -146,7 +146,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               error={!!errors.firstName}
               style={styles.input}
               mode="outlined"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
             />
           )}
@@ -166,7 +166,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               error={!!errors.lastName}
               style={styles.input}
               mode="outlined"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
             />
           )}
@@ -188,7 +188,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               mode="outlined"
               keyboardType="phone-pad"
               placeholder={t('auth.phone_placeholder')}
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
             />
           )}
@@ -209,7 +209,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               keyboardType="email-address"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
             />
           )}
@@ -230,13 +230,13 @@ export const RegisterScreen = ({ navigation }: Props) => {
               error={!!errors.password}
               style={styles.input}
               mode="outlined"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               right={
                 <TextInput.Icon
                   icon={showPassword ? 'eye-off' : 'eye'}
                   onPress={() => setShowPassword(v => !v)}
-                  color={colors.gray}
+                  color={tokens.text.secondary}
                 />
               }
             />
@@ -263,13 +263,13 @@ export const RegisterScreen = ({ navigation }: Props) => {
               error={!!errors.confirmPassword}
               style={styles.input}
               mode="outlined"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               right={
                 <TextInput.Icon
                   icon={showConfirmPassword ? 'eye-off' : 'eye'}
                   onPress={() => setShowConfirmPassword(v => !v)}
-                  color={colors.gray}
+                  color={tokens.text.secondary}
                 />
               }
             />
@@ -285,23 +285,21 @@ export const RegisterScreen = ({ navigation }: Props) => {
           </Text>
         )}
 
-        <Button
-          mode="contained"
+        <ChocolateButton
           onPress={handleSubmit(onSubmit)}
           loading={isLoading}
           style={styles.button}
-          buttonColor={tokens.primary}
         >
           {t('auth.register_btn')}
-        </Button>
+        </ChocolateButton>
 
-        <Button
-          mode="text"
+        <ChocolateButton
+          variant="ghost"
           onPress={() => navigation.navigate('Login')}
           style={styles.linkButton}
         >
-          {t('auth.already_account')} {t('auth.login_link')}
-        </Button>
+          {`${t('auth.already_account')} ${t('auth.login_link')}`}
+        </ChocolateButton>
       </ScrollView>
     </KeyboardAvoidingView>
   );

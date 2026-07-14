@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,103 +19,9 @@ import { spacing } from '../../theme/spacing';
 import { getLocalizedName } from '../../utils/localize';
 import { RootState } from '../../store';
 import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
+import { CATEGORY_FIELDS, HAS_URGENCY } from '../../config/categoryFields';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep1'>;
-
-// ─── Options par catégorie ──────────────────────────────────────────────────
-
-type CategoryField = {
-  key: string;
-  labelKey: string;
-  options: { value: string; labelFr: string; labelEn: string; labelAr: string }[];
-};
-
-const CATEGORY_FIELDS: Record<string, CategoryField[]> = {
-  plumbing: [
-    {
-      key: 'problemType',
-      labelKey: 'booking_request.cat_plumbing_problem',
-      options: [
-        { value: 'leak',         labelFr: 'Fuite',           labelEn: 'Leak',           labelAr: 'تسرّب' },
-        { value: 'clog',         labelFr: 'Bouchon',         labelEn: 'Clog',           labelAr: 'انسداد' },
-        { value: 'installation', labelFr: 'Installation',    labelEn: 'Installation',   labelAr: 'تركيب' },
-        { value: 'repair',       labelFr: 'Réparation',      labelEn: 'Repair',         labelAr: 'إصلاح' },
-      ],
-    },
-  ],
-  electricity: [
-    {
-      key: 'problemType',
-      labelKey: 'booking_request.cat_electricity_problem',
-      options: [
-        { value: 'outlet',       labelFr: 'Prise / interrupteur', labelEn: 'Outlet / switch',   labelAr: 'مقبس / مفتاح' },
-        { value: 'circuit',      labelFr: 'Circuit / disjoncteur', labelEn: 'Circuit / breaker', labelAr: 'دائرة كهربائية' },
-        { value: 'installation', labelFr: 'Installation',          labelEn: 'Installation',      labelAr: 'تركيب' },
-        { value: 'short',        labelFr: 'Court-circuit',         labelEn: 'Short circuit',     labelAr: 'دائرة قصيرة' },
-      ],
-    },
-  ],
-  painting: [
-    {
-      key: 'surfaceType',
-      labelKey: 'booking_request.cat_painting_surface',
-      options: [
-        { value: 'walls',    labelFr: 'Murs intérieurs', labelEn: 'Interior walls', labelAr: 'جدران داخلية' },
-        { value: 'ceiling',  labelFr: 'Plafond',         labelEn: 'Ceiling',        labelAr: 'سقف' },
-        { value: 'exterior', labelFr: 'Extérieur',       labelEn: 'Exterior',       labelAr: 'خارجي' },
-        { value: 'furniture',labelFr: 'Mobilier',        labelEn: 'Furniture',      labelAr: 'أثاث' },
-      ],
-    },
-  ],
-  handyman: [
-    {
-      key: 'taskType',
-      labelKey: 'booking_request.cat_handyman_task',
-      options: [
-        { value: 'assembly',   labelFr: 'Montage meuble',    labelEn: 'Furniture assembly', labelAr: 'تجميع أثاث' },
-        { value: 'mounting',   labelFr: 'Fixation murale',   labelEn: 'Wall mounting',      labelAr: 'تثبيت جداري' },
-        { value: 'repair',     labelFr: 'Réparation',        labelEn: 'Repair',             labelAr: 'إصلاح' },
-        { value: 'general',    labelFr: 'Travaux généraux',  labelEn: 'General tasks',      labelAr: 'أعمال عامة' },
-      ],
-    },
-  ],
-  cleaning: [
-    {
-      key: 'cleaningType',
-      labelKey: 'booking_request.cat_cleaning_type',
-      options: [
-        { value: 'standard',         labelFr: 'Nettoyage standard',     labelEn: 'Standard cleaning',   labelAr: 'تنظيف عادي' },
-        { value: 'deep',             labelFr: 'Grand ménage',           labelEn: 'Deep cleaning',        labelAr: 'تنظيف عميق' },
-        { value: 'post_construction',labelFr: 'Après travaux',          labelEn: 'Post-construction',    labelAr: 'بعد البناء' },
-      ],
-    },
-  ],
-  carpentry: [
-    {
-      key: 'taskType',
-      labelKey: 'booking_request.cat_carpentry_task',
-      options: [
-        { value: 'repair',      labelFr: 'Réparation',      labelEn: 'Repair',       labelAr: 'إصلاح' },
-        { value: 'installation',labelFr: 'Installation',    labelEn: 'Installation', labelAr: 'تركيب' },
-        { value: 'custom',      labelFr: 'Sur mesure',      labelEn: 'Custom work',  labelAr: 'عمل مخصص' },
-      ],
-    },
-  ],
-  air_condition: [
-    {
-      key: 'serviceType',
-      labelKey: 'booking_request.cat_ac_service',
-      options: [
-        { value: 'cleaning',    labelFr: 'Nettoyage',       labelEn: 'Cleaning',     labelAr: 'تنظيف' },
-        { value: 'installation',labelFr: 'Installation',    labelEn: 'Installation', labelAr: 'تركيب' },
-        { value: 'repair',      labelFr: 'Réparation',      labelEn: 'Repair',       labelAr: 'إصلاح' },
-        { value: 'maintenance', labelFr: 'Entretien',       labelEn: 'Maintenance',  labelAr: 'صيانة' },
-      ],
-    },
-  ],
-};
-
-const HAS_URGENCY = ['plumbing', 'electricity', 'handyman', 'air_condition'];
 
 export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   const { tokens } = useAppTheme();
@@ -150,6 +56,19 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   const [description, setDescription] = useState(prefill?.clientDescription ?? '');
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    content: { padding: spacing.md, paddingBottom: spacing.xl },
+    stepLabel: { fontSize: 12, color: tokens.text.secondary, marginBottom: spacing.xs },
+    categoryTitle: { fontSize: 20, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.lg },
+    section: { marginBottom: spacing.lg },
+    sectionLabel: { fontSize: 14, fontWeight: '600', color: tokens.text.primary, marginBottom: spacing.sm },
+    chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    textarea: { backgroundColor: tokens.backgroundAlt, maxHeight: 120 },
+    nextBtn: { marginTop: spacing.md },
+    errorText: { fontSize: 12, color: colors.error, marginTop: 4 },
+  }), [tokens]);
 
   const toggleSelection = (fieldKey: string, value: string) => {
     setSelections(prev => {
@@ -187,7 +106,7 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: tokens.background }]} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.stepLabel}>{t('booking_request.step_of', { current: 1, total: 5 })}</Text>
       <Text style={styles.categoryTitle}>{categoryName}</Text>
 
@@ -246,7 +165,7 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
           placeholder={t('booking_request.description_placeholder')}
           value={description}
           onChangeText={setDescription}
-          outlineColor={submitted && description.trim().length < 10 ? colors.error : colors.border}
+          outlineColor={submitted && description.trim().length < 10 ? colors.error : tokens.border}
           activeOutlineColor={tokens.primary}
           style={styles.textarea}
         />
@@ -272,15 +191,3 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, paddingBottom: spacing.xl },
-  stepLabel: { fontSize: 12, color: colors.gray, marginBottom: spacing.xs },
-  categoryTitle: { fontSize: 20, fontWeight: '700', color: colors.dark, marginBottom: spacing.lg },
-  section: { marginBottom: spacing.lg },
-  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  textarea: { backgroundColor: colors.white, maxHeight: 120 },
-  nextBtn: { marginTop: spacing.md },
-  errorText: { fontSize: 12, color: colors.error, marginTop: 4 },
-});

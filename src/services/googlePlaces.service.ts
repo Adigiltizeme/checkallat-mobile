@@ -64,49 +64,43 @@ export class GooglePlacesService {
   ): Promise<PlaceSuggestion[]> {
     if (!GOOGLE_API_KEY) return [];
 
+    const params: Record<string, string> = {
+      input: query,
+      key: GOOGLE_API_KEY,
+      types: 'geocode|establishment',
+    };
+
+    if (options?.language) params.language = options.language;
+    if (options?.sessionToken) params.sessiontoken = options.sessionToken;
+    if (options?.countryCode) params.components = `country:${options.countryCode}`;
+    if (options?.proximity) {
+      params.location = `${options.proximity.lat},${options.proximity.lng}`;
+      params.radius = '50000';
+      params.strictbounds = 'false';
+      params.origin = `${options.proximity.lat},${options.proximity.lng}`;
+    }
+
+    // Erreurs réseau uniquement — laisse les erreurs de statut se propager
+    let response: any;
     try {
-      const params: Record<string, string> = {
-        input: query,
-        key: GOOGLE_API_KEY,
-        // Adresses + établissements (restaurants, entreprises, landmarks)
-        types: 'geocode|establishment',
-      };
-
-      if (options?.language) params.language = options.language;
-      if (options?.sessionToken) params.sessiontoken = options.sessionToken;
-
-      // Restreindre au pays si détecté
-      if (options?.countryCode) {
-        params.components = `country:${options.countryCode}`;
-      }
-
-      // Biaiser vers la position GPS + activer le calcul de distance dans les résultats
-      if (options?.proximity) {
-        params.location = `${options.proximity.lat},${options.proximity.lng}`;
-        params.radius = '50000';
-        params.strictbounds = 'false';
-        // origin : permet à Google de retourner distance_meters dans chaque suggestion
-        params.origin = `${options.proximity.lat},${options.proximity.lng}`;
-      }
-
-      const response = await axios.get(this.autocompleteUrl, { params });
-
-      if (response.data.status !== 'OK' && response.data.status !== 'ZERO_RESULTS') {
-        console.warn('Google Places suggest status:', response.data.status);
-        return [];
-      }
-
-      return (response.data.predictions ?? []).map((p: any) => ({
-        placeId: p.place_id,
-        name: p.structured_formatting?.main_text ?? p.description,
-        subtitle: p.structured_formatting?.secondary_text ?? '',
-        distanceMeters: p.distance_meters,
-        types: p.types,
-      }));
+      response = await axios.get(this.autocompleteUrl, { params });
     } catch (error: any) {
-      console.error('Google Places suggest error:', error.message);
+      console.error('Google Places network error:', error.message);
       return [];
     }
+
+    // Statut non-OK : propagation pour permettre le fallback Mapbox côté appelant
+    if (response.data.status !== 'OK' && response.data.status !== 'ZERO_RESULTS') {
+      throw new Error(`Google Places: ${response.data.status}`);
+    }
+
+    return (response.data.predictions ?? []).map((p: any) => ({
+      placeId: p.place_id,
+      name: p.structured_formatting?.main_text ?? p.description,
+      subtitle: p.structured_formatting?.secondary_text ?? '',
+      distanceMeters: p.distance_meters,
+      types: p.types,
+    }));
   }
 
   /**

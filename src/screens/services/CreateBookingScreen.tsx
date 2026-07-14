@@ -45,68 +45,68 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
 
-  label: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
-  hint: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
+  label: { fontSize: 14, fontWeight: '600', color: tokens.text.primary, marginBottom: spacing.sm },
+  hint: { fontSize: 12, color: tokens.text.secondary, marginBottom: spacing.sm },
   errorHint: { fontSize: 12, color: colors.error, marginTop: 4 },
-  emptyText: { fontSize: 13, color: colors.gray, fontStyle: 'italic' },
+  emptyText: { fontSize: 13, color: tokens.text.secondary, fontStyle: 'italic' },
 
   // Pro summary
   proSummary: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
-    marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: tokens.card, borderRadius: 14, padding: spacing.md,
+    marginBottom: spacing.lg, borderWidth: 1, borderColor: tokens.border,
   },
   proAvatarSmall: {
     width: 42, height: 42, borderRadius: 12,
     backgroundColor: tokens.primary + '20', alignItems: 'center', justifyContent: 'center',
   },
   proAvatarLetter: { fontSize: 18, fontWeight: '700', color: tokens.primary },
-  proSummaryName: { fontSize: 14, fontWeight: '700', color: colors.dark },
-  proSummaryRating: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  proSummaryName: { fontSize: 14, fontWeight: '700', color: tokens.text.primary },
+  proSummaryRating: { fontSize: 12, color: tokens.text.secondary, marginTop: 2 },
 
   // Offerings
   offeringOption: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
-    marginBottom: spacing.sm, borderWidth: 1.5, borderColor: colors.border,
+    backgroundColor: tokens.card, borderRadius: 12, padding: spacing.md,
+    marginBottom: spacing.sm, borderWidth: 1.5, borderColor: tokens.border,
   },
   offeringOptionActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '08' },
   radioCircle: {
     width: 20, height: 20, borderRadius: 10, borderWidth: 2,
-    borderColor: colors.border, alignItems: 'center', justifyContent: 'center',
+    borderColor: tokens.border, alignItems: 'center', justifyContent: 'center',
   },
   radioCircleActive: { borderColor: tokens.primary },
   radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: tokens.primary },
-  offeringName: { fontSize: 14, fontWeight: '600', color: colors.dark },
+  offeringName: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
   offeringNameActive: { color: tokens.primary },
-  offeringPrice: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  offeringPrice: { fontSize: 12, color: tokens.text.secondary, marginTop: 2 },
 
   // Inputs
-  textArea: { backgroundColor: colors.white, minHeight: 100 },
-  input: { backgroundColor: colors.white },
+  textArea: { backgroundColor: tokens.backgroundAlt, minHeight: 100 },
+  input: { backgroundColor: tokens.backgroundAlt },
 
   // Date
   dateCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.white, borderRadius: 12,
-    borderWidth: 1, borderColor: colors.border, overflow: 'hidden',
+    backgroundColor: tokens.card, borderRadius: 12,
+    borderWidth: 1, borderColor: tokens.border, overflow: 'hidden',
   },
   dateArrow: { padding: spacing.md },
   dateCenter: { flex: 1, alignItems: 'center', paddingVertical: spacing.md },
-  dateText: { fontSize: 14, fontWeight: '600', color: colors.dark, textTransform: 'capitalize' },
+  dateText: { fontSize: 14, fontWeight: '600', color: tokens.text.primary, textTransform: 'capitalize' },
 
   // Payment
   paymentRow: { flexDirection: 'row', gap: spacing.md },
   paymentOption: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
-    borderWidth: 1.5, borderColor: colors.border, justifyContent: 'center',
+    backgroundColor: tokens.card, borderRadius: 12, padding: spacing.md,
+    borderWidth: 1.5, borderColor: tokens.border, justifyContent: 'center',
   },
   paymentOptionActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '08' },
-  paymentLabel: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  paymentLabel: { fontSize: 13, color: tokens.text.secondary, fontWeight: '500' },
   paymentLabelActive: { color: tokens.primary, fontWeight: '700' },
 
   // Summary
@@ -116,8 +116,8 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
   },
   summaryTitle: { fontSize: 14, fontWeight: '700', color: '#166534', marginBottom: spacing.sm },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  summaryLabel: { fontSize: 13, color: colors.gray },
-  summaryValue: { fontSize: 13, color: colors.dark, fontWeight: '500' },
+  summaryLabel: { fontSize: 13, color: tokens.text.secondary },
+  summaryValue: { fontSize: 13, color: tokens.text.primary, fontWeight: '500' },
 
   // Submit
   submitBtn: {
@@ -251,7 +251,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
           placeholder={t('booking.describe_placeholder')}
           multiline
           numberOfLines={4}
-          outlineColor={colors.border}
+          outlineColor={tokens.border}
           activeOutlineColor={tokens.primary}
           style={styles.textArea}
         />
@@ -266,10 +266,10 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
           value={address}
           onChangeText={setAddress}
           placeholder={t('booking.address_placeholder')}
-          outlineColor={colors.border}
+          outlineColor={tokens.border}
           activeOutlineColor={tokens.primary}
           style={styles.input}
-          left={<TextInput.Icon icon="map-marker-outline" color={colors.gray} />}
+          left={<TextInput.Icon icon="map-marker-outline" color={tokens.text.secondary} />}
         />
 
         {/* Date */}
@@ -286,7 +286,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
             <Icon
               name="chevron-left"
               size={24}
-              color={isToday(addDays(scheduledDate, -1)) ? colors.border : colors.dark}
+              color={isToday(addDays(scheduledDate, -1)) ? tokens.border : tokens.text.primary}
             />
           </TouchableOpacity>
           <View style={styles.dateCenter}>
@@ -297,7 +297,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
             </Text>
           </View>
           <TouchableOpacity onPress={() => setScheduledDate(addDays(scheduledDate, 1))} style={styles.dateArrow}>
-            <Icon name="chevron-right" size={24} color={colors.dark} />
+            <Icon name="chevron-right" size={24} color={tokens.text.primary} />
           </TouchableOpacity>
         </View>
 
@@ -314,7 +314,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
               <Icon
                 name={method === 'cash' ? 'cash' : 'shield-check'}
                 size={22}
-                color={paymentMethod === method ? tokens.primary : colors.gray}
+                color={paymentMethod === method ? tokens.primary : tokens.text.secondary}
               />
               <Text style={[styles.paymentLabel, paymentMethod === method && styles.paymentLabelActive]}>
                 {t(method === 'cash' ? 'booking.payment_cash' : 'booking.payment_inapp')}

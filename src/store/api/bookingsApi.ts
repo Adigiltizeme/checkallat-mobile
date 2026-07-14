@@ -46,10 +46,10 @@ export const bookingsApi = createApi({
      * Mettre à jour le statut d'une réservation
      */
     updateBookingStatus: builder.mutation({
-      query: ({ id, status, role }: { id: string; status: string; role: 'client' | 'pro' }) => ({
+      query: ({ id, status, role, finalPrice }: { id: string; status: string; role: 'client' | 'pro'; finalPrice?: number }) => ({
         url: `/${id}/status`,
         method: 'PUT',
-        body: { status, role },
+        body: { status, role, ...(finalPrice != null ? { finalPrice } : {}) },
       }),
       invalidatesTags: ['Booking'],
     }),
@@ -177,6 +177,28 @@ export const bookingsApi = createApi({
       query: () => '/pro/me/agenda',
       providesTags: ['Booking'],
     }),
+
+    submitBid: builder.mutation<any, { bookingId: string; proposedPrice: number; message?: string }>({
+      query: ({ bookingId, proposedPrice, message }) => ({
+        url: `/${bookingId}/bids`,
+        method: 'POST',
+        body: { proposedPrice, message },
+      }),
+      invalidatesTags: ['Booking'],
+    }),
+
+    getBookingBids: builder.query<any[], string>({
+      query: (bookingId: string) => `/${bookingId}/bids`,
+      providesTags: ['Booking'],
+    }),
+
+    acceptBid: builder.mutation<any, { bookingId: string; bidId: string }>({
+      query: ({ bookingId, bidId }) => ({
+        url: `/${bookingId}/bids/${bidId}/accept`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Booking'],
+    }),
   }),
 });
 
@@ -198,4 +220,7 @@ export const {
   useOpenBookingDisputeMutation,
   useGetProDemandesQuery,
   useGetProAgendaQuery,
+  useSubmitBidMutation,
+  useGetBookingBidsQuery,
+  useAcceptBidMutation,
 } = bookingsApi;

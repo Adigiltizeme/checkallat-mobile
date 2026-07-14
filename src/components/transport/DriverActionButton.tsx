@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { Button, useTheme } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { ChocolateButton } from '../shared/ChocolateButton';
 import { useTranslation } from 'react-i18next';
 import { TransportStatus } from '../../types/transport-status';
 
@@ -75,7 +74,6 @@ export const DriverActionButton: React.FC<DriverActionButtonProps> = ({
   onStatusChange,
 }) => {
   const { t } = useTranslation();
-  const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
 
   const action = ACTION_MAP[currentStatus];
@@ -101,20 +99,13 @@ export const DriverActionButton: React.FC<DriverActionButtonProps> = ({
 
   return (
     <View style={styles.container}>
-      <Button
-        mode="contained"
+      <ChocolateButton
         onPress={handleActionPress}
         loading={loading}
         disabled={loading}
-        icon={({ size, color }) => (
-          <Icon name={action.icon} size={size} color={color} />
-        )}
-        style={[styles.button, { backgroundColor: action.color }]}
-        contentStyle={styles.buttonContent}
-        labelStyle={styles.buttonLabel}
       >
         {t(action.labelKey)}
-      </Button>
+      </ChocolateButton>
     </View>
   );
 };
@@ -122,15 +113,5 @@ export const DriverActionButton: React.FC<DriverActionButtonProps> = ({
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-  },
-  button: {
-    borderRadius: 12,
-  },
-  buttonContent: {
-    paddingVertical: 8,
-  },
-  buttonLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });

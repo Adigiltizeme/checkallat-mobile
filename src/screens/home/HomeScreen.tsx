@@ -115,7 +115,7 @@ const PulsingDot = ({ active }: { active: boolean }) => {
     <Animated.View
       style={[
         styles.dot,
-        active ? { backgroundColor: tokens.primary, width: 20, borderRadius: 4 } : styles.dotInactive,
+        active ? { backgroundColor: tokens.primary, width: 20, borderRadius: 4 } : { backgroundColor: tokens.border },
         style,
       ]}
     />
@@ -165,6 +165,7 @@ const ROW1_COPY_WIDTH = ROW1.length * CHIP_FULL;
 const ROW2_COPY_WIDTH = ROW2.length * CHIP_FULL;
 
 const ServiceChip = ({ item, t, onPress }: { item: typeof SERVICES[0]; t: any; onPress: () => void }) => {
+  const { tokens: scTokens } = useAppTheme();
   const scale = useSharedValue(1);
   const handlePress = () => {
     scale.value = withSequence(withTiming(0.92, { duration: 80 }), withTiming(1, { duration: 120 }));
@@ -175,11 +176,11 @@ const ServiceChip = ({ item, t, onPress }: { item: typeof SERVICES[0]; t: any; o
   return (
     <Animated.View style={[styles.serviceChipWrap, style]}>
       <TouchableOpacity onPress={handlePress} activeOpacity={0.85}>
-        <View style={styles.serviceChip}>
+        <View style={[styles.serviceChip, { backgroundColor: scTokens.card }]}>
           <View style={[styles.serviceChipIcon, { backgroundColor: item.color + '20' }]}>
             <Icon name={item.icon} size={26} color={item.color} />
           </View>
-          <Text style={styles.serviceChipLabel}>{t(item.bgKey)}</Text>
+          <Text style={[styles.serviceChipLabel, { color: scTokens.text.primary }]}>{t(item.bgKey)}</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -266,15 +267,18 @@ const MarqueeRow = ({
   );
 };
 
-const FeatureCard = ({ item, t, index }: { item: typeof FEATURES[0]; t: any; index: number }) => (
-  <Animated.View entering={FadeInRight.delay(index * 100).springify()} style={styles.featureCard}>
-    <View style={[styles.featureIconBg, { backgroundColor: item.color + '18' }]}>
-      <Icon name={item.icon} size={32} color={item.color} />
-    </View>
-    <Text style={styles.featureTitle}>{t(item.titleKey)}</Text>
-    <Text style={styles.featureDesc}>{t(item.descKey)}</Text>
-  </Animated.View>
-);
+const FeatureCard = ({ item, t, index }: { item: typeof FEATURES[0]; t: any; index: number }) => {
+  const { tokens: fcTokens } = useAppTheme();
+  return (
+    <Animated.View entering={FadeInRight.delay(index * 100).springify()} style={[styles.featureCard, { backgroundColor: fcTokens.card }]}>
+      <View style={[styles.featureIconBg, { backgroundColor: item.color + '18' }]}>
+        <Icon name={item.icon} size={32} color={item.color} />
+      </View>
+      <Text style={[styles.featureTitle, { color: fcTokens.text.primary }]}>{t(item.titleKey)}</Text>
+      <Text style={[styles.featureDesc, { color: fcTokens.text.secondary }]}>{t(item.descKey)}</Text>
+    </Animated.View>
+  );
+};
 
 const StatBadge = ({ value, labelKey, t, index }: { value: string; labelKey: string; t: any; index: number }) => {
   const { tokens } = useAppTheme();
@@ -289,7 +293,7 @@ const StatBadge = ({ value, labelKey, t, index }: { value: string; labelKey: str
   return (
     <Animated.View style={[styles.statBadge, style]}>
       <Text style={[styles.statValue, { color: tokens.primary }]}>{value}</Text>
-      <Text style={styles.statLabel}>{t(labelKey)}</Text>
+      <Text style={[styles.statLabel, { color: tokens.text.secondary }]}>{t(labelKey)}</Text>
     </Animated.View>
   );
 };
@@ -563,17 +567,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  /* My bookings shortcut */
-  myBookingsBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    backgroundColor: colors.white, marginHorizontal: spacing.lg,
-    marginBottom: spacing.md, borderRadius: 14, padding: spacing.md,
-    borderWidth: 1, borderColor: colors.border,
-  },
-  myBookingsBtnText: {
-    flex: 1, fontSize: 14, fontWeight: '600', color: colors.dark,
-  },
-
   /* New categories grid */
   newCatGrid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingHorizontal: spacing.lg,
@@ -709,14 +702,14 @@ export const HomeScreen = ({ navigation }: any) => {
         />
 
         {/* Dots */}
-        <View style={styles.dotsRow}>
+        <View style={[styles.dotsRow, { backgroundColor: tokens.card }]}>
           {HERO_SLIDES.map((_, i) => (
             <PulsingDot key={i} active={i === activeSlide} />
           ))}
         </View>
 
         {/* ── Stats strip ── */}
-        <Animated.View entering={SlideInLeft.springify()} style={styles.statsStrip}>
+        <Animated.View entering={SlideInLeft.springify()} style={[styles.statsStrip, { backgroundColor: tokens.card, borderBottomColor: tokens.border }]}>
           {STATS.map((s, i) => (
             <StatBadge key={s.labelKey} value={s.value} labelKey={s.labelKey} t={t} index={i} />
           ))}
@@ -724,7 +717,7 @@ export const HomeScreen = ({ navigation }: any) => {
 
         {/* ── Services marquee ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('home.services')}</Text>
+          <Text style={[styles.sectionTitle, { color: tokens.text.primary }]}>{t('home.services')}</Text>
           <MarqueeRow
             items={ROW1_LOOP}
             copyWidth={ROW1_COPY_WIDTH}
@@ -745,7 +738,7 @@ export const HomeScreen = ({ navigation }: any) => {
         {/* ── Nouvelles catégories depuis l'admin (dynamique) ── */}
         {newCategories.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('home.new_services')}</Text>
+            <Text style={[styles.sectionTitle, { color: tokens.text.primary }]}>{t('home.new_services')}</Text>
             <View style={styles.newCatGrid}>
               {newCategories.map((cat: any) => {
                 const name = i18n.language === 'ar' ? cat.nameAr
@@ -754,12 +747,12 @@ export const HomeScreen = ({ navigation }: any) => {
                 return (
                   <TouchableOpacity
                     key={cat.slug}
-                    style={styles.newCatCard}
+                    style={[styles.newCatCard, { backgroundColor: tokens.card, borderColor: tokens.border }]}
                     onPress={() => handleServicePress(cat.slug)}
                     activeOpacity={0.8}
                   >
                     <Text style={styles.newCatIcon}>{cat.icon}</Text>
-                    <Text style={styles.newCatLabel} numberOfLines={2}>{name}</Text>
+                    <Text style={[styles.newCatLabel, { color: tokens.text.primary }]} numberOfLines={2}>{name}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -767,20 +760,9 @@ export const HomeScreen = ({ navigation }: any) => {
           </View>
         )}
 
-        {/* ── My bookings shortcut ── */}
-        <TouchableOpacity
-          style={styles.myBookingsBtn}
-          onPress={() => navigation.navigate('MyBookings')}
-          activeOpacity={0.85}
-        >
-          <Icon name="calendar-check" size={20} color={tokens.primary} />
-          <Text style={styles.myBookingsBtnText}>{t('booking.my_bookings')}</Text>
-          <Icon name="chevron-right" size={20} color={colors.gray} />
-        </TouchableOpacity>
-
         {/* ── Features ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('home.why_checkallat')}</Text>
+          <Text style={[styles.sectionTitle, { color: tokens.text.primary }]}>{t('home.why_checkallat')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.featuresScroll}>
             {FEATURES.map((item, index) => (
               <FeatureCard key={item.titleKey} item={item} t={t} index={index} />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -24,9 +24,34 @@ const STATUS_BADGE: Record<string, { color: string; bg: string; icon: string }> 
 
 export const ProDemandesScreen = () => {
   const { t, i18n } = useTranslation();
-    const { tokens } = useAppTheme();
-const navigation = useNavigation<any>();
+  const { tokens } = useAppTheme();
+  const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    content: { padding: spacing.md, paddingBottom: spacing.xxl },
+    centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+    emptyText: { color: tokens.text.secondary, fontSize: 14, textAlign: 'center' },
+    sectionHeader: {
+      fontSize: 11, fontWeight: '700', color: tokens.text.secondary,
+      textTransform: 'uppercase', letterSpacing: 0.5,
+      marginTop: spacing.md, marginBottom: spacing.sm, paddingHorizontal: 2,
+    },
+    card: {
+      backgroundColor: tokens.card, borderRadius: 14,
+      padding: spacing.md, marginBottom: spacing.sm,
+      borderWidth: 1, borderColor: tokens.border,
+    },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
+    badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
+    badgeText: { fontSize: 11, fontWeight: '700' },
+    cardDate: { fontSize: 11, color: tokens.text.secondary },
+    cardTitle: { fontSize: 15, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.xs },
+    cardRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+    cardMeta: { fontSize: 13, color: tokens.text.secondary, flex: 1 },
+    chevron: { position: 'absolute', right: spacing.md, top: '50%' },
+  }), [tokens]);
 
   const { data = [], isLoading, refetch } = useGetProDemandesQuery(undefined, {
     pollingInterval: 8000,
@@ -76,18 +101,18 @@ const navigation = useNavigation<any>();
         <Text style={styles.cardTitle}>{catName}</Text>
 
         <View style={styles.cardRow}>
-          <Icon name="account" size={15} color={colors.gray} />
+          <Icon name="account" size={15} color={tokens.text.secondary} />
           <Text style={styles.cardMeta}>{clientName}</Text>
         </View>
 
         {item.address ? (
           <View style={styles.cardRow}>
-            <Icon name="map-marker-outline" size={15} color={colors.gray} />
+            <Icon name="map-marker-outline" size={15} color={tokens.text.secondary} />
             <Text style={styles.cardMeta} numberOfLines={1}>{item.address}</Text>
           </View>
         ) : null}
 
-        <Icon name="chevron-right" size={20} color={colors.border} style={styles.chevron} />
+        <Icon name="chevron-right" size={20} color={tokens.border} style={styles.chevron} />
       </TouchableOpacity>
     );
   };
@@ -103,7 +128,7 @@ const navigation = useNavigation<any>();
   if (items.length === 0) {
     return (
       <View style={styles.centered}>
-        <Icon name="inbox-outline" size={48} color={colors.border} />
+        <Icon name="inbox-outline" size={48} color={tokens.border} />
         <Text style={styles.emptyText}>{t('pro_space.no_demandes')}</Text>
       </View>
     );
@@ -129,29 +154,3 @@ const navigation = useNavigation<any>();
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.md, paddingBottom: spacing.xxl },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-  emptyText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
-
-  sectionHeader: {
-    fontSize: 11, fontWeight: '700', color: colors.gray,
-    textTransform: 'uppercase', letterSpacing: 0.5,
-    marginTop: spacing.md, marginBottom: spacing.sm, paddingHorizontal: 2,
-  },
-
-  card: {
-    backgroundColor: colors.white, borderRadius: 14,
-    padding: spacing.md, marginBottom: spacing.sm,
-    borderWidth: 1, borderColor: colors.border,
-  },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-  cardDate: { fontSize: 11, color: colors.gray },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: colors.dark, marginBottom: spacing.xs },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
-  cardMeta: { fontSize: 13, color: colors.gray, flex: 1 },
-  chevron: { position: 'absolute', right: spacing.md, top: '50%' },
-});

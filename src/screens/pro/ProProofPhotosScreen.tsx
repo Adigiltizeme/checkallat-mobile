@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Button, TextInput } from 'react-native-paper';
+import { Text, TextInput } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -29,6 +30,25 @@ export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
   const [markStarted] = useMarkStartedMutation();
   const [confirmCompletion] = useConfirmBookingCompletionMutation();
   const token = useSelector((state: RootState) => state.auth.token);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    content: { padding: spacing.md, paddingBottom: spacing.xxl },
+    title: { fontWeight: 'bold', marginBottom: spacing.xs },
+    subtitle: { color: tokens.text.secondary, marginBottom: spacing.md },
+    hint: { color: tokens.text.secondary, fontStyle: 'italic', marginTop: spacing.md },
+    cashSection: {
+      marginTop: spacing.lg, padding: spacing.md,
+      backgroundColor: '#FFF9C4', borderRadius: 10, borderWidth: 1, borderColor: '#F59E0B40',
+    },
+    cashLabel: { color: '#92400E', fontWeight: '600' },
+    bottomActions: {
+      flexDirection: 'row', padding: spacing.md, gap: spacing.sm,
+      backgroundColor: tokens.card, borderTopWidth: 1, borderTopColor: tokens.border, elevation: 4,
+    },
+    cancelButton: { flex: 1 },
+    submitButton: { flex: 2 },
+  }), [tokens]);
 
   const showCashField = isCash && nextAction === 'complete';
 
@@ -124,9 +144,9 @@ export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
               onChangeText={setCashAmountInput}
               keyboardType="numeric"
               placeholder="0.00"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
-              style={{ backgroundColor: colors.white, marginTop: spacing.xs }}
+              style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.xs }}
               right={<TextInput.Affix text="EGP" />}
             />
           </View>
@@ -134,76 +154,24 @@ export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
       </ScrollView>
 
       <View style={styles.bottomActions}>
-        <Button
-          mode="outlined"
+        <ChocolateButton
+          variant="outline"
           onPress={() => navigation.goBack()}
           disabled={uploading}
           style={styles.cancelButton}
         >
           {t('common.cancel')}
-        </Button>
-        <Button
-          mode="contained"
+        </ChocolateButton>
+        <ChocolateButton
           onPress={handleConfirm}
           loading={uploading}
           disabled={uploading || photos.length === 0}
-          buttonColor={tokens.primary}
           style={styles.submitButton}
         >
           {uploading ? uploadProgress : t('driver.confirm_photos_and_continue')}
-        </Button>
+        </ChocolateButton>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    color: colors.gray,
-    marginBottom: spacing.md,
-  },
-  hint: {
-    color: colors.gray,
-    fontStyle: 'italic',
-    marginTop: spacing.md,
-  },
-  cashSection: {
-    marginTop: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: '#FFF9C4',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#F59E0B40',
-  },
-  cashLabel: {
-    color: '#92400E',
-    fontWeight: '600',
-  },
-  bottomActions: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    gap: spacing.sm,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    elevation: 4,
-  },
-  cancelButton: {
-    flex: 1,
-  },
-  submitButton: {
-    flex: 2,
-  },
-});

@@ -34,35 +34,35 @@ export const ProAgendaScreen = () => {
     const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.md, paddingBottom: spacing.xxl },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-  emptyText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
+  emptyText: { color: tokens.text.secondary, fontSize: 14, textAlign: 'center' },
 
   card: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: colors.white, borderRadius: 14,
+    backgroundColor: tokens.card, borderRadius: 14,
     padding: spacing.md, marginBottom: spacing.sm,
-    borderWidth: 1, borderColor: colors.border, gap: spacing.sm,
+    borderWidth: 1, borderColor: tokens.border, gap: spacing.sm,
   },
   cardToday: { borderColor: tokens.primary, borderWidth: 1.5 },
 
   dateStripe: {
     width: 48, alignItems: 'center', justifyContent: 'center',
-    paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: colors.border,
+    paddingRight: spacing.sm, borderRightWidth: 1, borderRightColor: tokens.border,
   },
-  dateDay: { fontSize: 10, fontWeight: '700', color: colors.gray, letterSpacing: 0.5 },
-  dateDayNum: { fontSize: 22, fontWeight: '800', color: colors.dark, lineHeight: 26 },
+  dateDay: { fontSize: 10, fontWeight: '700', color: tokens.text.secondary, letterSpacing: 0.5 },
+  dateDayNum: { fontSize: 22, fontWeight: '800', color: tokens.text.primary, lineHeight: 26 },
   dateTime: { fontSize: 10, color: tokens.primary, fontWeight: '600' },
-  dateTbd: { fontSize: 11, color: colors.gray, fontWeight: '600' },
+  dateTbd: { fontSize: 11, color: tokens.text.secondary, fontWeight: '600' },
 
   cardBody: { flex: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: colors.dark, flex: 1, marginRight: 6 },
+  cardTitle: { fontSize: 14, fontWeight: '700', color: tokens.text.primary, flex: 1, marginRight: 6 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 20, paddingHorizontal: 7, paddingVertical: 2 },
   badgeText: { fontSize: 10, fontWeight: '700' },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 2 },
-  cardMeta: { fontSize: 12, color: colors.gray, flex: 1 },
+  cardMeta: { fontSize: 12, color: tokens.text.secondary, flex: 1 },
   }), [tokens]);
 const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
@@ -129,19 +129,19 @@ const navigation = useNavigation<any>();
           </View>
 
           <View style={styles.cardRow}>
-            <Icon name="account" size={14} color={colors.gray} />
+            <Icon name="account" size={14} color={tokens.text.secondary} />
             <Text style={styles.cardMeta}>{clientName}</Text>
           </View>
 
           {item.address ? (
             <View style={styles.cardRow}>
-              <Icon name="map-marker-outline" size={14} color={colors.gray} />
+              <Icon name="map-marker-outline" size={14} color={tokens.text.secondary} />
               <Text style={styles.cardMeta} numberOfLines={1}>{item.address}</Text>
             </View>
           ) : null}
         </View>
 
-        <Icon name="chevron-right" size={18} color={colors.border} />
+        <Icon name="chevron-right" size={18} color={tokens.border} />
       </TouchableOpacity>
     );
   };
@@ -157,7 +157,7 @@ const navigation = useNavigation<any>();
   if (items.length === 0) {
     return (
       <View style={styles.centered}>
-        <Icon name="calendar-blank-outline" size={48} color={colors.border} />
+        <Icon name="calendar-blank-outline" size={48} color={tokens.border} />
         <Text style={styles.emptyText}>{t('pro_space.no_agenda')}</Text>
       </View>
     );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -14,6 +14,7 @@ import { ProfileStackParamList } from '../../navigation/types';
 import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/ThemeProvider';
 
 type Props = StackScreenProps<ProfileStackParamList, 'AddActivity'>;
 
@@ -55,8 +56,43 @@ const STATUS_BADGE: Record<string, { label: string; color: string; bg: string; i
 };
 
 export const AddActivityScreen = ({ navigation }: Props) => {
+  const { tokens } = useAppTheme();
   const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    pageTitle: { fontSize: 20, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.xs },
+    pageSubtitle: { fontSize: 14, color: tokens.text.secondary, lineHeight: 22, marginBottom: spacing.lg },
+    activityCard: {
+      flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+      backgroundColor: tokens.card, borderRadius: 16, padding: spacing.md,
+      marginBottom: spacing.md, borderWidth: 1.5, borderColor: tokens.border,
+    },
+    activityCardActive: { borderColor: '#10B981', backgroundColor: '#10B98108' },
+    activityIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+    activityTitle: { fontSize: 15, fontWeight: '700', color: tokens.text.primary, marginBottom: 2 },
+    activityDesc: { fontSize: 13, color: tokens.text.secondary, lineHeight: 18 },
+    statusBadge: {
+      flexDirection: 'row', alignItems: 'center', gap: 4,
+      borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3,
+      alignSelf: 'flex-start', marginTop: spacing.xs,
+    },
+    statusText: { fontSize: 11, fontWeight: '700' },
+    addMoreText: { fontSize: 12, fontWeight: '600', marginTop: 4 },
+    comingSoonBadge: {
+      backgroundColor: tokens.border + '80', borderRadius: 8,
+      paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start', marginTop: spacing.xs,
+    },
+    comingSoonText: { fontSize: 11, color: tokens.text.secondary, fontWeight: '600' },
+    infoBox: {
+      flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
+      backgroundColor: tokens.card, borderRadius: 12, padding: spacing.md,
+      marginTop: spacing.sm, borderWidth: 1, borderColor: tokens.border,
+    },
+    infoText: { flex: 1, fontSize: 12, color: tokens.text.secondary, lineHeight: 18 },
+  }), [tokens]);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -120,7 +156,7 @@ export const AddActivityScreen = ({ navigation }: Props) => {
               <Icon
                 name={isActive && canNavigateWhenActive ? 'plus-circle-outline' : 'chevron-right'}
                 size={22}
-                color={isActive ? activity.color : colors.border}
+                color={isActive ? activity.color : tokens.border}
               />
             )}
             {isActive && !canNavigateWhenActive && (
@@ -131,54 +167,10 @@ export const AddActivityScreen = ({ navigation }: Props) => {
       })}
 
       <View style={styles.infoBox}>
-        <Icon name="information-outline" size={16} color={colors.gray} />
+        <Icon name="information-outline" size={16} color={tokens.text.secondary} />
         <Text style={styles.infoText}>{t('activity.info_note')}</Text>
       </View>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-
-  pageTitle: { fontSize: 20, fontWeight: '700', color: colors.dark, marginBottom: spacing.xs },
-  pageSubtitle: { fontSize: 14, color: colors.gray, lineHeight: 22, marginBottom: spacing.lg },
-
-  activityCard: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
-    backgroundColor: colors.white, borderRadius: 16, padding: spacing.md,
-    marginBottom: spacing.md, borderWidth: 1.5, borderColor: colors.border,
-  },
-  activityCardActive: { borderColor: '#10B981', backgroundColor: '#10B98108' },
-  activityIcon: {
-    width: 56, height: 56, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  activityTitle: { fontSize: 15, fontWeight: '700', color: colors.dark, marginBottom: 2 },
-  activityDesc: { fontSize: 13, color: colors.gray, lineHeight: 18 },
-
-  statusBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3,
-    alignSelf: 'flex-start', marginTop: spacing.xs,
-  },
-  statusText: { fontSize: 11, fontWeight: '700' },
-
-  addMoreText: {
-    fontSize: 12, fontWeight: '600', marginTop: 4,
-  },
-
-  comingSoonBadge: {
-    backgroundColor: colors.border + '80', borderRadius: 8,
-    paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start', marginTop: spacing.xs,
-  },
-  comingSoonText: { fontSize: 11, color: colors.gray, fontWeight: '600' },
-
-  infoBox: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.md,
-    marginTop: spacing.sm, borderWidth: 1, borderColor: colors.border,
-  },
-  infoText: { flex: 1, fontSize: 12, color: colors.gray, lineHeight: 18 },
-});

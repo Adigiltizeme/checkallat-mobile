@@ -40,7 +40,7 @@ export const LanguagePickerModal = ({ visible, onDismiss }: Props) => {
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.modal,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: spacing.xl,
@@ -48,12 +48,12 @@ export const LanguagePickerModal = ({ visible, onDismiss }: Props) => {
   },
   title: {
     fontWeight: 'bold',
-    color: colors.dark,
+    color: tokens.text.primary,
     textAlign: 'center',
     marginBottom: 4,
   },
   subtitle: {
-    color: '#6B7280',
+    color: tokens.text.secondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
@@ -67,7 +67,7 @@ export const LanguagePickerModal = ({ visible, onDismiss }: Props) => {
     padding: 14,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+    borderColor: tokens.border,
     gap: 12,
   },
   langRowActive: {
@@ -80,7 +80,7 @@ export const LanguagePickerModal = ({ visible, onDismiss }: Props) => {
   langLabel: {
     flex: 1,
     fontSize: 16,
-    color: colors.dark,
+    color: tokens.text.primary,
   },
   langLabelActive: {
     fontWeight: '600',

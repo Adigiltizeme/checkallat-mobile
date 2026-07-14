@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, Card, HelperText } from 'react-native-paper';
+import { Text, TextInput, Card, HelperText } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { TransportStackParamList } from '../../navigation/types';
@@ -19,7 +20,7 @@ export const CashValidationScreen = ({ route, navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tokens.background,
   },
   card: {
     margin: 16,
@@ -30,19 +31,19 @@ export const CashValidationScreen = ({ route, navigation }: Props) => {
     textAlign: 'center',
   },
   subtitle: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: 24,
     textAlign: 'center',
   },
   priceInfo: {
-    backgroundColor: colors.lightGray,
+    backgroundColor: tokens.backgroundAlt,
     padding: 16,
     borderRadius: 8,
     marginBottom: 24,
     alignItems: 'center',
   },
   label: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: 4,
   },
   expectedPrice: {
@@ -53,13 +54,13 @@ export const CashValidationScreen = ({ route, navigation }: Props) => {
     marginBottom: 16,
   },
   infoBox: {
-    backgroundColor: colors.lightBlue,
+    backgroundColor: tokens.backgroundAlt,
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
   },
   infoText: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     lineHeight: 20,
   },
   actions: {
@@ -175,25 +176,23 @@ export const CashValidationScreen = ({ route, navigation }: Props) => {
       </Card>
 
       <View style={styles.actions}>
-        <Button
-          mode="contained"
+        <ChocolateButton
           onPress={handleValidate}
           loading={isLoading}
           disabled={isLoading || !amount}
           style={styles.button}
-          icon="check-circle"
         >
           {t('cash_validation.validate_btn')}
-        </Button>
+        </ChocolateButton>
 
-        <Button
-          mode="outlined"
+        <ChocolateButton
+          variant="outline"
           onPress={() => navigation.goBack()}
           disabled={isLoading}
           style={styles.button}
         >
           {t('common.cancel')}
-        </Button>
+        </ChocolateButton>
       </View>
     </ScrollView>
   );

@@ -7,7 +7,8 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { ChocolateButton } from './ChocolateButton';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { colors } from '../../theme/colors';
@@ -103,9 +104,7 @@ export const UnsupportedCountryModal = ({
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  dismissButton: {
-    borderRadius: 8,
-  },
+  dismissButton: {},
   }), [tokens]);
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -169,13 +168,13 @@ export const UnsupportedCountryModal = ({
 
         {/* Bouton retour */}
         <View style={styles.footer}>
-          <Button
-            mode="outlined"
+          <ChocolateButton
+            variant="outline"
             onPress={onDismiss}
             style={styles.dismissButton}
           >
             {t('common.cancel')}
-          </Button>
+          </ChocolateButton>
         </View>
       </SafeAreaView>
     </Modal>

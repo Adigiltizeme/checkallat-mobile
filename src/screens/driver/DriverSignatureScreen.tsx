@@ -1,20 +1,55 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import SignatureCanvas from 'react-native-signature-canvas';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useAppTheme } from '../../theme/ThemeProvider';
 import { DriverStackParamList } from '../../navigation/types';
 import { useSaveSignatureMutation } from '../../store/api/transportApi';
 
 type Props = StackScreenProps<DriverStackParamList, 'DriverSignature'>;
 
 export const DriverSignatureScreen = ({ navigation, route }: Props) => {
+  const { tokens } = useAppTheme();
   const { requestId } = route.params;
   const [signature, setSignature] = useState<string | null>(null);
   const [saveSignature, { isLoading }] = useSaveSignatureMutation();
   const signatureRef = useRef<any>(null);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    header: {
+      padding: spacing.md,
+      backgroundColor: tokens.card,
+      borderBottomWidth: 1,
+      borderBottomColor: tokens.border,
+    },
+    title: { fontWeight: 'bold', marginBottom: spacing.xs },
+    subtitle: { color: tokens.text.secondary },
+    signatureContainer: {
+      flex: 1,
+      margin: spacing.md,
+      backgroundColor: tokens.card,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderStyle: 'dashed',
+      borderColor: tokens.border,
+      overflow: 'hidden',
+    },
+    actionsContainer: {
+      flexDirection: 'row',
+      padding: spacing.md,
+      gap: spacing.sm,
+      backgroundColor: tokens.card,
+      borderTopWidth: 1,
+      borderTopColor: tokens.border,
+    },
+    clearButton: { flex: 1 },
+    submitButton: { flex: 2 },
+  }), [tokens]);
 
   const handleSignature = (sig: string) => {
     setSignature(sig);
@@ -79,76 +114,30 @@ export const DriverSignatureScreen = ({ navigation, route }: Props) => {
           clearText="Effacer"
           confirmText="Confirmer"
           webStyle={style}
-          backgroundColor={colors.white}
-          penColor={colors.text.primary}
+          backgroundColor={tokens.card}
+          penColor={tokens.text.primary}
         />
       </View>
 
       <View style={styles.actionsContainer}>
-        <Button
-          mode="outlined"
+        <ChocolateButton
+          variant="outline"
           onPress={handleClear}
           disabled={isLoading}
           style={styles.clearButton}
-          icon="eraser"
         >
           Effacer
-        </Button>
-        <Button
-          mode="contained"
+        </ChocolateButton>
+        <ChocolateButton
           onPress={handleSubmit}
           loading={isLoading}
           disabled={isLoading || !signature}
           style={styles.submitButton}
-          icon="check"
         >
           Enregistrer
-        </Button>
+        </ChocolateButton>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    padding: spacing.md,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    color: colors.gray,
-  },
-  signatureContainer: {
-    flex: 1,
-    margin: spacing.md,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    gap: spacing.sm,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  clearButton: {
-    flex: 1,
-  },
-  submitButton: {
-    flex: 2,
-  },
-});

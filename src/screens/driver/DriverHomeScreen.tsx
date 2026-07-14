@@ -46,10 +46,10 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: tokens.background },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   availabilityCard: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     padding: spacing.md,
     margin: spacing.md,
     borderRadius: 12,
@@ -57,13 +57,13 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   },
   availabilityContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   availabilityTitle: { fontWeight: 'bold', marginBottom: spacing.xs },
-  availabilitySubtitle: { color: colors.gray },
+  availabilitySubtitle: { color: tokens.text.secondary },
   statsContainer: { flexDirection: 'row', paddingHorizontal: spacing.md, marginBottom: spacing.md, gap: spacing.sm },
-  statCard: { flex: 1, backgroundColor: colors.white, padding: spacing.md, borderRadius: 12, alignItems: 'center', elevation: 2 },
+  statCard: { flex: 1, backgroundColor: tokens.card, padding: spacing.md, borderRadius: 12, alignItems: 'center', elevation: 2 },
   statNumber: { fontWeight: 'bold', color: tokens.primary },
-  statLabel: { color: colors.gray, marginTop: spacing.xs },
+  statLabel: { color: tokens.text.secondary, marginTop: spacing.xs },
   collapsibleCard: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
@@ -77,10 +77,10 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+  chevron: { fontSize: 12, color: tokens.text.secondary },
   filtersContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     marginHorizontal: spacing.md,
     marginBottom: spacing.md,
@@ -95,30 +95,30 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
     marginTop: spacing.xs,
     marginBottom: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 10,
-    backgroundColor: colors.lightGray,
+    backgroundColor: tokens.backgroundAlt,
     paddingHorizontal: spacing.sm,
   },
-  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
+  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: tokens.text.primary },
   searchClear: { padding: spacing.xs },
   tabsRow: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
-  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: colors.lightGray, marginRight: spacing.xs },
+  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: tokens.backgroundAlt, marginRight: spacing.xs },
   tabActive: { backgroundColor: tokens.primary },
-  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  tabText: { fontSize: 13, color: tokens.text.secondary, fontWeight: '500' },
   tabTextActive: { color: colors.white, fontWeight: '600' },
   dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.lightGray },
+  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: tokens.border, backgroundColor: tokens.backgroundAlt },
   dateModeBtnActive: { backgroundColor: `${tokens.primary}20`, borderColor: tokens.primary },
-  dateModeBtnText: { fontSize: 12, color: colors.gray },
+  dateModeBtnText: { fontSize: 12, color: tokens.text.secondary },
   dateModeBtnTextActive: { color: tokens.primary, fontWeight: '600' },
   dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateLabel: { fontSize: 13, color: colors.gray },
-  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: colors.lightGray },
-  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
-  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingTop: spacing.xs },
+  dateLabel: { fontSize: 13, color: tokens.text.secondary },
+  dateInput: { flex: 1, borderWidth: 1, borderColor: tokens.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: tokens.text.primary, backgroundColor: tokens.backgroundAlt },
+  clearBtn: { fontSize: 16, color: tokens.text.secondary, paddingHorizontal: spacing.xs },
+  countText: { fontSize: 12, color: tokens.text.secondary, paddingHorizontal: spacing.md, paddingTop: spacing.xs },
   listContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl * 2 },
-  deliveryCard: { marginBottom: spacing.md, backgroundColor: colors.white, elevation: 2 },
+  deliveryCard: { marginBottom: spacing.md, backgroundColor: tokens.card, elevation: 2 },
   activeCard: { borderLeftWidth: 4, borderLeftColor: tokens.primary },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   deliveryTitle: { fontWeight: 'bold' },
@@ -126,18 +126,18 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   locationSection: { marginBottom: spacing.md },
   locationRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   locationText: { flex: 1 },
-  locationLabel: { color: colors.gray, marginBottom: 2 },
-  routeLine: { width: 2, height: 20, backgroundColor: colors.border, marginLeft: 9, marginVertical: spacing.xs },
+  locationLabel: { color: tokens.text.secondary, marginBottom: 2 },
+  routeLine: { width: 2, height: 20, backgroundColor: tokens.border, marginLeft: 9, marginVertical: spacing.xs },
   infoRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
   infoItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  infoText: { color: colors.gray },
+  infoText: { color: tokens.text.secondary },
   clientRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginBottom: spacing.sm },
-  clientText: { fontSize: 13, color: colors.gray, flex: 1 },
+  clientText: { fontSize: 13, color: tokens.text.secondary, flex: 1 },
   actionButton: { backgroundColor: tokens.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.sm, borderRadius: 8, gap: spacing.xs, marginTop: spacing.sm },
   actionButtonText: { color: colors.white, fontWeight: 'bold' },
   emptyContainer: { alignItems: 'center', paddingTop: spacing.xl * 2, paddingHorizontal: spacing.xl },
   emptyText: { marginTop: spacing.md, fontWeight: 'bold' },
-  emptySubtext: { marginTop: spacing.xs, color: colors.gray, textAlign: 'center' },
+  emptySubtext: { marginTop: spacing.xs, color: tokens.text.secondary, textAlign: 'center' },
   fab: { position: 'absolute', bottom: spacing.md, right: spacing.md, backgroundColor: colors.success },
 
   availableBanner: {
@@ -349,11 +349,11 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
 
             <View style={styles.infoRow}>
               <View style={styles.infoItem}>
-                <Icon name="calendar" size={16} color={colors.gray} />
+                <Icon name="calendar" size={16} color={tokens.text.secondary} />
                 <Text variant="bodySmall" style={styles.infoText}>{formatDate(item.scheduledDate)}</Text>
               </View>
               <View style={styles.infoItem}>
-                <Icon name="cash" size={16} color={colors.gray} />
+                <Icon name="cash" size={16} color={tokens.text.secondary} />
                 <Text variant="bodySmall" style={styles.infoText}>
                   {(item as any).payment?.proNetAmount
                     ? formatCurrency((item as any).payment.proNetAmount)
@@ -402,7 +402,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
           <Switch
             value={isAvailable}
             onValueChange={toggleAvailability}
-            trackColor={{ false: colors.gray, true: tokens.primary }}
+            trackColor={{ false: tokens.border, true: tokens.primary }}
             thumbColor={colors.white}
           />
         </View>
@@ -473,7 +473,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
                 value={search}
                 onChangeText={setSearch}
                 placeholder={t('driver.search_placeholder')}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
                 returnKeyType="search"
               />
               {!!search && (
@@ -522,7 +522,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
                   value={dateSingle}
                   onChangeText={setDateSingle}
                   placeholder="AAAA-MM-JJ"
-                  placeholderTextColor={colors.gray}
+                  placeholderTextColor={tokens.text.secondary}
                   keyboardType="numeric"
                   maxLength={10}
                 />
@@ -534,7 +534,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
                     value={dateStart}
                     onChangeText={setDateStart}
                     placeholder={t('common.date_placeholder')}
-                    placeholderTextColor={colors.gray}
+                    placeholderTextColor={tokens.text.secondary}
                     keyboardType="numeric"
                     maxLength={10}
                   />
@@ -544,7 +544,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
                     value={dateEnd}
                     onChangeText={setDateEnd}
                     placeholder={t('common.date_placeholder')}
-                    placeholderTextColor={colors.gray}
+                    placeholderTextColor={tokens.text.secondary}
                     keyboardType="numeric"
                     maxLength={10}
                   />
@@ -581,7 +581,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="truck-fast-outline" size={80} color={colors.gray} />
+            <Icon name="truck-fast-outline" size={80} color={tokens.text.secondary} />
             <Text variant="titleMedium" style={styles.emptyText}>{t('driver.no_deliveries')}</Text>
             <Text variant="bodyMedium" style={styles.emptySubtext}>
               {t('driver.no_deliveries_hint')}

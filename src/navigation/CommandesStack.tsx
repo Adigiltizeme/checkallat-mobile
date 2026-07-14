@@ -11,6 +11,8 @@ import { BookingChatScreen } from '../screens/services/BookingChatScreen';
 import { BookingDisputeScreen } from '../screens/services/BookingDisputeScreen';
 import { TransportDetailsScreen } from '../screens/transport/TransportDetailsScreen';
 import { TransportTrackingScreen } from '../screens/transport/TransportTrackingScreen';
+import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
+import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
 
 import { BookingStep1Data, BookingStep2Data, BookingStep3Data, BookingStep4Data } from '../types/booking';
 
@@ -22,6 +24,8 @@ export type CommandesStackParamList = {
   BookingDispute: { bookingId: string };
   TransportDetails: { requestId: string };
   TransportTracking: { requestId: string };
+  TransportCompletion: { requestId: string };
+  CashValidation: { requestId: string; totalPrice: number };
 };
 
 const Stack = createStackNavigator<CommandesStackParamList>();
@@ -67,6 +71,16 @@ export const CommandesStack = () => {
         name="TransportTracking"
         component={TransportTrackingScreen}
         options={{ title: t('transport.tracking_title'), headerShown: false }}
+      />
+      <Stack.Screen
+        name="TransportCompletion"
+        component={TransportCompletionScreen}
+        options={{ title: t('transport.completion_title') }}
+      />
+      <Stack.Screen
+        name="CashValidation"
+        component={CashValidationScreen}
+        options={{ title: t('transport.cash_validation_title') }}
       />
     </Stack.Navigator>
   );

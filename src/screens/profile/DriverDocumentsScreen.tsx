@@ -27,19 +27,19 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   label: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: spacing.sm,
     marginTop: spacing.md,
   },
   hint: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: spacing.sm,
     lineHeight: 18,
   },
@@ -51,7 +51,7 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
     marginTop: spacing.sm,
   },
   existingLabel: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: spacing.xs,
   },
   existingRow: {
@@ -62,13 +62,13 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
     height: 60,
     borderRadius: 6,
     marginRight: spacing.sm,
-    backgroundColor: colors.border,
+    backgroundColor: tokens.backgroundAlt,
   },
   licenseThumb: {
     width: '100%',
     height: 140,
     borderRadius: 8,
-    backgroundColor: colors.border,
+    backgroundColor: tokens.backgroundAlt,
     marginTop: spacing.xs,
   },
   uploadingContainer: {
@@ -78,7 +78,7 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
   },
   uploadingText: {
     marginTop: spacing.sm,
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontSize: 14,
   },
   saveBtn: {

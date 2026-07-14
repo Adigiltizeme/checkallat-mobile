@@ -4,7 +4,7 @@ import { API_CONFIG, createBaseQuery } from '../../config/api';
 export const prosApi = createApi({
   reducerPath: 'prosApi',
   baseQuery: createBaseQuery(`${API_CONFIG.BASE_URL}/pros`),
-  tagTypes: ['Pro'],
+  tagTypes: ['Pro', 'ProStats'],
   endpoints: (builder) => ({
     searchPros: builder.query({
       query: (params: {
@@ -77,6 +77,21 @@ export const prosApi = createApi({
      */
     getProStats: builder.query({
       query: (id: string) => `/${id}/stats`,
+      providesTags: ['ProStats'],
+    }),
+
+    /**
+     * Pro paye sa commission cash en attente via Stripe in-app
+     */
+    payProCommission: builder.mutation<
+      { clientSecret: string; paymentIntentId: string; amount: number },
+      void
+    >({
+      query: () => ({
+        url: '/pay-commission',
+        method: 'POST',
+      }),
+      invalidatesTags: ['ProStats'],
     }),
 
     /**
@@ -101,4 +116,5 @@ export const {
   useValidateProProfileMutation,
   useGetProStatsQuery,
   useUpdateProAvailabilityMutation,
+  usePayProCommissionMutation,
 } = prosApi;

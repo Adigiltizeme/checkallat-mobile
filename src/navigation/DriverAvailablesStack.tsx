@@ -12,6 +12,7 @@ import { DriverProofPhotosScreen } from '../screens/driver/DriverProofPhotosScre
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
 import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
 import { BookingChatScreen } from '../screens/services/BookingChatScreen';
+import { DisputeScreen } from '../screens/transport/DisputeScreen';
 
 export type DriverAvailablesStackParamList = {
   DriverAvailablesHome: undefined;
@@ -21,6 +22,7 @@ export type DriverAvailablesStackParamList = {
   DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string };
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number };
+  Dispute: { requestId: string };
   BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
 };
 
@@ -72,6 +74,11 @@ export const DriverAvailablesStack = () => {
         name="BookingChat"
         component={BookingChatScreen}
         options={({ route }) => ({ title: route.params.otherPartyName })}
+      />
+      <Stack.Screen
+        name="Dispute"
+        component={DisputeScreen}
+        options={{ title: t('dispute.title') }}
       />
     </Stack.Navigator>
   );

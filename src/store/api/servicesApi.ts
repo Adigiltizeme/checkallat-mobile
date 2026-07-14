@@ -11,10 +11,13 @@ export const servicesApi = createApi({
     /**
      * Récupérer toutes les catégories de services
      */
-    getCategories: builder.query<any[], { activeOnly?: boolean }>({
-      query: ({ activeOnly = true }) => ({
+    getCategories: builder.query<any[], { activeOnly?: boolean; countryCode?: string }>({
+      query: ({ activeOnly = true, countryCode }) => ({
         url: '/categories',
-        params: { activeOnly: activeOnly ? 'true' : 'false' },
+        params: {
+          activeOnly: activeOnly ? 'true' : 'false',
+          ...(countryCode ? { countryCode } : {}),
+        },
       }),
       providesTags: ['Category'],
     }),

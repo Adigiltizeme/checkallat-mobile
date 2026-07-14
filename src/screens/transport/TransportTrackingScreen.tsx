@@ -55,7 +55,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
     justifyContent: 'space-between',
   },
   fab: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 24,
     elevation: 6,
     shadowColor: '#000',
@@ -67,7 +67,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   bottomSheet: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     elevation: 12,
@@ -85,7 +85,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   handle: {
     width: 40, height: 4,
     borderRadius: 2,
-    backgroundColor: '#D1D5DB',
+    backgroundColor: tokens.border,
   },
   chevronIcon: { marginTop: 2 },
 
@@ -107,8 +107,8 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   },
   driverAvatar: { backgroundColor: tokens.primary },
   driverInfo: { flex: 1 },
-  driverName: { color: colors.dark, fontWeight: '600' },
-  driverDetails: { color: colors.gray, marginTop: 2 },
+  driverName: { color: tokens.text.primary, fontWeight: '600' },
+  driverDetails: { color: tokens.text.secondary, marginTop: 2 },
   trackingContactBtns: { flexDirection: 'row', gap: 8, marginLeft: 4 },
   trackingCallBtn: {
     width: 38, height: 38, borderRadius: 19,
@@ -127,7 +127,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
     backgroundColor: '#FFF3CD', borderRadius: 8,
     padding: spacing.sm, marginBottom: spacing.sm,
   },
-  infoText: { flex: 1, color: colors.dark, lineHeight: 18 },
+  infoText: { flex: 1, color: tokens.text.primary, lineHeight: 18 },
 
   locationInfo: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
@@ -138,13 +138,13 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   locationText: { color: colors.success, fontWeight: '500', fontSize: 12 },
 
   routeSection: {
-    borderTopWidth: 1, borderTopColor: colors.border,
+    borderTopWidth: 1, borderTopColor: tokens.border,
     paddingTop: spacing.sm,
   },
   routeItem: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginVertical: 2 },
   routeContent: { flex: 1 },
-  routeLabel: { color: colors.gray, fontSize: 10, textTransform: 'uppercase', fontWeight: '600' },
-  routeAddress: { color: colors.dark, fontSize: 13, marginTop: 1 },
+  routeLabel: { color: tokens.text.secondary, fontSize: 10, textTransform: 'uppercase', fontWeight: '600' },
+  routeAddress: { color: tokens.text.primary, fontSize: 13, marginTop: 1 },
   routeDivider: { paddingLeft: 6, marginVertical: 2 },
   }), [tokens]);
 
@@ -319,14 +319,14 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
         <IconButton
           icon="arrow-left"
           size={22}
-          iconColor={colors.dark}
+          iconColor={tokens.text.primary}
           style={styles.fab}
           onPress={() => navigation.goBack()}
         />
         <IconButton
           icon="share-variant"
           size={22}
-          iconColor={colors.dark}
+          iconColor={tokens.text.primary}
           style={styles.fab}
           onPress={handleShare}
         />
@@ -340,7 +340,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
           <Icon
             name={collapsed ? 'chevron-up' : 'chevron-down'}
             size={20}
-            color={colors.gray}
+            color={tokens.text.secondary}
             style={styles.chevronIcon}
           />
         </TouchableOpacity>
@@ -420,7 +420,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
                 </View>
               </View>
               <View style={styles.routeDivider}>
-                <Icon name="dots-vertical" size={16} color={colors.gray} />
+                <Icon name="dots-vertical" size={16} color={tokens.text.secondary} />
               </View>
               <View style={styles.routeItem}>
                 <Icon name="circle" size={14} color={colors.error} />

@@ -25,12 +25,14 @@ import { spacing } from '../../theme/spacing';
 const VEHICLE_TYPES = ['van', 'small_truck', 'large_truck'] as const;
 type VehicleType = typeof VEHICLE_TYPES[number];
 
-// ─── Styles module-level ─────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+// ─── Styles hook ─────────────────────────────────────────────────────────────
+function useDriverStyles() {
+  const { tokens } = useAppTheme();
+  return useMemo(() => StyleSheet.create({
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  label: { color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
-  hint: { color: colors.gray, marginBottom: spacing.sm, lineHeight: 18 },
+  label: { color: tokens.text.primary, marginBottom: spacing.sm, marginTop: spacing.md },
+  hint: { color: tokens.text.secondary, marginBottom: spacing.sm, lineHeight: 18 },
   errorHint: { color: colors.error, marginTop: 4 },
 
   // Status card
@@ -44,7 +46,7 @@ const styles = StyleSheet.create({
   statusTitle: { fontSize: 18, fontWeight: '700', marginBottom: spacing.sm },
   statusTitlePending: { color: '#92400e' },
   statusTitleRejected: { color: '#991b1b' },
-  statusDesc: { color: colors.gray, textAlign: 'center', lineHeight: 20 },
+  statusDesc: { color: tokens.text.secondary, textAlign: 'center', lineHeight: 20 },
 
   // Rejection reason card
   reasonCard: {
@@ -56,15 +58,15 @@ const styles = StyleSheet.create({
 
   // Docs card
   docsCard: {
-    backgroundColor: colors.white, borderRadius: 12, padding: spacing.lg,
+    backgroundColor: tokens.card, borderRadius: 12, padding: spacing.lg,
     marginBottom: spacing.lg, shadowColor: '#000', shadowOpacity: 0.05,
     shadowRadius: 4, elevation: 2,
   },
-  docsTitle: { color: colors.dark, marginBottom: spacing.md },
-  docsLabel: { color: colors.gray, marginTop: spacing.sm, marginBottom: 6 },
+  docsTitle: { color: tokens.text.primary, marginBottom: spacing.md },
+  docsLabel: { color: tokens.text.secondary, marginTop: spacing.sm, marginBottom: 6 },
   thumbRow: { flexDirection: 'row', marginBottom: spacing.sm },
-  thumb: { width: 72, height: 54, borderRadius: 6, marginRight: spacing.sm, backgroundColor: colors.border },
-  docThumb: { width: '100%', height: 120, borderRadius: 8, backgroundColor: colors.border, marginBottom: spacing.sm },
+  thumb: { width: 72, height: 54, borderRadius: 6, marginRight: spacing.sm, backgroundColor: tokens.border },
+  docThumb: { width: '100%', height: 120, borderRadius: 8, backgroundColor: tokens.border, marginBottom: spacing.sm },
 
   // Buttons
   editBtn: {
@@ -81,21 +83,23 @@ const styles = StyleSheet.create({
 
   // Form
   radioGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
-  radioBtn: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingVertical: 8, paddingHorizontal: spacing.md },
-  radioBtnText: { color: colors.gray, fontSize: 14 },
-  input: { backgroundColor: colors.white, marginBottom: spacing.sm },
+  radioBtn: { borderWidth: 1, borderColor: tokens.border, borderRadius: 8, paddingVertical: 8, paddingHorizontal: spacing.md },
+  radioBtnText: { color: tokens.text.secondary, fontSize: 14 },
+  input: { backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm },
   uploadingContainer: { alignItems: 'center', padding: spacing.md, marginVertical: spacing.md },
-  uploadingText: { marginTop: spacing.sm, color: colors.gray, fontSize: 14 },
+  uploadingText: { marginTop: spacing.sm, color: tokens.text.secondary, fontSize: 14 },
   submitBtn: { paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: spacing.xl },
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '600' },
-  footerNote: { textAlign: 'center', color: colors.gray, marginTop: spacing.md, fontStyle: 'italic', lineHeight: 18 },
-});
+  footerNote: { textAlign: 'center', color: tokens.text.secondary, marginTop: spacing.md, fontStyle: 'italic', lineHeight: 18 },
+  }), [tokens]);
+}
 
 // ─── Vue suivi candidature ───────────────────────────────────────────────────
 const ApplicationTracking = ({ navigation }: { navigation: any }) => {
   const { t } = useTranslation();
   const { tokens } = useAppTheme();
+  const styles = useDriverStyles();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
   const driver = user?.driver;
@@ -242,6 +246,7 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
 const ApplicationForm = ({ navigation }: { navigation: any }) => {
   const { t } = useTranslation();
   const { tokens } = useAppTheme();
+  const styles = useDriverStyles();
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.auth.token);
 
@@ -333,13 +338,13 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
         <Text variant="labelLarge" style={styles.label}>{t('profile.license_plate')} *</Text>
         <TextInput mode="outlined" value={vehiclePlate} onChangeText={setVehiclePlate}
           placeholder={t('profile.plate_placeholder')} autoCapitalize="characters"
-          outlineColor={colors.border} activeOutlineColor={tokens.primary} style={styles.input} />
+          outlineColor={tokens.border} activeOutlineColor={tokens.primary} style={styles.input} />
 
         {/* Capacité */}
         <Text variant="labelLarge" style={styles.label}>{t('driver_apply.vehicle_capacity')} *</Text>
         <TextInput mode="outlined" value={vehicleCapacity} onChangeText={setVehicleCapacity}
           keyboardType="decimal-pad" placeholder="Ex: 10" right={<TextInput.Affix text="m³" />}
-          outlineColor={colors.border} activeOutlineColor={tokens.primary} style={styles.input} />
+          outlineColor={tokens.border} activeOutlineColor={tokens.primary} style={styles.input} />
 
         {/* Photos véhicule */}
         <Text variant="labelLarge" style={styles.label}>{t('driver_apply.vehicle_photos_label')} *</Text>

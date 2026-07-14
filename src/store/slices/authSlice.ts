@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { secureStorage } from '../../utils/secureStorage';
 
 export const LANGUAGE_STORAGE_KEY = 'preferredLanguage';
 export const DEFAULT_ROLE_KEY = 'defaultRole';
@@ -85,8 +86,8 @@ const authSlice = createSlice({
         state.needsRoleSelection = true;
       }
 
-      AsyncStorage.setItem('accessToken', accessToken);
-      AsyncStorage.setItem('refreshToken', refreshToken);
+      secureStorage.setToken(accessToken);
+      secureStorage.setRefreshToken(refreshToken);
     },
 
     setActiveRole: (
@@ -159,8 +160,7 @@ const authSlice = createSlice({
       state.needsRoleSelection = false;
       // On garde defaultRole et language au logout
 
-      AsyncStorage.removeItem('accessToken');
-      AsyncStorage.removeItem('refreshToken');
+      secureStorage.clearTokens();
     },
 
     restoreAuth: (

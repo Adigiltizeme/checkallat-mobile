@@ -19,14 +19,14 @@ export const SubmitProposalScreen = ({ navigation }: any) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1, backgroundColor: tokens.background },
   scroll: { flex: 1 },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   header: { marginBottom: spacing.lg },
-  title: { color: colors.dark, fontWeight: '800', marginBottom: spacing.xs },
-  subtitle: { color: colors.gray },
+  title: { color: tokens.text.primary, fontWeight: '800', marginBottom: spacing.xs },
+  subtitle: { color: tokens.text.secondary },
   section: { gap: spacing.sm },
-  input: { backgroundColor: colors.white },
+  input: { backgroundColor: tokens.backgroundAlt },
   submitBtn: {
     marginTop: spacing.xl,
     backgroundColor: tokens.primary,

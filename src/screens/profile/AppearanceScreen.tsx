@@ -219,7 +219,7 @@ const ThemeTile = ({ data, active, onSelect, fullWidth = false }: TileProps) => 
           {/* Badge sélectionné */}
           {active && (
             <View style={[tileStyles.badge, { backgroundColor: tokens.secondary }]}>
-              <Text style={tileStyles.badgeText}>✓</Text>
+              <Text style={[tileStyles.badgeText, { color: tokens.text.primary }]}>✓</Text>
             </View>
           )}
         </View>
@@ -287,7 +287,7 @@ export const AppearanceScreen = () => {
     alignItems: 'center', justifyContent: 'center',
     zIndex: 2,
   },
-  badgeText: { color: colors.dark, fontSize: 12, fontWeight: '900' },
+  badgeText: { color: tokens.text.primary, fontSize: 12, fontWeight: '900' },
   infoBox: {
     marginTop: spacing.lg,
     padding: spacing.md,

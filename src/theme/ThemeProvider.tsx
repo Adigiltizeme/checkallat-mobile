@@ -168,7 +168,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
   const resolved: Exclude<AppThemeMode, 'system'> =
     mode === 'system'
-      ? systemScheme === 'dark' ? 'dark' : 'teal'
+      ? systemScheme === 'dark' ? 'dark' : 'comfort'
       : mode;
 
   // Met à jour colors.primary/secondary/etc. avant le rendu des enfants,

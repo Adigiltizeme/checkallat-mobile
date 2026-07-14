@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Button, Text, Card, IconButton } from 'react-native-paper';
+import { Text, Card, IconButton } from 'react-native-paper';
+import { StepNavButtons } from '../../components/shared/StepNavButtons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
@@ -59,28 +60,28 @@ export const TransportRequestStep4Screen = ({ route, navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  title: { color: colors.dark, marginBottom: spacing.lg },
-  label: { color: colors.dark, marginBottom: spacing.sm, marginTop: spacing.md },
+  title: { color: tokens.text.primary, marginBottom: spacing.lg },
+  label: { color: tokens.text.primary, marginBottom: spacing.sm, marginTop: spacing.md },
 
   // Mode selection
   modeRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
   modeCard: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     padding: spacing.md,
     alignItems: 'center',
     position: 'relative',
   },
   modeCardActive: { borderColor: tokens.primary, backgroundColor: '#E8F5F3' },
   modeIcon: { fontSize: 28, marginBottom: spacing.xs },
-  modeLabel: { color: colors.dark, fontWeight: '700', textAlign: 'center', marginBottom: 4 },
+  modeLabel: { color: tokens.text.primary, fontWeight: '700', textAlign: 'center', marginBottom: 4 },
   modeLabelActive: { color: tokens.primary },
-  modeHint: { color: colors.gray, textAlign: 'center', fontSize: 11 },
+  modeHint: { color: tokens.text.secondary, textAlign: 'center', fontSize: 11 },
   modeCheck: {
     position: 'absolute', top: 6, right: 6,
     width: 20, height: 20, borderRadius: 10,
@@ -90,25 +91,25 @@ export const TransportRequestStep4Screen = ({ route, navigation }: Props) => {
   modeCheckIcon: { color: colors.white, fontSize: 12, fontWeight: '700' },
 
   // Date
-  dateCard: { marginBottom: spacing.sm, backgroundColor: colors.white },
+  dateCard: { marginBottom: spacing.sm, backgroundColor: tokens.card },
   dateCardContent: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   dateInfo: { flex: 1 },
-  dateText: { color: colors.dark, textTransform: 'capitalize' },
-  dateHint: { color: colors.gray, marginTop: 4 },
+  dateText: { color: tokens.text.primary, textTransform: 'capitalize' },
+  dateHint: { color: tokens.text.secondary, marginTop: 4 },
 
   // Warnings / Info
   infoCard: { backgroundColor: '#E3F2FD', marginTop: spacing.sm, marginBottom: spacing.sm },
   warningCard: { backgroundColor: '#FFF3E0', marginTop: spacing.sm, marginBottom: spacing.sm },
-  infoText: { color: colors.dark, lineHeight: 22 },
+  infoText: { color: tokens.text.primary, lineHeight: 22 },
   warningText: { color: '#E65100', lineHeight: 20 },
 
   // Time slots
   timeSlots: { gap: spacing.md },
   timeSlotCard: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     padding: spacing.md,
     position: 'relative',
   },
@@ -116,10 +117,10 @@ export const TransportRequestStep4Screen = ({ route, navigation }: Props) => {
   timeSlotCardDisabled: { backgroundColor: '#F5F5F5', borderColor: '#E0E0E0', opacity: 0.6 },
   timeSlotContent: { alignItems: 'center' },
   timeSlotText: { fontSize: 32, marginBottom: spacing.xs },
-  timeSlotLabel: { color: colors.dark, fontWeight: '600' },
+  timeSlotLabel: { color: tokens.text.primary, fontWeight: '600' },
   timeSlotLabelActive: { color: tokens.primary },
-  timeSlotLabelDisabled: { color: colors.gray },
-  timeSlotHours: { color: colors.gray, marginTop: 4 },
+  timeSlotLabelDisabled: { color: tokens.text.secondary },
+  timeSlotHours: { color: tokens.text.secondary, marginTop: 4 },
   timeSlotHoursActive: { color: tokens.primary },
   unavailableLabel: { color: '#E65100', marginTop: 4, fontWeight: '600' },
   checkmark: {
@@ -130,10 +131,6 @@ export const TransportRequestStep4Screen = ({ route, navigation }: Props) => {
   },
   checkmarkIcon: { color: colors.white, fontSize: 16, fontWeight: '700' },
 
-  // Actions
-  actions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xl },
-  backButton: { flex: 1, paddingVertical: spacing.sm },
-  nextButton: { flex: 2, paddingVertical: spacing.sm },
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
@@ -369,25 +366,12 @@ export const TransportRequestStep4Screen = ({ route, navigation }: Props) => {
         </>
       )}
 
-      {/* Boutons navigation */}
-      <View style={styles.actions}>
-        <Button
-          mode="outlined"
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          textColor={colors.gray}
-        >
-          {t('common.back')}
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleNext}
-          buttonColor={tokens.primary}
-          style={styles.nextButton}
-        >
-          {t('transport.next')}
-        </Button>
-      </View>
+      <StepNavButtons
+        onBack={() => navigation.goBack()}
+        onNext={handleNext}
+        backLabel={t('common.back')}
+        nextLabel={t('transport.next')}
+      />
     </ScrollView>
   );
 };

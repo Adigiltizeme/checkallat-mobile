@@ -26,6 +26,7 @@ import Animated, {
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { CURRENCY_CONFIG } from '../../config/currency';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
 import { useUpdateProAvailabilityMutation } from '../../store/api/prosApi';
@@ -56,12 +57,12 @@ export const ProHomeScreen = ({ navigation }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: tokens.background },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  availabilityCard: { backgroundColor: colors.white, padding: spacing.md, margin: spacing.md, borderRadius: 12, elevation: 2 },
+  availabilityCard: { backgroundColor: tokens.card, padding: spacing.md, margin: spacing.md, borderRadius: 12, elevation: 2 },
   availabilityContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   availabilityTitle: { fontWeight: 'bold', marginBottom: spacing.xs },
-  availabilitySubtitle: { color: colors.gray },
+  availabilitySubtitle: { color: tokens.text.secondary },
   pendingBanner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: tokens.primary, marginHorizontal: spacing.md, marginBottom: spacing.md,
@@ -71,45 +72,45 @@ export const ProHomeScreen = ({ navigation }: Props) => {
   bannerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
   bannerTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   bannerSub: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
-  collapsibleCard: { backgroundColor: colors.white, borderRadius: 12, marginHorizontal: spacing.md, marginBottom: spacing.md, elevation: 1, overflow: 'hidden' },
+  collapsibleCard: { backgroundColor: tokens.card, borderRadius: 12, marginHorizontal: spacing.md, marginBottom: spacing.md, elevation: 1, overflow: 'hidden' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+  chevron: { fontSize: 12, color: tokens.text.secondary },
   statsContainer: { flexDirection: 'row', paddingHorizontal: spacing.md, marginBottom: spacing.md, gap: spacing.sm },
-  statCard: { flex: 1, backgroundColor: colors.white, padding: spacing.md, borderRadius: 12, alignItems: 'center', elevation: 2 },
+  statCard: { flex: 1, backgroundColor: tokens.card, padding: spacing.md, borderRadius: 12, alignItems: 'center', elevation: 2 },
   statNumber: { fontWeight: 'bold', color: tokens.primary },
-  statLabel: { color: colors.gray, marginTop: spacing.xs },
-  filtersContainer: { backgroundColor: colors.white, borderRadius: 12, marginHorizontal: spacing.md, marginBottom: spacing.md, elevation: 1, overflow: 'hidden' },
-  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginTop: spacing.xs, marginBottom: spacing.xs, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: '#F3F4F6', paddingHorizontal: spacing.sm },
-  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
+  statLabel: { color: tokens.text.secondary, marginTop: spacing.xs },
+  filtersContainer: { backgroundColor: tokens.card, borderRadius: 12, marginHorizontal: spacing.md, marginBottom: spacing.md, elevation: 1, overflow: 'hidden' },
+  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginTop: spacing.xs, marginBottom: spacing.xs, borderWidth: 1, borderColor: tokens.border, borderRadius: 10, backgroundColor: tokens.backgroundAlt, paddingHorizontal: spacing.sm },
+  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: tokens.text.primary },
   searchClear: { padding: spacing.xs },
   tabsRow: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.xs, gap: spacing.xs },
-  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: '#F3F4F6', marginRight: spacing.xs },
+  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: tokens.backgroundAlt, marginRight: spacing.xs },
   tabActive: { backgroundColor: tokens.primary },
-  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  tabText: { fontSize: 13, color: tokens.text.secondary, fontWeight: '500' },
   tabTextActive: { color: colors.white, fontWeight: '600' },
   dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: '#F3F4F6' },
+  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: tokens.border, backgroundColor: tokens.backgroundAlt },
   dateModeBtnActive: { backgroundColor: `${tokens.primary}20`, borderColor: tokens.primary },
-  dateModeBtnText: { fontSize: 12, color: colors.gray },
+  dateModeBtnText: { fontSize: 12, color: tokens.text.secondary },
   dateModeBtnTextActive: { color: tokens.primary, fontWeight: '600' },
   dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
   dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  dateLabel: { fontSize: 13, color: colors.gray },
-  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: '#F3F4F6' },
-  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
-  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.sm },
+  dateLabel: { fontSize: 13, color: tokens.text.secondary },
+  dateInput: { flex: 1, borderWidth: 1, borderColor: tokens.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: tokens.text.primary, backgroundColor: tokens.backgroundAlt },
+  clearBtn: { fontSize: 16, color: tokens.text.secondary, paddingHorizontal: spacing.xs },
+  countText: { fontSize: 12, color: tokens.text.secondary, paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.sm },
   listContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.xl * 2 },
-  bookingCard: { marginBottom: spacing.md, backgroundColor: colors.white, elevation: 2 },
+  bookingCard: { marginBottom: spacing.md, backgroundColor: tokens.card, elevation: 2 },
   activeCard: { borderLeftWidth: 4, borderLeftColor: tokens.primary },
   confirmRequiredCard: { borderLeftWidth: 4, borderLeftColor: '#D97706' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
   cardTitle: { fontWeight: 'bold' },
-  clientText: { color: colors.gray, marginTop: 2 },
+  clientText: { color: tokens.text.secondary, marginTop: 2 },
   statusChip: {},
   infoRow: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginBottom: 2 },
   infoItem: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
-  infoText: { color: colors.gray, flexShrink: 1 },
+  infoText: { color: tokens.text.secondary, flexShrink: 1 },
   confirmBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     marginTop: spacing.sm, paddingHorizontal: spacing.sm, paddingVertical: 4,
@@ -118,7 +119,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
   confirmBadgeText: { fontSize: 11, fontWeight: '600', color: '#D97706' },
   emptyContainer: { alignItems: 'center', paddingTop: spacing.xl * 2, paddingHorizontal: spacing.xl },
   emptyText: { marginTop: spacing.md, fontWeight: 'bold', textAlign: 'center' },
-  emptySubtext: { marginTop: spacing.xs, color: colors.gray, textAlign: 'center' },
+  emptySubtext: { marginTop: spacing.xs, color: tokens.text.secondary, textAlign: 'center' },
   fab: { position: 'absolute', bottom: spacing.md, right: spacing.md, backgroundColor: tokens.primary },
 }), [tokens]);
 
@@ -265,7 +266,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
               <Chip
                 mode="flat"
                 textStyle={{ fontSize: 11, lineHeight: 16, color: colors.white }}
-                style={[styles.statusChip, { backgroundColor: STATUS_COLORS[item.status] ?? colors.gray }]}
+                style={[styles.statusChip, { backgroundColor: STATUS_COLORS[item.status] ?? tokens.text.secondary }]}
               >
                 {t('booking_status.' + item.status, { defaultValue: item.status })}
               </Chip>
@@ -275,7 +276,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
             <View style={styles.infoRow}>
               {!!dateStr && (
                 <View style={styles.infoItem}>
-                  <Icon name="calendar" size={13} color={colors.gray} />
+                  <Icon name="calendar" size={13} color={tokens.text.secondary} />
                   <Text variant="bodySmall" style={styles.infoText} numberOfLines={1}>
                     {formatDate(dateStr)}
                   </Text>
@@ -283,7 +284,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
               )}
               {!!item.address && (
                 <View style={styles.infoItem}>
-                  <Icon name="map-marker-outline" size={13} color={colors.gray} />
+                  <Icon name="map-marker-outline" size={13} color={tokens.text.secondary} />
                   <Text variant="bodySmall" style={styles.infoText} numberOfLines={1}>
                     {item.address}
                   </Text>
@@ -294,9 +295,9 @@ export const ProHomeScreen = ({ navigation }: Props) => {
             {/* Prix */}
             {item.estimatedPrice > 0 && (
               <View style={[styles.infoItem, { marginTop: 2 }]}>
-                <Icon name="cash" size={13} color={colors.gray} />
+                <Icon name="cash" size={13} color={tokens.text.secondary} />
                 <Text variant="bodySmall" style={styles.infoText}>
-                  {item.finalPrice ? `${item.finalPrice} EGP` : `~${item.estimatedPrice} EGP`}
+                  {item.finalPrice ? `${item.finalPrice} ${CURRENCY_CONFIG.code}` : `~${item.estimatedPrice} ${CURRENCY_CONFIG.code}`}
                 </Text>
               </View>
             )}
@@ -334,28 +335,37 @@ export const ProHomeScreen = ({ navigation }: Props) => {
               {isAvailable ? t('pro_space.available_subtitle') : t('pro_space.unavailable_subtitle')}
             </Text>
           </View>
-          <Switch value={isAvailable} onValueChange={toggleAvailability} trackColor={{ false: colors.gray, true: tokens.primary }} thumbColor={colors.white} />
+          <Switch value={isAvailable} onValueChange={toggleAvailability} trackColor={{ false: tokens.border, true: tokens.primary }} thumbColor={colors.white} />
         </View>
       </View>
 
-      {pendingBookings.length > 0 && (
-        <Animated.View style={bannerAnimStyle}>
-          <TouchableOpacity
-            style={styles.pendingBanner}
-            onPress={() => navigation.navigate('ProBookingDetails', { bookingId: pendingBookings[0].id })}
-            activeOpacity={0.85}
-          >
-            <View style={styles.bannerLeft}>
-              <Icon name="bell-ring" size={22} color="#FFFFFF" />
-              <View>
-                <Text style={styles.bannerTitle}>{t('pro_space.new_bookings_count', { count: pendingBookings.length })}</Text>
-                <Text style={styles.bannerSub}>{t('pro_space.tap_to_see_bookings')}</Text>
+      {pendingBookings.length > 0 && (() => {
+        const first = pendingBookings[0];
+        const catName = getLocalizedName(first.serviceOffering?.category ?? first.category, i18n.language);
+        const clientName = first.client ? `${first.client.firstName} ${first.client.lastName}` : null;
+        const price = first.estimatedPrice > 0 ? `~${first.estimatedPrice} ${CURRENCY_CONFIG.code}` : null;
+        const subParts = [catName, clientName, price].filter(Boolean);
+        return (
+          <Animated.View style={bannerAnimStyle}>
+            <TouchableOpacity
+              style={styles.pendingBanner}
+              onPress={() => navigation.navigate('ProBookingDetails', { bookingId: first.id })}
+              activeOpacity={0.85}
+            >
+              <View style={styles.bannerLeft}>
+                <Icon name="bell-ring" size={22} color="#FFFFFF" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.bannerTitle}>{t('pro_space.new_bookings_count', { count: pendingBookings.length })}</Text>
+                  {subParts.length > 0 && (
+                    <Text style={styles.bannerSub} numberOfLines={1}>{subParts.join(' · ')}</Text>
+                  )}
+                </View>
               </View>
-            </View>
-            <Icon name="chevron-right" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-        </Animated.View>
-      )}
+              <Icon name="chevron-right" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      })()}
 
       <View style={styles.collapsibleCard}>
         <TouchableOpacity style={styles.sectionHeader} onPress={() => setStatsOpen(o => !o)} activeOpacity={0.7}>
@@ -390,7 +400,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
         {filtersOpen && (
           <View>
             <View style={styles.searchRow}>
-              <TextInput style={styles.searchInput} value={search} onChangeText={setSearch} placeholder={t('pro_space.search_placeholder')} placeholderTextColor={colors.gray} returnKeyType="search" />
+              <TextInput style={styles.searchInput} value={search} onChangeText={setSearch} placeholder={t('pro_space.search_placeholder')} placeholderTextColor={tokens.text.secondary} returnKeyType="search" />
               {!!search && <TouchableOpacity onPress={() => setSearch('')} style={styles.searchClear}><Text style={styles.clearBtn}>✕</Text></TouchableOpacity>}
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsRow}>
@@ -410,13 +420,13 @@ export const ProHomeScreen = ({ navigation }: Props) => {
             </View>
             <View style={styles.dateRangeRow}>
               {dateMode === 'single' ? (
-                <TextInput style={[styles.dateInput, { flex: 1 }]} value={dateSingle} onChangeText={setDateSingle} placeholder="AAAA-MM-JJ" placeholderTextColor={colors.gray} keyboardType="numeric" maxLength={10} />
+                <TextInput style={[styles.dateInput, { flex: 1 }]} value={dateSingle} onChangeText={setDateSingle} placeholder="AAAA-MM-JJ" placeholderTextColor={tokens.text.secondary} keyboardType="numeric" maxLength={10} />
               ) : (
                 <View style={styles.dateRangeInner}>
                   <Text style={styles.dateLabel}>{t('common.from')}</Text>
-                  <TextInput style={styles.dateInput} value={dateStart} onChangeText={setDateStart} placeholder={t('common.date_placeholder')} placeholderTextColor={colors.gray} keyboardType="numeric" maxLength={10} />
+                  <TextInput style={styles.dateInput} value={dateStart} onChangeText={setDateStart} placeholder={t('common.date_placeholder')} placeholderTextColor={tokens.text.secondary} keyboardType="numeric" maxLength={10} />
                   <Text style={styles.dateLabel}>{t('common.to')}</Text>
-                  <TextInput style={styles.dateInput} value={dateEnd} onChangeText={setDateEnd} placeholder={t('common.date_placeholder')} placeholderTextColor={colors.gray} keyboardType="numeric" maxLength={10} />
+                  <TextInput style={styles.dateInput} value={dateEnd} onChangeText={setDateEnd} placeholder={t('common.date_placeholder')} placeholderTextColor={tokens.text.secondary} keyboardType="numeric" maxLength={10} />
                 </View>
               )}
               {hasDateFilter && <TouchableOpacity onPress={clearDates}><Text style={styles.clearBtn}>✕</Text></TouchableOpacity>}
@@ -442,7 +452,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[tokens.primary]} />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="briefcase-search-outline" size={80} color={colors.gray} />
+            <Icon name="briefcase-search-outline" size={80} color={tokens.text.secondary} />
             <Text variant="titleMedium" style={styles.emptyText}>{t('pro_space.no_bookings')}</Text>
             <Text variant="bodyMedium" style={styles.emptySubtext}>{t('pro_space.no_bookings_hint')}</Text>
           </View>

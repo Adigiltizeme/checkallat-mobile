@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, Modal, Dimensions } from 'react-native';
-import { Button, Text, Card, RadioButton, Divider, ActivityIndicator, IconButton, Chip } from 'react-native-paper';
+import { Text, Card, RadioButton, Divider, ActivityIndicator, IconButton, Chip } from 'react-native-paper';
+import { StepNavButtons } from '../../components/shared/StepNavButtons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
@@ -25,42 +26,42 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   title: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: spacing.lg,
   },
   card: {
     marginBottom: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   sectionTitle: {
     color: tokens.primary,
     marginBottom: spacing.sm,
   },
   value: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '600',
     marginBottom: 4,
   },
   description: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginTop: spacing.xs,
   },
   detail: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginTop: 4,
   },
   addressRow: {
     marginVertical: spacing.xs,
   },
   addressLabel: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: 4,
   },
   divider: {
@@ -72,12 +73,12 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
     marginTop: spacing.xs,
   },
   service: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginVertical: 4,
   },
   priceCard: {
     marginBottom: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderWidth: 2,
     borderColor: tokens.primary,
   },
@@ -102,7 +103,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
     alignItems: 'center',
   },
   totalLabel: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '700',
   },
   totalValue: {
@@ -117,35 +118,22 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
     paddingVertical: spacing.lg,
   },
   priceLoadingText: {
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   infoCard: {
     backgroundColor: '#FFF3CD',
     marginBottom: spacing.md,
   },
   conditions: {
-    color: colors.dark,
+    color: tokens.text.primary,
     lineHeight: 20,
     textAlign: 'center',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-  },
-  submitButton: {
-    flex: 2,
-    paddingVertical: spacing.sm,
   },
   photosSection: {
     marginTop: spacing.md,
   },
   photosLabel: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: spacing.xs,
   },
   photosGrid: {
@@ -159,7 +147,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
   },
   thumbnailImage: {
     width: '100%',
@@ -391,10 +379,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
             {
               text: t('transport.view_request'),
               onPress: () => {
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'TransportList' }],
-                });
+                navigation.getParent()?.navigate('Commandes');
               },
             },
           ]
@@ -676,28 +661,14 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
         </Card.Content>
       </Card>
 
-      {/* Boutons */}
-      <View style={styles.actions}>
-        <Button
-          mode="outlined"
-          onPress={handleBack}
-          disabled={isLoading}
-          style={styles.backButton}
-          textColor={colors.gray}
-        >
-          {t('common.back')}
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleSubmit}
-          loading={isLoading}
-          disabled={isLoading}
-          buttonColor={colors.accent}
-          style={styles.submitButton}
-        >
-          {t('transport.confirm_request')}
-        </Button>
-      </View>
+      <StepNavButtons
+        onBack={handleBack}
+        onNext={handleSubmit}
+        backLabel={t('common.back')}
+        nextLabel={t('transport.confirm_request')}
+        nextDisabled={isLoading}
+        nextLoading={isLoading}
+      />
 
       {/* Modal de visualisation des photos */}
       <Modal

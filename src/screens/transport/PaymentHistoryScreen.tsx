@@ -28,42 +28,42 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  filtersContainer: { backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
+  filtersContainer: { backgroundColor: tokens.card, borderBottomWidth: 1, borderBottomColor: tokens.border },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+  chevron: { fontSize: 12, color: tokens.text.secondary },
   tabsRow: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, gap: spacing.xs },
-  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: colors.lightGray, marginRight: spacing.xs },
+  tab: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: 20, backgroundColor: tokens.backgroundAlt, marginRight: spacing.xs },
   tabActive: { backgroundColor: tokens.primary },
-  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  tabText: { fontSize: 13, color: tokens.text.secondary, fontWeight: '500' },
   tabTextActive: { color: colors.white, fontWeight: '600' },
-  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginTop: spacing.xs, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.lightGray, paddingHorizontal: spacing.sm },
-  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
+  searchRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: spacing.md, marginTop: spacing.xs, borderWidth: 1, borderColor: tokens.border, borderRadius: 10, backgroundColor: tokens.backgroundAlt, paddingHorizontal: spacing.sm },
+  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: tokens.text.primary },
   dateModeRow: { flexDirection: 'row', paddingHorizontal: spacing.md, paddingTop: spacing.xs, gap: spacing.xs },
-  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.lightGray },
+  dateModeBtn: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: 8, borderWidth: 1, borderColor: tokens.border, backgroundColor: tokens.backgroundAlt },
   dateModeBtnActive: { backgroundColor: `${tokens.primary}20`, borderColor: tokens.primary },
-  dateModeBtnText: { fontSize: 12, color: colors.gray },
+  dateModeBtnText: { fontSize: 12, color: tokens.text.secondary },
   dateModeBtnTextActive: { color: tokens.primary, fontWeight: '600' },
   dateRangeRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.sm, gap: spacing.xs },
   dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  dateLabel: { fontSize: 13, color: colors.gray },
-  dateInput: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: colors.dark, backgroundColor: colors.lightGray },
-  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
-  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
+  dateLabel: { fontSize: 13, color: tokens.text.secondary },
+  dateInput: { flex: 1, borderWidth: 1, borderColor: tokens.border, borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 6, fontSize: 13, color: tokens.text.primary, backgroundColor: tokens.backgroundAlt },
+  clearBtn: { fontSize: 16, color: tokens.text.secondary, paddingHorizontal: spacing.xs },
+  countText: { fontSize: 12, color: tokens.text.secondary, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
   list: { padding: spacing.md },
   listEmpty: { flexGrow: 1 },
-  card: { marginBottom: spacing.md, backgroundColor: colors.white },
+  card: { marginBottom: spacing.md, backgroundColor: tokens.card },
   cardHeader: { flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap', marginBottom: spacing.xs },
   statusChip: {},
   locationRow: { flexDirection: 'row', gap: spacing.xs, marginBottom: 2 },
-  locationLabel: { width: 20, color: colors.gray },
-  locationText: { flex: 1, color: colors.dark },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
-  dateText: { color: colors.gray },
+  locationLabel: { width: 20, color: tokens.text.secondary },
+  locationText: { flex: 1, color: tokens.text.primary },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: tokens.border },
+  dateText: { color: tokens.text.secondary },
   amountText: { color: tokens.primary, fontWeight: '700' },
-  empty: { color: colors.gray, textAlign: 'center' },
+  empty: { color: tokens.text.secondary, textAlign: 'center' },
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
@@ -162,7 +162,7 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
           </ScrollView>
           <View style={styles.searchRow}>
             <TextInput style={styles.searchInput} value={search} onChangeText={setSearch}
-              placeholder={t('transport.search_placeholder')} placeholderTextColor={colors.gray} />
+              placeholder={t('transport.search_placeholder')} placeholderTextColor={tokens.text.secondary} />
             {!!search && <TouchableOpacity onPress={() => setSearch('')}><Text style={styles.clearBtn}>✕</Text></TouchableOpacity>}
           </View>
           <View style={styles.dateModeRow}>
@@ -178,15 +178,15 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
           <View style={styles.dateRangeRow}>
             {dateMode === 'single' ? (
               <TextInput style={[styles.dateInput, { flex: 1 }]} value={dateSingle} onChangeText={setDateSingle}
-                placeholder={t('common.date_placeholder')} placeholderTextColor={colors.gray} keyboardType="numeric" maxLength={10} />
+                placeholder={t('common.date_placeholder')} placeholderTextColor={tokens.text.secondary} keyboardType="numeric" maxLength={10} />
             ) : (
               <View style={styles.dateRangeInner}>
                 <Text style={styles.dateLabel}>{t('common.from')}</Text>
                 <TextInput style={styles.dateInput} value={dateStart} onChangeText={setDateStart}
-                  placeholder={t('common.date_placeholder')} placeholderTextColor={colors.gray} keyboardType="numeric" maxLength={10} />
+                  placeholder={t('common.date_placeholder')} placeholderTextColor={tokens.text.secondary} keyboardType="numeric" maxLength={10} />
                 <Text style={styles.dateLabel}>{t('common.to')}</Text>
                 <TextInput style={styles.dateInput} value={dateEnd} onChangeText={setDateEnd}
-                  placeholder={t('common.date_placeholder')} placeholderTextColor={colors.gray} keyboardType="numeric" maxLength={10} />
+                  placeholder={t('common.date_placeholder')} placeholderTextColor={tokens.text.secondary} keyboardType="numeric" maxLength={10} />
               </View>
             )}
             {hasDateFilter && <TouchableOpacity onPress={clearDates}><Text style={styles.clearBtn}>✕</Text></TouchableOpacity>}
@@ -198,7 +198,7 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
   );
 
   const renderItem = ({ item }: { item: any }) => {
-    const statusColor = STATUS_COLORS[item.status as TransportStatus] || colors.gray;
+    const statusColor = STATUS_COLORS[item.status as TransportStatus] || tokens.text.secondary;
     const payment = (item as any).payment;
     const escrowStatus = payment?.escrowStatus;
     return (
@@ -217,7 +217,7 @@ export const PaymentHistoryScreen = ({ navigation }: Props) => {
               </Chip> */}
               {payment && escrowStatus && (
                 <Chip mode="flat" textStyle={{ fontSize: 11, lineHeight: 14, color: colors.white }}
-                  style={[styles.statusChip, { backgroundColor: ESCROW_COLORS[escrowStatus] || colors.gray }]}>
+                  style={[styles.statusChip, { backgroundColor: ESCROW_COLORS[escrowStatus] || tokens.border }]}>
                   {t('payment.escrow_' + escrowStatus)}
                 </Chip>
               )}

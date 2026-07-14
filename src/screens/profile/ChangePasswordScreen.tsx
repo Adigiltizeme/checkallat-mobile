@@ -27,21 +27,21 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingTop: spacing.xl },
   iconWrapper: { alignItems: 'center', marginBottom: spacing.lg },
-  title: { textAlign: 'center', color: colors.dark, fontWeight: '700', marginBottom: spacing.md },
-  description: { textAlign: 'center', color: colors.gray, marginBottom: spacing.xl, lineHeight: 22 },
-  label: { color: colors.dark, fontSize: 13, fontWeight: '600', marginBottom: 4, marginTop: spacing.sm },
+  title: { textAlign: 'center', color: tokens.text.primary, fontWeight: '700', marginBottom: spacing.md },
+  description: { textAlign: 'center', color: tokens.text.secondary, marginBottom: spacing.xl, lineHeight: 22 },
+  label: { color: tokens.text.primary, fontSize: 13, fontWeight: '600', marginBottom: 4, marginTop: spacing.sm },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     fontSize: 15,
-    color: colors.dark,
-    backgroundColor: colors.white,
+    color: tokens.text.primary,
+    backgroundColor: tokens.backgroundAlt,
     marginBottom: spacing.sm,
   },
   inputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
@@ -144,7 +144,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
               keyboardType="number-pad"
               maxLength={6}
               placeholder="------"
-              placeholderTextColor={colors.gray}
+              placeholderTextColor={tokens.text.secondary}
             />
 
             <Text style={styles.label}>{t('auth.new_password')}</Text>
@@ -155,10 +155,10 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 onChangeText={setNewPassword}
                 secureTextEntry={!showNew}
                 placeholder={t('auth.new_password')}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
               />
               <TouchableOpacity onPress={() => setShowNew(v => !v)} style={styles.eyeBtn}>
-                <Icon name={showNew ? 'eye-off' : 'eye'} size={20} color={colors.gray} />
+                <Icon name={showNew ? 'eye-off' : 'eye'} size={20} color={tokens.text.secondary} />
               </TouchableOpacity>
             </View>
 
@@ -170,10 +170,10 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirm}
                 placeholder={t('auth.confirm_password')}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
               />
               <TouchableOpacity onPress={() => setShowConfirm(v => !v)} style={styles.eyeBtn}>
-                <Icon name={showConfirm ? 'eye-off' : 'eye'} size={20} color={colors.gray} />
+                <Icon name={showConfirm ? 'eye-off' : 'eye'} size={20} color={tokens.text.secondary} />
               </TouchableOpacity>
             </View>
 

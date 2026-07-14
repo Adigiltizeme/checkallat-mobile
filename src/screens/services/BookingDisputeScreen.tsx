@@ -7,7 +7,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Text, Chip, Button } from 'react-native-paper';
+import { Text, Chip } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -25,7 +26,7 @@ export const BookingDisputeScreen = ({ route, navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
 
   infoBox: {
@@ -34,40 +35,39 @@ export const BookingDisputeScreen = ({ route, navigation }: Props) => {
     padding: spacing.md, marginBottom: spacing.lg,
     borderLeftWidth: 3, borderLeftColor: tokens.primary,
   },
-  infoText: { flex: 1, color: colors.dark, lineHeight: 18 },
+  infoText: { flex: 1, color: tokens.text.primary, lineHeight: 18 },
 
   sectionLabel: {
-    color: colors.dark, fontWeight: '700',
+    color: tokens.text.primary, fontWeight: '700',
     marginBottom: spacing.sm, marginTop: spacing.md,
   },
 
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.xs },
-  chip: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border },
+  chip: { backgroundColor: tokens.card, borderWidth: 1, borderColor: tokens.border },
   chipSelected: { backgroundColor: tokens.primary, borderColor: tokens.primary },
-  chipText: { color: colors.dark },
+  chipText: { color: tokens.text.primary },
   chipTextSelected: { color: colors.white },
 
   textarea: {
-    backgroundColor: colors.white,
-    borderWidth: 1, borderColor: colors.border, borderRadius: 10,
-    padding: spacing.md, fontSize: 14, color: colors.dark,
+    backgroundColor: tokens.backgroundAlt,
+    borderWidth: 1, borderColor: tokens.border, borderRadius: 10,
+    padding: spacing.md, fontSize: 14, color: tokens.text.primary,
     minHeight: 130,
   },
   textareaError: { borderColor: colors.error },
-  charCount: { fontSize: 11, color: colors.gray, marginTop: 4, textAlign: 'right' },
+  charCount: { fontSize: 11, color: tokens.text.secondary, marginTop: 4, textAlign: 'right' },
 
   error: { color: colors.error, fontSize: 12, marginTop: 4 },
 
-  submitBtn: { marginTop: spacing.lg, borderRadius: 10 },
-  submitBtnContent: { paddingVertical: 6 },
+  submitBtn: { marginTop: spacing.lg },
   cancelBtn: { marginTop: spacing.sm },
 
   successContainer: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     padding: spacing.xl, gap: spacing.md,
   },
-  successTitle: { color: colors.dark, fontWeight: '700', textAlign: 'center' },
-  successSubtitle: { color: colors.gray, textAlign: 'center', lineHeight: 20 },
+  successTitle: { color: tokens.text.primary, fontWeight: '700', textAlign: 'center' },
+  successSubtitle: { color: tokens.text.secondary, textAlign: 'center', lineHeight: 20 },
   successBtn: { marginTop: spacing.md },
   }), [tokens]);
 
@@ -107,9 +107,9 @@ export const BookingDisputeScreen = ({ route, navigation }: Props) => {
         <Text variant="bodyMedium" style={styles.successSubtitle}>
           {t('dispute.submitted_msg')}
         </Text>
-        <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.successBtn}>
+        <ChocolateButton variant="outline" onPress={() => navigation.goBack()} style={styles.successBtn}>
           {t('common.back')}
-        </Button>
+        </ChocolateButton>
       </View>
     );
   }
@@ -150,7 +150,7 @@ export const BookingDisputeScreen = ({ route, navigation }: Props) => {
           value={description}
           onChangeText={setDescription}
           placeholder={t('dispute.description_placeholder')}
-          placeholderTextColor={colors.gray}
+          placeholderTextColor={tokens.text.secondary}
           multiline
           numberOfLines={6}
           maxLength={2000}
@@ -161,20 +161,18 @@ export const BookingDisputeScreen = ({ route, navigation }: Props) => {
           <Text style={styles.error}>{t('dispute.description_too_short')}</Text>
         )}
 
-        <Button
-          mode="contained"
+        <ChocolateButton
           onPress={handleSubmit}
           loading={isLoading}
           disabled={isLoading}
           style={styles.submitBtn}
-          contentStyle={styles.submitBtnContent}
         >
           {t('dispute.submit_btn')}
-        </Button>
+        </ChocolateButton>
 
-        <Button mode="text" onPress={() => navigation.goBack()} style={styles.cancelBtn}>
+        <ChocolateButton variant="ghost" onPress={() => navigation.goBack()} style={styles.cancelBtn}>
           {t('common.cancel')}
-        </Button>
+        </ChocolateButton>
       </ScrollView>
     </KeyboardAvoidingView>
   );

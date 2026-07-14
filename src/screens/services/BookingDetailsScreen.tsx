@@ -15,12 +15,15 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
-import { BookingStep1Data, BookingStep2Data } from '../../types/booking';
+import { CATEGORY_FIELDS, HAS_URGENCY, getCategoryOptionLabel } from '../../config/categoryFields';
 import { HomeStackParamList } from '../../navigation/types';
+import { CURRENCY_CONFIG } from '../../config/currency';
 import {
   useGetBookingByIdQuery,
   useCancelBookingMutation,
   useConfirmBookingCompletionMutation,
+  useGetBookingBidsQuery,
+  useAcceptBidMutation,
 } from '../../store/api/bookingsApi';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
@@ -54,10 +57,10 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { color: colors.gray, fontSize: 14 },
+  loadingText: { color: tokens.text.secondary, fontSize: 14 },
 
   statusBanner: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
@@ -66,12 +69,12 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   statusText: { fontSize: 15, fontWeight: '700' },
 
   card: {
-    backgroundColor: colors.white, borderRadius: 14,
+    backgroundColor: tokens.card, borderRadius: 14,
     padding: spacing.md, marginBottom: spacing.md,
-    borderWidth: 1, borderColor: colors.border,
+    borderWidth: 1, borderColor: tokens.border,
   },
   cardTitle: {
-    fontSize: 13, fontWeight: '700', color: colors.gray,
+    fontSize: 13, fontWeight: '700', color: tokens.text.secondary,
     textTransform: 'uppercase', marginBottom: spacing.sm, letterSpacing: 0.5,
   },
 
@@ -81,19 +84,19 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     backgroundColor: tokens.primary + '20', alignItems: 'center', justifyContent: 'center',
   },
   proAvatarLetter: { fontSize: 18, fontWeight: '700', color: tokens.primary },
-  proName: { fontSize: 15, fontWeight: '700', color: colors.dark },
-  proRating: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  proName: { fontSize: 15, fontWeight: '700', color: tokens.text.primary },
+  proRating: { fontSize: 12, color: tokens.text.secondary, marginTop: 2 },
 
   detailRow: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
     paddingVertical: 6,
   },
-  detailText: { fontSize: 14, color: colors.dark, flex: 1 },
+  detailText: { fontSize: 14, color: tokens.text.primary, flex: 1 },
 
   photosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   photoThumbnail: {
     width: 70, height: 70, borderRadius: 8,
-    overflow: 'hidden', borderWidth: 1, borderColor: colors.border,
+    overflow: 'hidden', borderWidth: 1, borderColor: tokens.border,
   },
   thumbnailImage: { width: '100%', height: '100%', resizeMode: 'cover' },
 
@@ -106,30 +109,30 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     backgroundColor: tokens.primary,
   },
   contactBtnMessage: {
-    backgroundColor: colors.white, borderWidth: 1.5, borderColor: tokens.primary,
+    backgroundColor: tokens.card, borderWidth: 1.5, borderColor: tokens.primary,
   },
   contactBtnText: { fontSize: 14, fontWeight: '700', color: colors.white },
   contactBtnMessageText: { color: tokens.primary },
 
   escrowCard: { borderColor: tokens.primary + '40' },
   escrowStatus: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
-  escrowNote: { fontSize: 13, color: colors.gray, lineHeight: 18 },
+  escrowNote: { fontSize: 13, color: tokens.text.secondary, lineHeight: 18 },
 
   warningCard: { backgroundColor: '#FFF3CD', borderColor: '#F59E0B40' },
   warningText: { fontSize: 13, color: '#856404', lineHeight: 18, textAlign: 'center' },
 
   cancelForm: {
-    backgroundColor: colors.white, borderRadius: 14,
+    backgroundColor: tokens.card, borderRadius: 14,
     padding: spacing.md, marginBottom: spacing.md,
     borderWidth: 1, borderColor: colors.error + '60',
   },
-  cancelFormTitle: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
+  cancelFormTitle: { fontSize: 14, fontWeight: '600', color: tokens.text.primary, marginBottom: spacing.sm },
   cancelFormActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   cancelFormAbort: {
     flex: 1, borderRadius: 10, paddingVertical: 12,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+    borderWidth: 1, borderColor: tokens.border, alignItems: 'center',
   },
-  cancelFormAbortText: { fontSize: 14, color: colors.gray, fontWeight: '600' },
+  cancelFormAbortText: { fontSize: 14, color: tokens.text.secondary, fontWeight: '600' },
   cancelFormConfirm: {
     flex: 2, borderRadius: 10, paddingVertical: 12,
     backgroundColor: colors.error, alignItems: 'center',
@@ -173,15 +176,15 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   disputeBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: spacing.sm, borderRadius: 14, paddingVertical: 14,
-    backgroundColor: `${colors.error}10`, marginBottom: spacing.sm,
-    borderWidth: 1, borderColor: `${colors.error}30`,
+    backgroundColor: `${colors.error}20`, marginBottom: spacing.sm,
+    borderWidth: 1, borderColor: `${colors.error}60`,
   },
   disputeBtnText: { fontSize: 14, fontWeight: '700', color: colors.error },
 
   renewBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: spacing.sm, borderRadius: 14, paddingVertical: 14,
-    backgroundColor: colors.white, marginBottom: spacing.sm,
+    backgroundColor: tokens.card, marginBottom: spacing.sm,
     borderWidth: 1.5, borderColor: tokens.primary,
   },
   renewBtnText: { fontSize: 14, fontWeight: '700', color: tokens.primary },
@@ -189,22 +192,54 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   backBtn: {
     alignItems: 'center', paddingVertical: 10, marginBottom: spacing.sm,
   },
-  backBtnText: { fontSize: 14, color: colors.gray },
+  backBtnText: { fontSize: 14, color: tokens.text.secondary },
+
+  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: spacing.xs },
+  chip: {
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 20, borderWidth: 1,
+    borderColor: tokens.primary + '60',
+    backgroundColor: tokens.primary + '12',
+  },
+  chipText: { fontSize: 12, fontWeight: '600', color: tokens.primary },
+
+  bidCard: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: spacing.sm, gap: spacing.md,
+    borderBottomWidth: 1, borderBottomColor: tokens.border,
+  },
+  bidAvatar: {
+    width: 40, height: 40, borderRadius: 10,
+    backgroundColor: tokens.primary + '20', alignItems: 'center', justifyContent: 'center',
+  },
+  bidAvatarLetter: { fontSize: 16, fontWeight: '700', color: tokens.primary },
+  bidInfo: { flex: 1 },
+  bidProName: { fontSize: 14, fontWeight: '700', color: tokens.text.primary },
+  bidRating: { fontSize: 12, color: tokens.text.secondary, marginTop: 1 },
+  bidPrice: { fontSize: 16, fontWeight: '800', color: tokens.primary },
+  bidCurrency: { fontSize: 12, color: tokens.text.secondary },
+  bidAcceptBtn: {
+    paddingHorizontal: spacing.md, paddingVertical: 8,
+    backgroundColor: tokens.primary, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  bidAcceptBtnText: { fontSize: 13, fontWeight: '700', color: colors.white },
+  noBidsText: { fontSize: 13, color: tokens.text.secondary, textAlign: 'center', paddingVertical: spacing.sm, lineHeight: 18 },
 
   cashModalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center', alignItems: 'center', padding: spacing.lg,
   },
   cashModalBox: {
-    backgroundColor: colors.white, borderRadius: 16,
+    backgroundColor: tokens.modal, borderRadius: 16,
     padding: spacing.lg, width: '100%', maxWidth: 400,
   },
-  cashModalTitle: { fontSize: 17, fontWeight: '700', color: colors.dark, marginBottom: spacing.xs },
-  cashModalMsg: { fontSize: 14, color: colors.gray, lineHeight: 20 },
+  cashModalTitle: { fontSize: 17, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.xs },
+  cashModalMsg: { fontSize: 14, color: tokens.text.secondary, lineHeight: 20 },
   cashModalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
   cashModalCancel: {
     flex: 1, borderRadius: 10, paddingVertical: 12,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+    borderWidth: 1, borderColor: tokens.border, alignItems: 'center',
   },
   cashModalConfirm: {
     flex: 2, borderRadius: 10, paddingVertical: 12,
@@ -241,6 +276,14 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
 
   const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
   const [confirmCompletion, { isLoading: isConfirming }] = useConfirmBookingCompletionMutation();
+  const [acceptBid, { isLoading: isAcceptingBid }] = useAcceptBidMutation();
+
+  const isAutoBidBooking = (booking as any)?.assignmentType === 'auto' && (booking as any)?.status === 'pending' && !(booking as any)?.proId;
+  const { data: bookingBids } = useGetBookingBidsQuery(bookingId, {
+    skip: !isAutoBidBooking,
+    pollingInterval: 8000,
+    refetchOnMountOrArgChange: true,
+  });
 
   const CALL_ACTIVE_STATUSES = ['accepted', 'en_route', 'arrived', 'in_progress'];
   const bookingStatus = (booking as any)?.status ?? '';
@@ -311,15 +354,33 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   const photosAfterWork: string[] = (booking as any).photosAfterWork ?? [];
   const payment = (booking as any).payment;
 
+  const categorySlug: string = (booking as any).category?.slug ?? '';
+  const categoryData: Record<string, string | string[]> = (booking as any).categoryData ?? {};
+  const categoryFieldDefs = CATEGORY_FIELDS[categorySlug] ?? [];
+  const bookingType: string = (booking as any).bookingType ?? '';
+  const timeSlot: string = (booking as any).timeSlot ?? '';
+  const isRecurring: boolean = !!(booking as any).isRecurring;
+  const recurringFrequency: string = (booking as any).recurringFrequency ?? '';
+  const recurringEndDate = (booking as any).recurringEndDate
+    ? new Date((booking as any).recurringEndDate)
+    : null;
+
   const handleCancel = async () => {
     if (!cancelReason.trim()) {
       Alert.alert(t('common.error'), t('booking.cancel_reason_required'));
       return;
     }
     try {
-      await cancelBooking({ id: bookingId, role: 'client', reason: cancelReason.trim() }).unwrap();
+      const res = await cancelBooking({ id: bookingId, role: 'client', reason: cancelReason.trim() }).unwrap();
       setShowCancelForm(false);
       setCancelReason('');
+      const refundPct = (res as any)?.refundPct;
+      const feeAmount = (res as any)?.feeAmount;
+      if (feeAmount > 0) {
+        Alert.alert(t('common.success'), t('booking.cancel_result_fee', { amount: feeAmount, currency: CURRENCY_CONFIG.code }));
+      } else if (refundPct != null) {
+        Alert.alert(t('common.success'), t('booking.cancel_result_refund', { pct: refundPct }));
+      }
     } catch {
       Alert.alert(t('common.error'), t('booking.error_cancel'));
     }
@@ -394,6 +455,57 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   };
 
   const isTerminal = status === 'completed' || status === 'cancelled' || status === 'rejected';
+  const hasPendingFee = !!(booking as any).cancellationFeeAmount && !(booking as any).cancellationFeePaid;
+
+  const handleCancelPress = () => {
+    if (status === 'arrived') {
+      Alert.alert(
+        t('booking.cancel_fee_title'),
+        t('booking.cancel_arrived_warning'),
+        [
+          { text: t('common.back'), style: 'cancel' },
+          { text: t('booking.cancel_anyway'), style: 'destructive', onPress: () => setShowCancelForm(true) },
+        ],
+      );
+    } else if (status === 'en_route') {
+      Alert.alert(
+        t('booking.cancel_fee_title'),
+        t('booking.cancel_en_route_warning'),
+        [
+          { text: t('common.back'), style: 'cancel' },
+          { text: t('booking.cancel_anyway'), style: 'destructive', onPress: () => setShowCancelForm(true) },
+        ],
+      );
+    } else {
+      setShowCancelForm(true);
+    }
+  };
+
+  const handleAcceptBid = (bid: any) => {
+    const proName = bid.pro?.user
+      ? `${bid.pro.user.firstName} ${bid.pro.user.lastName}`
+      : '—';
+    Alert.alert(
+      t('booking.confirm_accept_bid_title'),
+      t('booking.confirm_accept_bid_msg', {
+        proName,
+        price: `${bid.proposedPrice} ${CURRENCY_CONFIG.code}`,
+      }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('booking.accept_bid'),
+          onPress: async () => {
+            try {
+              await acceptBid({ bookingId, bidId: bid.id }).unwrap();
+            } catch {
+              Alert.alert(t('common.error'), t('booking.error_accept_bid'));
+            }
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -458,12 +570,12 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t('booking.select_service')}</Text>
         <View style={styles.detailRow}>
-          <Icon name="briefcase-outline" size={18} color={colors.gray} />
+          <Icon name="briefcase-outline" size={18} color={tokens.text.secondary} />
           <Text style={styles.detailText}>{serviceName}</Text>
         </View>
         {((booking as any).serviceOffering?.priceMin || (booking as any).serviceOffering?.priceMax) && (
           <View style={styles.detailRow}>
-            <Icon name="tag-outline" size={18} color={colors.gray} />
+            <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>
               {(booking as any).serviceOffering.priceMax
                 ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} EGP`
@@ -471,24 +583,75 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             </Text>
           </View>
         )}
+
+        {/* Chips des sélections spécifiques à la catégorie */}
+        {categoryFieldDefs.map((field) => {
+          const selected = categoryData[field.key];
+          const values: string[] = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+          if (values.length === 0) return null;
+          return (
+            <View key={field.key} style={{ marginTop: spacing.xs }}>
+              <Text style={[styles.cardTitle, { marginBottom: 4 }]}>{t(field.labelKey)}</Text>
+              <View style={styles.chipsRow}>
+                {values.map((v) => (
+                  <View key={v} style={styles.chip}>
+                    <Text style={styles.chipText}>
+                      {getCategoryOptionLabel(categorySlug, field.key, v, i18n.language)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          );
+        })}
+
+        {/* Urgence */}
+        {HAS_URGENCY.includes(categorySlug) && categoryData.urgency === 'urgent' && (
+          <View style={[styles.chipsRow, { marginTop: spacing.xs }]}>
+            <View style={[styles.chip, { borderColor: '#F59E0B80', backgroundColor: '#FEF3C7' }]}>
+              <Text style={[styles.chipText, { color: '#92400E' }]}>
+                ⚡ {t('booking_request.urgency_urgent', { pct: 30 })}
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
 
       {/* Booking details */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{t('common.details')}</Text>
+        {/* Type de réservation */}
+        {bookingType && (
+          <View style={styles.detailRow}>
+            <Icon name={bookingType === 'immediate' ? 'flash' : 'calendar-clock'} size={18} color={tokens.text.secondary} />
+            <Text style={styles.detailText}>{t(`booking_request.${bookingType}`)}</Text>
+          </View>
+        )}
         {scheduledAt && (
           <View style={styles.detailRow}>
-            <Icon name="calendar-outline" size={18} color={colors.gray} />
+            <Icon name="calendar-outline" size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>
               {scheduledAt.toLocaleDateString(i18n.language, {
                 weekday: 'long', day: 'numeric', month: 'long',
               })}
+              {timeSlot ? `  •  ${t(`booking_request.time_slot_${timeSlot}_short`)}` : ''}
+            </Text>
+          </View>
+        )}
+        {/* Récurrence */}
+        {isRecurring && (
+          <View style={styles.detailRow}>
+            <Icon name="refresh" size={18} color={tokens.text.secondary} />
+            <Text style={styles.detailText}>
+              {t('booking_request.recurring_label')}
+              {recurringFrequency ? `  •  ${t(`booking_request.freq_${recurringFrequency}`)}` : ''}
+              {recurringEndDate ? `  •  ${t('booking_request.until_label', { date: recurringEndDate.toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' }) })}` : ''}
             </Text>
           </View>
         )}
         {(booking as any).address ? (
           <View style={styles.detailRow}>
-            <Icon name="map-marker-outline" size={18} color={colors.gray} />
+            <Icon name="map-marker-outline" size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>{(booking as any).address}</Text>
           </View>
         ) : null}
@@ -497,7 +660,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <Icon
               name={(booking as any).paymentMethod === 'cash' ? 'cash' : 'shield-check'}
               size={18}
-              color={colors.gray}
+              color={tokens.text.secondary}
             />
             <Text style={styles.detailText}>
               {t((booking as any).paymentMethod === 'cash' ? 'booking.payment_cash' : 'booking.payment_inapp')}
@@ -506,10 +669,18 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         )}
         {(booking as any).clientDescription ? (
           <View style={[styles.detailRow, { alignItems: 'flex-start' }]}>
-            <Icon name="text-box-outline" size={18} color={colors.gray} style={{ marginTop: 2 }} />
+            <Icon name="text-box-outline" size={18} color={tokens.text.secondary} style={{ marginTop: 2 }} />
             <Text style={[styles.detailText, { flex: 1 }]}>{(booking as any).clientDescription}</Text>
           </View>
         ) : null}
+        {(booking as any).finalPrice != null && (
+          <View style={[styles.detailRow, { marginTop: 2 }]}>
+            <Icon name="tag-check-outline" size={18} color={tokens.primary} />
+            <Text style={[styles.detailText, { color: tokens.primary, fontWeight: '700' }]}>
+              {t('booking.final_price_label')} : {(booking as any).finalPrice} {CURRENCY_CONFIG.code}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Client photos */}
@@ -601,7 +772,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <Icon
               name={clientConfirmed ? 'check-circle' : 'clock-outline'}
               size={18}
-              color={clientConfirmed ? colors.success : colors.gray}
+              color={clientConfirmed ? colors.success : tokens.text.secondary}
             />
             <Text style={styles.detailText}>
               {t('booking.client_confirmed')}{' '}{clientConfirmed ? '✓' : '—'}
@@ -611,7 +782,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <Icon
               name={proConfirmed ? 'check-circle' : 'clock-outline'}
               size={18}
-              color={proConfirmed ? colors.success : colors.gray}
+              color={proConfirmed ? colors.success : tokens.text.secondary}
             />
             <Text style={styles.detailText}>
               {t('booking.pro_confirmed')}{' '}{proConfirmed ? '✓' : '—'}
@@ -622,7 +793,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <View style={[styles.detailRow, { marginTop: spacing.xs }]}>
               <Icon name="cash" size={18} color={
                 (booking as any).cashPaymentStatus === 'disputed' ? colors.error :
-                (booking as any).cashPaymentStatus === 'confirmed' ? colors.success : colors.gray
+                (booking as any).cashPaymentStatus === 'confirmed' ? colors.success : tokens.text.secondary
               } />
               <Text style={[styles.detailText, { fontSize: 12 }]}>
                 {t('booking.cash_declared_client')}: {(booking as any).cashAmountDeclaredByClient} EGP
@@ -647,9 +818,9 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             placeholder={t('booking.cancel_reason_placeholder')}
             multiline
             numberOfLines={3}
-            outlineColor={colors.border}
+            outlineColor={tokens.border}
             activeOutlineColor={colors.error}
-            style={{ backgroundColor: colors.white }}
+            style={{ backgroundColor: tokens.backgroundAlt }}
           />
           <View style={styles.cancelFormActions}>
             <TouchableOpacity
@@ -683,11 +854,69 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         </TouchableOpacity>
       )}
 
-      {/* Cancel button */}
-      {isPending && !showCancelForm && (
+      {/* Section propositions reçues (mode auto — en attente) */}
+      {isAutoBidBooking && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('booking.bids_section_title')}</Text>
+          {!bookingBids || bookingBids.length === 0 ? (
+            <Text style={styles.noBidsText}>{t('booking.no_bids_yet')}</Text>
+          ) : (
+            bookingBids.map((bid: any, idx: number) => {
+              const proUser = bid.pro?.user;
+              const proName = proUser ? `${proUser.firstName} ${proUser.lastName}` : '—';
+              const proLetter = proName.charAt(0).toUpperCase();
+              const rating = bid.pro?.averageRating;
+              const missionCount = bid.pro?.totalCompletedBookings ?? 0;
+              return (
+                <View key={bid.id} style={[styles.bidCard, idx === bookingBids.length - 1 && { borderBottomWidth: 0 }]}>
+                  <View style={styles.bidAvatar}>
+                    <Text style={styles.bidAvatarLetter}>{proLetter}</Text>
+                  </View>
+                  <View style={styles.bidInfo}>
+                    <Text style={styles.bidProName}>{proName}</Text>
+                    {rating != null && rating > 0 && (
+                      <Text style={styles.bidRating}>
+                        {t('booking.bid_pro_rating', { rating: rating.toFixed(1), count: missionCount })}
+                      </Text>
+                    )}
+                    {bid.message ? (
+                      <Text style={{ fontSize: 12, color: tokens.text.secondary, marginTop: 2 }} numberOfLines={2}>
+                        {bid.message}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <View style={{ alignItems: 'flex-end', gap: 6 }}>
+                    <Text style={styles.bidPrice}>{bid.proposedPrice}</Text>
+                    <Text style={styles.bidCurrency}>{CURRENCY_CONFIG.code}</Text>
+                    <TouchableOpacity
+                      style={[styles.bidAcceptBtn, isAcceptingBid && { opacity: 0.5 }]}
+                      onPress={() => handleAcceptBid(bid)}
+                      disabled={isAcceptingBid}
+                    >
+                      <Text style={styles.bidAcceptBtnText}>{t('booking.accept_bid')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </View>
+      )}
+
+      {/* Bannière frais d'annulation en attente */}
+      {hasPendingFee && (
+        <View style={[styles.card, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B60' }]}>
+          <Text style={{ fontSize: 13, color: '#92400E', lineHeight: 18 }}>
+            ⚠️ {t('booking.cancel_fee_pending', { amount: `${(booking as any).cancellationFeeAmount} ${CURRENCY_CONFIG.code}` })}
+          </Text>
+        </View>
+      )}
+
+      {/* Cancel button — visible avant le début du travail */}
+      {['pending', 'accepted', 'en_route', 'arrived'].includes(status) && !showCancelForm && (
         <TouchableOpacity
           style={styles.cancelBtn}
-          onPress={() => setShowCancelForm(true)}
+          onPress={handleCancelPress}
           activeOpacity={0.85}
         >
           <Icon name="close-circle-outline" size={20} color={colors.error} />
@@ -729,8 +958,8 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         </View>
       )}
 
-      {/* Signaler un problème + Renouveler — visible une fois terminé ou annulé */}
-      {isTerminal && (
+      {/* Signaler un problème — visible dès que la réservation est acceptée */}
+      {!isPending && (
         <TouchableOpacity
           style={styles.disputeBtn}
           onPress={() => navigation.navigate('BookingDispute', { bookingId })}
@@ -753,7 +982,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
       )}
 
       {isTerminal && (
-        <TouchableOpacity onPress={() => navigation.navigate('MyBookings')} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backBtnText}>{t('booking.back_to_list')}</Text>
         </TouchableOpacity>
       )}
@@ -770,9 +999,9 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
               onChangeText={setCashAmountInput}
               keyboardType="numeric"
               placeholder="0.00"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
-              style={{ backgroundColor: colors.white, marginTop: spacing.sm }}
+              style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.sm }}
               right={<TextInput.Affix text="EGP" />}
             />
             <View style={styles.cashModalActions}>
@@ -780,7 +1009,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
                 style={styles.cashModalCancel}
                 onPress={() => setShowCashModal(false)}
               >
-                <Text style={{ color: colors.gray, fontWeight: '600' }}>{t('common.cancel')}</Text>
+                <Text style={{ color: tokens.text.secondary, fontWeight: '600' }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.cashModalConfirm, isConfirming && { opacity: 0.5 }]}

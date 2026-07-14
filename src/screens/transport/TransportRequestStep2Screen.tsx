@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { TextInput, Button, Text, IconButton, Switch, Card, Chip } from 'react-native-paper';
+import { TextInput, Text, IconButton, Switch, Card, Chip } from 'react-native-paper';
+import { StepNavButtons } from '../../components/shared/StepNavButtons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
@@ -70,21 +71,21 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   title: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: spacing.sm,
   },
   countryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -95,7 +96,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   countryBadgeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
+    color: tokens.text.primary,
   },
   countryBadgeChange: {
     fontSize: 12,
@@ -104,7 +105,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   },
   card: {
     marginBottom: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -113,17 +114,17 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     marginBottom: spacing.md,
   },
   cardTitle: {
-    color: colors.dark,
+    color: tokens.text.primary,
   },
   input: {
     marginBottom: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.backgroundAlt,
   },
   addressInputContainer: {
     marginBottom: spacing.md,
   },
   addressInput: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.backgroundAlt,
   },
   successChip: {
     alignSelf: 'flex-start',
@@ -132,14 +133,14 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   },
   suggestionsContainer: {
     marginVertical: spacing.sm,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     padding: spacing.sm,
   },
   suggestionsTitle: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: spacing.sm,
     fontWeight: '600',
   },
@@ -148,18 +149,18 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     alignItems: 'center',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: tokens.border,
   },
   suggestionText: {
     flex: 1,
     marginLeft: spacing.xs,
   },
   suggestionName: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '500',
   },
   suggestionLocation: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginTop: 2,
   },
   suggestionDistance: {
@@ -170,7 +171,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     textAlign: 'right',
   },
   label: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: spacing.xs,
   },
   loadingContainer: {
@@ -199,26 +200,13 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 8,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   infoCard: {
     backgroundColor: tokens.primary,
     marginBottom: spacing.md,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-  },
-  nextButton: {
-    flex: 2,
-    paddingVertical: spacing.sm,
   },
   }), [tokens]);
 
@@ -619,7 +607,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
                 placeholder="Ex: 5 Tahrir Square, Cairo, Egypt"
                 value={pickup.address}
                 onChangeText={(text) => handleAddressChange(text, 'pickup')}
-                outlineColor={colors.border}
+                outlineColor={tokens.border}
                 activeOutlineColor={tokens.primary}
                 style={styles.addressInput}
                 right={
@@ -720,7 +708,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
               multiline
               numberOfLines={2}
               maxLength={200}
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={styles.input}
             />
@@ -749,7 +737,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
                 placeholder="Ex: 10 El-Horreya Road, Alexandria, Egypt"
                 value={delivery.address}
                 onChangeText={(text) => handleAddressChange(text, 'delivery')}
-                outlineColor={colors.border}
+                outlineColor={tokens.border}
                 activeOutlineColor={tokens.primary}
                 style={styles.addressInput}
                 right={
@@ -850,7 +838,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
               multiline
               numberOfLines={2}
               maxLength={200}
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={styles.input}
             />
@@ -875,26 +863,13 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
           </Card>
         )}
 
-        {/* Boutons navigation */}
-        <View style={styles.actions}>
-          <Button
-            mode="outlined"
-            onPress={handleBack}
-            style={styles.backButton}
-            textColor={colors.gray}
-          >
-            {t('common.back')}
-          </Button>
-          <Button
-            mode="contained"
-            onPress={handleNext}
-            disabled={!pickup.address || !delivery.address}
-            buttonColor={tokens.primary}
-            style={styles.nextButton}
-          >
-            {t('transport.next')}
-          </Button>
-        </View>
+        <StepNavButtons
+          onBack={handleBack}
+          onNext={handleNext}
+          backLabel={t('common.back')}
+          nextLabel={t('transport.next')}
+          nextDisabled={!pickup.address || !delivery.address}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

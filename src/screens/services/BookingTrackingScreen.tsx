@@ -77,7 +77,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
     justifyContent: 'space-between',
   },
   fab: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 24,
     elevation: 6,
     shadowColor: '#000',
@@ -89,7 +89,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
   bottomSheet: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     elevation: 12,
@@ -101,7 +101,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
   },
 
   handleRow: { alignItems: 'center', paddingVertical: 10 },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#D1D5DB' },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: tokens.border },
   chevronIcon: { marginTop: 2 },
 
   statusBanner: {
@@ -122,18 +122,18 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
   },
   proAvatar: { backgroundColor: tokens.primary },
   proInfo: { flex: 1 },
-  proName: { color: colors.dark, fontWeight: '600' },
-  proDetails: { color: colors.gray, marginTop: 2 },
+  proName: { color: tokens.text.primary, fontWeight: '600' },
+  proDetails: { color: tokens.text.secondary, marginTop: 2 },
 
   infoCard: {
     flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
     backgroundColor: '#FFF3CD', borderRadius: 8,
     padding: spacing.sm, marginBottom: spacing.sm,
   },
-  infoText: { flex: 1, color: colors.dark, lineHeight: 18 },
+  infoText: { flex: 1, color: tokens.text.primary, lineHeight: 18 },
 
   milestoneSection: {
-    borderTopWidth: 1, borderTopColor: colors.border,
+    borderTopWidth: 1, borderTopColor: tokens.border,
     paddingTop: spacing.sm, marginBottom: spacing.sm,
   },
   milestone: {
@@ -143,15 +143,15 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
   milestoneLeft: { width: 20, alignItems: 'center', marginRight: spacing.sm },
   milestoneCircle: {
     width: 14, height: 14, borderRadius: 7,
-    borderWidth: 2, borderColor: colors.border, backgroundColor: colors.white,
+    borderWidth: 2, borderColor: tokens.border, backgroundColor: tokens.card,
   },
   milestoneDone: { backgroundColor: tokens.primary, borderColor: tokens.primary },
-  milestoneLine: { width: 2, flex: 1, backgroundColor: colors.border, marginTop: 2, minHeight: 16 },
+  milestoneLine: { width: 2, flex: 1, backgroundColor: tokens.border, marginTop: 2, minHeight: 16 },
   milestoneLineDone: { backgroundColor: tokens.primary },
   milestoneRight: { flex: 1, paddingBottom: 8 },
-  milestoneLabel: { fontSize: 13, color: colors.gray },
-  milestoneLabelDone: { color: colors.dark, fontWeight: '600' },
-  milestoneTime: { fontSize: 11, color: colors.gray, marginTop: 1 },
+  milestoneLabel: { fontSize: 13, color: tokens.text.secondary },
+  milestoneLabelDone: { color: tokens.text.primary, fontWeight: '600' },
+  milestoneTime: { fontSize: 11, color: tokens.text.secondary, marginTop: 1 },
 
   actionRow: { marginTop: spacing.xs },
   actionBtn: {
@@ -176,15 +176,15 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
     justifyContent: 'center', alignItems: 'center', padding: spacing.lg,
   },
   cashModalBox: {
-    backgroundColor: colors.white, borderRadius: 16,
+    backgroundColor: tokens.modal, borderRadius: 16,
     padding: spacing.lg, width: '100%', maxWidth: 400,
   },
-  cashModalTitle: { fontSize: 17, fontWeight: '700', color: colors.dark, marginBottom: spacing.xs },
-  cashModalMsg: { fontSize: 14, color: colors.gray, lineHeight: 20 },
+  cashModalTitle: { fontSize: 17, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.xs },
+  cashModalMsg: { fontSize: 14, color: tokens.text.secondary, lineHeight: 20 },
   cashModalActions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.lg },
   cashModalCancel: {
     flex: 1, borderRadius: 10, paddingVertical: 12,
-    borderWidth: 1, borderColor: colors.border, alignItems: 'center',
+    borderWidth: 1, borderColor: tokens.border, alignItems: 'center',
   },
   cashModalConfirm: {
     flex: 2, borderRadius: 10, paddingVertical: 12,
@@ -442,7 +442,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
 
   const contactPhone = role === 'client' ? proLocation?.phone : booking.client?.phone;
   const contactLabel = role === 'client' ? t('booking_tracking.contact_pro') : t('booking_tracking.contact_client');
-  const proName = proLocation?.proName || proLocation?.phone;
+  const proName = proLocation?.proName || undefined;
 
   const clientConfirmed = !!(booking as any).clientConfirmedCompletion;
   const proConfirmed = !!(booking as any).proConfirmedCompletion;
@@ -457,7 +457,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
         <IconButton
           icon="arrow-left"
           size={22}
-          iconColor={colors.dark}
+          iconColor={tokens.text.primary}
           style={styles.fab}
           onPress={() => navigation.goBack()}
         />
@@ -471,7 +471,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
           <Icon
             name={collapsed ? 'chevron-up' : 'chevron-down'}
             size={20}
-            color={colors.gray}
+            color={tokens.text.secondary}
             style={styles.chevronIcon}
           />
         </TouchableOpacity>
@@ -641,14 +641,14 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
               onChangeText={setCashAmountInput}
               keyboardType="numeric"
               placeholder="0.00"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
-              style={{ backgroundColor: colors.white, marginTop: spacing.sm }}
+              style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.sm }}
               right={<TextInput.Affix text="EGP" />}
             />
             <View style={styles.cashModalActions}>
               <TouchableOpacity style={styles.cashModalCancel} onPress={() => setShowCashModal(false)}>
-                <Text style={{ color: colors.gray, fontWeight: '600' }}>{t('common.cancel')}</Text>
+                <Text style={{ color: tokens.text.secondary, fontWeight: '600' }}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.cashModalConfirm, isCompletingLoading && { opacity: 0.5 }]}

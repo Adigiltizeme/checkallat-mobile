@@ -30,11 +30,11 @@ export const LanguageScreen = () => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
     padding: spacing.lg,
   },
   subtitle: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: spacing.lg,
     textAlign: 'center',
   },
@@ -42,7 +42,7 @@ export const LanguageScreen = () => {
     gap: spacing.sm,
   },
   item: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     padding: spacing.lg,
     flexDirection: 'row',
@@ -60,7 +60,7 @@ export const LanguageScreen = () => {
   },
   langName: {
     flex: 1,
-    color: colors.dark,
+    color: tokens.text.primary,
   },
   langNameSelected: {
     color: tokens.primary,
@@ -80,7 +80,7 @@ export const LanguageScreen = () => {
     fontSize: 14,
   },
   hint: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     textAlign: 'center',
     marginTop: spacing.xl,
     paddingHorizontal: spacing.lg,

@@ -20,7 +20,7 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.light,
+      backgroundColor: tokens.background,
     },
     loadingContainer: {
       flex: 1,
@@ -36,18 +36,18 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
     emptyText: {
       fontSize: 18,
       fontWeight: '600',
-      color: colors.text.primary,
+      color: tokens.text.primary,
       textAlign: 'center',
       marginBottom: spacing.sm,
     },
     emptySubtext: {
       fontSize: 14,
-      color: colors.text.secondary,
+      color: tokens.text.secondary,
       textAlign: 'center',
     },
     statsHeader: {
       flexDirection: 'row',
-      backgroundColor: colors.white,
+      backgroundColor: tokens.card,
       padding: spacing.lg,
       elevation: 2,
       marginBottom: spacing.md,
@@ -58,7 +58,7 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
     },
     statDivider: {
       width: 1,
-      backgroundColor: colors.border,
+      backgroundColor: tokens.border,
       marginHorizontal: spacing.md,
     },
     statValue: {
@@ -68,7 +68,7 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
     },
     statLabel: {
       fontSize: 14,
-      color: colors.text.secondary,
+      color: tokens.text.secondary,
       marginTop: spacing.xs,
     },
     list: {

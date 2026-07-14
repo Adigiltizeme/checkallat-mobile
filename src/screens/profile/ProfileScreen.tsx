@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Switch, Image, Linking } from 'react-native';
-import { List, Button, Divider, Text } from 'react-native-paper';
+import { List, Divider, Text } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -31,10 +32,10 @@ export const ProfileScreen = () => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   header: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     padding: spacing.xl,
     alignItems: 'center',
     marginBottom: spacing.md,
@@ -62,12 +63,12 @@ export const ProfileScreen = () => {
     fontWeight: '700',
   },
   name: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '600',
     marginBottom: 4,
   },
   email: {
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   driverBadge: {
     marginTop: 8,
@@ -82,16 +83,15 @@ export const ProfileScreen = () => {
     fontSize: 13,
   },
   section: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     marginBottom: spacing.md,
   },
   logoutButton: {
     margin: spacing.lg,
-    paddingVertical: 8,
   },
   version: {
     textAlign: 'center',
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: spacing.xl,
   },
   }), [tokens]);
@@ -183,7 +183,7 @@ export const ProfileScreen = () => {
               <Divider />
               <List.Item
                 title={t('role_selector.clear_default')}
-                left={(props) => <List.Icon {...props} icon="star-off" color={colors.gray} />}
+                left={(props) => <List.Icon {...props} icon="star-off" color={tokens.text.secondary} />}
                 onPress={() => dispatch(clearDefaultRole())}
               />
             </>
@@ -260,8 +260,8 @@ export const ProfileScreen = () => {
             <Switch
               value={notificationsEnabled}
               onValueChange={toggleNotifications}
-              trackColor={{ false: colors.border, true: tokens.primary + '80' }}
-              thumbColor={notificationsEnabled ? tokens.primary : colors.gray}
+              trackColor={{ false: tokens.border, true: tokens.primary + '80' }}
+              thumbColor={notificationsEnabled ? tokens.primary : tokens.text.secondary}
             />
           )}
         />
@@ -307,15 +307,12 @@ export const ProfileScreen = () => {
         />
       </View>
 
-      <Button
-        mode="contained"
+      <ChocolateButton
         onPress={handleLogout}
         style={styles.logoutButton}
-        buttonColor={colors.error}
-        icon="logout"
       >
         {t('profile.logout')}
-      </Button>
+      </ChocolateButton>
 
       <Text variant="bodySmall" style={styles.version}>
         Version 1.0.0

@@ -3,6 +3,7 @@
     "name": "CheckAll@t",
     "slug": "checkallat",
     "version": "1.0.0",
+    "scheme": "checkallat",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",

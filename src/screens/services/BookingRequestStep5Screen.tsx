@@ -18,6 +18,7 @@ import { useCreateBookingMutation } from '../../store/api/bookingsApi';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { getLocalizedName } from '../../utils/localize';
+import { CURRENCY_CONFIG } from '../../config/currency';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep5'>;
 
@@ -25,37 +26,37 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  title: { color: colors.dark, marginBottom: spacing.lg },
+  title: { color: tokens.text.primary, marginBottom: spacing.lg },
   card: { borderRadius: 12, marginBottom: spacing.md, elevation: 2 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: spacing.sm },
-  summaryLabel: { fontSize: 13, color: colors.gray, flex: 1 },
-  summaryValue: { fontSize: 14, fontWeight: '500', color: colors.dark, flex: 2, textAlign: 'right' },
+  summaryLabel: { fontSize: 13, color: tokens.text.secondary, flex: 1 },
+  summaryValue: { fontSize: 14, fontWeight: '500', color: tokens.text.primary, flex: 2, textAlign: 'right' },
   summaryValueHighlight: { color: tokens.primary, fontWeight: '700' },
-  divider: { backgroundColor: colors.lightGray },
-  descLabel: { fontSize: 13, color: colors.gray, marginBottom: 4 },
-  descText: { fontSize: 14, color: colors.dark, lineHeight: 20 },
+  divider: { backgroundColor: tokens.border },
+  descLabel: { fontSize: 13, color: tokens.text.secondary, marginBottom: 4 },
+  descText: { fontSize: 14, color: tokens.text.primary, lineHeight: 20 },
   photosRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: spacing.xs },
-  photoThumb: { width: 64, height: 64, borderRadius: 8, backgroundColor: colors.lightGray },
-  sectionLabel: { fontSize: 14, fontWeight: '600', color: colors.dark, marginBottom: spacing.sm },
+  photoThumb: { width: 64, height: 64, borderRadius: 8, backgroundColor: tokens.backgroundAlt },
+  sectionLabel: { fontSize: 14, fontWeight: '600', color: tokens.text.primary, marginBottom: spacing.sm },
   paymentCards: { gap: spacing.sm, marginBottom: spacing.lg },
   paymentCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     padding: spacing.md,
     position: 'relative',
   },
-  paymentCardActive: { borderColor: tokens.primary, backgroundColor: '#E8F5F3' },
+  paymentCardActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
   paymentIcon: { fontSize: 24, marginRight: spacing.md },
   paymentInfo: { flex: 1 },
-  paymentTitle: { fontSize: 15, fontWeight: '600', color: colors.dark },
+  paymentTitle: { fontSize: 15, fontWeight: '600', color: tokens.text.primary },
   paymentTitleActive: { color: tokens.primary },
-  paymentDesc: { fontSize: 12, color: colors.gray, marginTop: 2 },
+  paymentDesc: { fontSize: 12, color: tokens.text.secondary, marginTop: 2 },
   paymentCheck: {
     width: 22, height: 22, borderRadius: 11,
     backgroundColor: tokens.primary,
@@ -157,7 +158,7 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: tokens.background }]} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text variant="headlineSmall" style={styles.title}>
         {t('booking_request.step5_title')}
       </Text>
@@ -184,7 +185,7 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
               <Divider style={styles.divider} />
               <SummaryRow
                 label={t('booking_request.summary_price_est')}
-                value={`≥ ${step4Data.estimatedPrice}`}
+                value={`≥ ${step4Data.estimatedPrice} ${step4Data.estimatedCurrency ?? CURRENCY_CONFIG.code}`}
                 highlight
               />
             </>
@@ -268,18 +269,18 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
   );
 };
 
-const summaryRowStyles = StyleSheet.create({
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: spacing.sm },
-  summaryLabel: { fontSize: 14, color: colors.gray, flex: 1 },
-  summaryValue: { fontSize: 14, fontWeight: '500', color: colors.dark, flex: 2, textAlign: 'right' },
-  summaryValueHighlight: { fontWeight: '700' },
-});
 const SummaryRow = ({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) => {
   const { tokens: srTokens } = useAppTheme();
+  const srStyles = useMemo(() => StyleSheet.create({
+    summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingVertical: spacing.sm },
+    summaryLabel: { fontSize: 14, color: srTokens.text.secondary, flex: 1 },
+    summaryValue: { fontSize: 14, fontWeight: '500', color: srTokens.text.primary, flex: 2, textAlign: 'right' },
+    summaryValueHighlight: { fontWeight: '700' },
+  }), [srTokens]);
   return (
-  <View style={summaryRowStyles.summaryRow}>
-    <Text style={summaryRowStyles.summaryLabel}>{label}</Text>
-    <Text style={[summaryRowStyles.summaryValue, highlight && [summaryRowStyles.summaryValueHighlight, { color: srTokens.primary }]]}>{value}</Text>
-  </View>
+    <View style={srStyles.summaryRow}>
+      <Text style={srStyles.summaryLabel}>{label}</Text>
+      <Text style={[srStyles.summaryValue, highlight && [srStyles.summaryValueHighlight, { color: srTokens.primary }]]}>{value}</Text>
+    </View>
   );
 };

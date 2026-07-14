@@ -9,7 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Text, Button, Chip } from 'react-native-paper';
+import { Text, Chip } from 'react-native-paper';
+import { ChocolateButton } from '../shared/ChocolateButton';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors } from '../../theme/colors';
@@ -163,25 +164,20 @@ export const DriverCancelModal = ({
 
             {/* Actions */}
             <View style={styles.actions}>
-              <Button
-                mode="contained"
+              <ChocolateButton
                 onPress={handleConfirm}
-                buttonColor={colors.error}
                 loading={isConfirming}
                 disabled={isConfirming}
-                icon="check"
                 style={styles.confirmBtn}
               >
                 {t('driver.cancel_confirm_btn')}
-              </Button>
-              <Button
-                mode="text"
+              </ChocolateButton>
+              <ChocolateButton
+                variant="ghost"
                 onPress={onContactSupport}
-                textColor={colors.primary}
-                icon="headset"
               >
                 {t('driver.cancel_contact_support')}
-              </Button>
+              </ChocolateButton>
             </View>
           </ScrollView>
         </View>
@@ -282,7 +278,5 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     marginTop: spacing.sm,
   },
-  confirmBtn: {
-    borderRadius: 10,
-  },
+  confirmBtn: {},
 });

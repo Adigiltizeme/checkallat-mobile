@@ -22,13 +22,13 @@ export const TransportListScreen = ({ navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
-  loadingText: { color: colors.gray, marginTop: spacing.md },
+  loadingText: { color: tokens.text.secondary, marginTop: spacing.md },
   filtersContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: tokens.border,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -37,8 +37,8 @@ export const TransportListScreen = ({ navigation }: Props) => {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
-  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: colors.dark },
-  chevron: { fontSize: 12, color: colors.gray },
+  sectionHeaderText: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+  chevron: { fontSize: 12, color: tokens.text.secondary },
   tabsRow: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.xs,
@@ -49,11 +49,11 @@ export const TransportListScreen = ({ navigation }: Props) => {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: 20,
-    backgroundColor: colors.lightGray,
+    backgroundColor: tokens.backgroundAlt,
     marginRight: spacing.xs,
   },
   tabActive: { backgroundColor: tokens.primary },
-  tabText: { fontSize: 13, color: colors.gray, fontWeight: '500' },
+  tabText: { fontSize: 13, color: tokens.text.secondary, fontWeight: '500' },
   tabTextActive: { color: colors.white, fontWeight: '600' },
   searchRow: {
     flexDirection: 'row',
@@ -61,12 +61,12 @@ export const TransportListScreen = ({ navigation }: Props) => {
     marginHorizontal: spacing.md,
     marginTop: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 10,
-    backgroundColor: colors.lightGray,
+    backgroundColor: tokens.backgroundAlt,
     paddingHorizontal: spacing.sm,
   },
-  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: colors.dark },
+  searchInput: { flex: 1, paddingVertical: 9, fontSize: 14, color: tokens.text.primary },
   searchClear: { padding: spacing.xs },
   dateModeRow: {
     flexDirection: 'row',
@@ -79,11 +79,11 @@ export const TransportListScreen = ({ navigation }: Props) => {
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.lightGray,
+    borderColor: tokens.border,
+    backgroundColor: tokens.backgroundAlt,
   },
   dateModeBtnActive: { backgroundColor: `${tokens.primary}20`, borderColor: tokens.primary },
-  dateModeBtnText: { fontSize: 12, color: colors.gray },
+  dateModeBtnText: { fontSize: 12, color: tokens.text.secondary },
   dateModeBtnTextActive: { color: tokens.primary, fontWeight: '600' },
   dateRangeRow: {
     flexDirection: 'row',
@@ -94,36 +94,36 @@ export const TransportListScreen = ({ navigation }: Props) => {
     gap: spacing.xs,
   },
   dateRangeInner: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  dateLabel: { fontSize: 13, color: colors.gray },
+  dateLabel: { fontSize: 13, color: tokens.text.secondary },
   dateInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 8,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     fontSize: 13,
-    color: colors.dark,
-    backgroundColor: colors.lightGray,
+    color: tokens.text.primary,
+    backgroundColor: tokens.backgroundAlt,
   },
-  clearBtn: { fontSize: 16, color: colors.gray, paddingHorizontal: spacing.xs },
-  countText: { fontSize: 12, color: colors.gray, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
+  clearBtn: { fontSize: 16, color: tokens.text.secondary, paddingHorizontal: spacing.xs },
+  countText: { fontSize: 12, color: tokens.text.secondary, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
   list: { padding: spacing.md },
   listEmpty: { flexGrow: 1 },
-  requestCard: { marginBottom: spacing.md, backgroundColor: colors.white },
+  requestCard: { marginBottom: spacing.md, backgroundColor: tokens.card },
   sectionTitle: { color: tokens.primary, marginBottom: spacing.sm },
   statusContainer: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing.sm },
   statusChip: {},
   chipsContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
   objectChip: { backgroundColor: `${tokens.primary}20`, paddingHorizontal: 8, paddingVertical: 0, margin: 0 },
   objectChipText: { color: tokens.primary, fontSize: 12, fontWeight: '600', lineHeight: 16 },
-  requestDescription: { color: colors.gray, marginBottom: spacing.sm },
+  requestDescription: { color: tokens.text.secondary, marginBottom: spacing.sm },
   requestDetails: { gap: 4, marginBottom: spacing.sm },
   detailRow: { flexDirection: 'row', gap: spacing.xs },
-  detailLabel: { color: colors.gray, width: 40 },
-  detailValue: { flex: 1, color: colors.dark },
-  requestFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
-  requestDate: { color: colors.gray },
+  detailLabel: { color: tokens.text.secondary, width: 40 },
+  detailValue: { flex: 1, color: tokens.text.primary },
+  requestFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: tokens.border },
+  requestDate: { color: tokens.text.secondary },
   requestPrice: { color: tokens.primary, fontWeight: '700' },
   driverRow: {
     flexDirection: 'row',
@@ -131,18 +131,18 @@ export const TransportListScreen = ({ navigation }: Props) => {
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: tokens.border,
     gap: spacing.xs,
   },
   driverIcon: { fontSize: 16 },
   driverInfo: { flex: 1 },
-  driverName: { fontSize: 13, fontWeight: '600', color: colors.dark },
-  driverSub: { fontSize: 12, color: colors.gray },
-  driverPending: { fontSize: 12, color: colors.gray, fontStyle: 'italic' },
+  driverName: { fontSize: 13, fontWeight: '600', color: tokens.text.primary },
+  driverSub: { fontSize: 12, color: tokens.text.secondary },
+  driverPending: { fontSize: 12, color: tokens.text.secondary, fontStyle: 'italic' },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
   emptyIcon: { fontSize: 80, marginBottom: spacing.lg },
-  emptyTitle: { color: colors.dark, marginBottom: spacing.sm },
-  emptyText: { color: colors.gray, textAlign: 'center', marginBottom: spacing.xs },
+  emptyTitle: { color: tokens.text.primary, marginBottom: spacing.sm },
+  emptyText: { color: tokens.text.secondary, textAlign: 'center', marginBottom: spacing.xs },
   fab: { position: 'absolute', right: spacing.lg, bottom: spacing.lg, backgroundColor: tokens.primary },
   }), [tokens]);
 
@@ -271,7 +271,7 @@ export const TransportListScreen = ({ navigation }: Props) => {
               value={search}
               onChangeText={setSearch}
               placeholder={t('transport.search_placeholder')}
-              placeholderTextColor={colors.gray}
+              placeholderTextColor={tokens.text.secondary}
               returnKeyType="search"
             />
             {!!search && (
@@ -305,7 +305,7 @@ export const TransportListScreen = ({ navigation }: Props) => {
                 value={dateSingle}
                 onChangeText={setDateSingle}
                 placeholder={t('common.date_placeholder')}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
                 keyboardType="numeric"
                 maxLength={10}
               />
@@ -317,7 +317,7 @@ export const TransportListScreen = ({ navigation }: Props) => {
                   value={dateStart}
                   onChangeText={setDateStart}
                   placeholder={t('common.date_placeholder')}
-                  placeholderTextColor={colors.gray}
+                  placeholderTextColor={tokens.text.secondary}
                   keyboardType="numeric"
                   maxLength={10}
                 />
@@ -327,7 +327,7 @@ export const TransportListScreen = ({ navigation }: Props) => {
                   value={dateEnd}
                   onChangeText={setDateEnd}
                   placeholder={t('common.date_placeholder')}
-                  placeholderTextColor={colors.gray}
+                  placeholderTextColor={tokens.text.secondary}
                   keyboardType="numeric"
                   maxLength={10}
                 />

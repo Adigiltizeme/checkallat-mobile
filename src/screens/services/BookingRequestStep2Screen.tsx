@@ -60,28 +60,28 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.md, paddingBottom: spacing.xl },
-  stepLabel: { fontSize: 12, color: colors.gray, marginBottom: spacing.sm },
-  countryBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.lightBlue, borderRadius: 8, padding: spacing.sm, marginBottom: spacing.md },
-  countryBadgeText: { fontSize: 14, color: colors.dark },
+  stepLabel: { fontSize: 12, color: tokens.text.secondary, marginBottom: spacing.sm },
+  countryBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: tokens.backgroundAlt, borderRadius: 8, padding: spacing.sm, marginBottom: spacing.md },
+  countryBadgeText: { fontSize: 14, color: tokens.text.primary },
   countryBadgeChange: { fontSize: 12, color: tokens.primary },
   card: { borderRadius: 12, marginBottom: spacing.md, elevation: 2 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  cardTitle: { fontSize: 16, fontWeight: '600', color: colors.dark },
-  input: { backgroundColor: colors.white, marginBottom: spacing.xs },
-  suggestions: { backgroundColor: colors.white, borderRadius: 8, borderWidth: 1, borderColor: colors.border, marginBottom: spacing.xs },
-  suggestionItem: { flexDirection: 'row', alignItems: 'center', paddingRight: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.lightGray },
+  cardTitle: { fontSize: 16, fontWeight: '600', color: tokens.text.primary },
+  input: { backgroundColor: tokens.backgroundAlt, marginBottom: spacing.xs },
+  suggestions: { backgroundColor: tokens.card, borderRadius: 8, borderWidth: 1, borderColor: tokens.border, marginBottom: spacing.xs },
+  suggestionItem: { flexDirection: 'row', alignItems: 'center', paddingRight: spacing.sm, borderBottomWidth: 1, borderBottomColor: tokens.border },
   suggestionText: { flex: 1 },
-  suggestionName: { fontSize: 14, color: colors.dark },
-  suggestionSub: { fontSize: 12, color: colors.gray },
-  suggestionDist: { fontSize: 12, color: colors.gray },
+  suggestionName: { fontSize: 14, color: tokens.text.primary },
+  suggestionSub: { fontSize: 12, color: tokens.text.secondary },
+  suggestionDist: { fontSize: 12, color: tokens.text.secondary },
   successChip: { backgroundColor: '#E8F5E9', marginTop: spacing.xs },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm },
   halfInput: { flex: 1, marginRight: spacing.sm },
-  fieldLabel: { fontSize: 12, color: colors.gray, marginBottom: 4 },
+  fieldLabel: { fontSize: 12, color: tokens.text.secondary, marginBottom: 4 },
   stepper: { flexDirection: 'row', alignItems: 'center' },
-  stepperVal: { fontSize: 18, fontWeight: '600', color: colors.dark, minWidth: 30, textAlign: 'center' },
+  stepperVal: { fontSize: 18, fontWeight: '600', color: tokens.text.primary, minWidth: 30, textAlign: 'center' },
   buttons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
   backWrap: { flex: 1 },
   nextWrap: { flex: 2 },
@@ -138,6 +138,16 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   const geocodeAddress = async (query: string) => {
     if (!query.trim() || query.trim().length < 3) return;
     setIsGeocoding(true);
+    const mapboxFallback = async () => {
+      const results = await MapboxService.geocodeAddress(query.trim(), {
+        country: activeCountryCode ?? undefined,
+        language: i18n.language,
+        ...(locationState.userLat && locationState.userLng
+          ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
+          : {}),
+      });
+      setSuggestions(results.slice(0, 5));
+    };
     try {
       if (GooglePlacesService.isConfigured()) {
         const results = await GooglePlacesService.suggest(query.trim(), {
@@ -150,17 +160,10 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
         });
         setSuggestions(results);
       } else {
-        const results = await MapboxService.geocodeAddress(query.trim(), {
-          country: activeCountryCode ?? undefined,
-          language: 'fr,ar,en',
-          ...(locationState.userLat && locationState.userLng
-            ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
-            : {}),
-        });
-        setSuggestions(results.slice(0, 5));
+        await mapboxFallback();
       }
     } catch {
-      setSuggestions([]);
+      try { await mapboxFallback(); } catch { setSuggestions([]); }
     } finally {
       setIsGeocoding(false);
     }
@@ -242,7 +245,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <KeyboardAvoidingView style={[styles.container, { backgroundColor: tokens.background }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <UnsupportedCountryModal
         visible={showUnsupportedModal}
         detectedCountryCode={locationState.detectedCountryCode}
@@ -279,7 +282,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
               placeholder={t('booking_request.address_placeholder')}
               value={address.address}
               onChangeText={handleAddressChange}
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={styles.input}
               right={isGeocoding ? <TextInput.Icon icon={() => <ActivityIndicator size={20} color={tokens.primary} />} /> : undefined}
@@ -337,7 +340,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
               placeholder={t('booking_request.instructions_placeholder')}
               value={address.instructions ?? ''}
               onChangeText={v => setAddress(prev => ({ ...prev, instructions: v }))}
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={[styles.input, { marginTop: spacing.sm }]}
             />

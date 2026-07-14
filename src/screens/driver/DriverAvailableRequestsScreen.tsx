@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,7 +7,8 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { Text, Card, Chip, ActivityIndicator, Button } from 'react-native-paper';
+import { Text, Card, Chip, ActivityIndicator } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -28,6 +29,55 @@ type Props = StackScreenProps<DriverStackParamList, 'DriverAvailableRequests'>;
 export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
   const { t, i18n } = useTranslation();
   const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    listContent: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
+    emptyContent: { flex: 1, justifyContent: 'center', padding: spacing.xl },
+
+    card: { marginBottom: spacing.md, backgroundColor: tokens.card, elevation: 2 },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+    price: { fontWeight: 'bold', color: colors.success },
+
+    routeSection: { marginBottom: spacing.md },
+    routeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+    routeLine: { width: 2, height: 16, backgroundColor: tokens.border, marginLeft: 8, marginVertical: 2 },
+    routeText: { flex: 1 },
+    routeLabel: { color: tokens.text.secondary, marginBottom: 2 },
+
+    metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+    metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    metaText: { color: tokens.text.secondary },
+    immediateChip: { backgroundColor: '#FFF8E1' },
+    immediateChipText: { fontSize: 11, color: '#B45309', includeFontPadding: false, lineHeight: 14 },
+
+    conditionText: { fontSize: 11, color: tokens.text.secondary, marginTop: 2 },
+
+    detailSection: { marginBottom: spacing.sm },
+    detailSectionLabel: { color: tokens.text.secondary, marginBottom: 4, fontWeight: '600', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
+
+    chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    objectChip: { backgroundColor: tokens.backgroundAlt },
+    objectChipText: { fontSize: 11, includeFontPadding: false, lineHeight: 14 },
+
+    statsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
+    statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    statText: { color: tokens.text.primary },
+
+    servicesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    serviceChip: { backgroundColor: '#EEF2FF' },
+    serviceChipText: { fontSize: 11, color: '#4338CA', includeFontPadding: false, lineHeight: 14 },
+    noServicesText: { color: tokens.text.secondary, fontStyle: 'italic', fontSize: 12 },
+
+    actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+    rejectBtn: { flex: 1, borderColor: colors.error },
+    acceptBtn: { flex: 2 },
+
+    emptyContainer: { alignItems: 'center' },
+    emptyTitle: { marginTop: spacing.lg, fontWeight: 'bold', color: tokens.text.primary },
+    emptySubtext: { marginTop: spacing.xs, color: tokens.text.secondary, textAlign: 'center', lineHeight: 20 },
+  }), [tokens]);
 
   const { data: requests = [], isLoading, isFetching, refetch } = useGetAvailableRequestsQuery(undefined, {
     pollingInterval: 8000,
@@ -154,14 +204,14 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
           {/* Volume / Weight */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Icon name="cube-outline" size={16} color={colors.gray} />
+              <Icon name="cube-outline" size={16} color={tokens.text.secondary} />
               <Text variant="bodySmall" style={styles.statText}>
                 {t('driver.volume_m3', { volume: item.estimatedVolume ?? 0 })}
               </Text>
             </View>
             {!!item.estimatedWeight && (
               <View style={styles.statItem}>
-                <Icon name="weight-kilogram" size={16} color={colors.gray} />
+                <Icon name="weight-kilogram" size={16} color={tokens.text.secondary} />
                 <Text variant="bodySmall" style={styles.statText}>
                   {t('driver.weight_kg', { weight: item.estimatedWeight })}
                 </Text>
@@ -203,11 +253,11 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
           {/* Meta: distance, date, immediate badge */}
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Icon name="map-marker-distance" size={15} color={colors.gray} />
+              <Icon name="map-marker-distance" size={15} color={tokens.text.secondary} />
               <Text variant="bodySmall" style={styles.metaText}>{item.distance?.toFixed(1)} km</Text>
             </View>
             <View style={styles.metaItem}>
-              <Icon name="calendar" size={15} color={colors.gray} />
+              <Icon name="calendar" size={15} color={tokens.text.secondary} />
               <Text variant="bodySmall" style={styles.metaText}>{formatDate(item.scheduledDate)}</Text>
             </View>
             {item.isImmediate && (
@@ -224,26 +274,21 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
 
           {/* Actions */}
           <View style={styles.actions}>
-            <Button
-              mode="outlined"
+            <ChocolateButton
+              variant="outline"
               onPress={() => handleReject(item.id)}
-              textColor={colors.error}
               style={styles.rejectBtn}
-              icon="close"
             >
               {t('driver.reject_request_btn')}
-            </Button>
-            <Button
-              mode="contained"
+            </ChocolateButton>
+            <ChocolateButton
               onPress={() => handleAccept(item.id)}
-              buttonColor={tokens.primary}
-              style={styles.acceptBtn}
-              icon="check"
               loading={accepting}
               disabled={accepting}
+              style={styles.acceptBtn}
             >
               {t('driver.accept_request_btn')}
-            </Button>
+            </ChocolateButton>
           </View>
         </Card.Content>
       </Card>
@@ -270,7 +315,7 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
       }
       ListEmptyComponent={
         <View style={styles.emptyContainer}>
-          <Icon name="truck-check-outline" size={80} color={colors.gray} />
+          <Icon name="truck-check-outline" size={80} color={tokens.text.secondary} />
           <Text variant="titleMedium" style={styles.emptyTitle}>{t('driver.no_available_requests')}</Text>
           <Text variant="bodyMedium" style={styles.emptySubtext}>{t('driver.no_available_requests_hint')}</Text>
         </View>
@@ -279,51 +324,3 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-  emptyContent: { flex: 1, justifyContent: 'center', padding: spacing.xl },
-
-  card: { marginBottom: spacing.md, backgroundColor: '#FFFFFF', elevation: 2 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  price: { fontWeight: 'bold', color: colors.success },
-
-  routeSection: { marginBottom: spacing.md },
-  routeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  routeLine: { width: 2, height: 16, backgroundColor: '#E0E0E0', marginLeft: 8, marginVertical: 2 },
-  routeText: { flex: 1 },
-  routeLabel: { color: '#9E9E9E', marginBottom: 2 },
-
-  metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
-  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaText: { color: '#6B7280' },
-  immediateChip: { backgroundColor: '#FFF8E1' },
-  immediateChipText: { fontSize: 11, color: '#B45309', includeFontPadding: false, lineHeight: 14 },
-
-  conditionText: { fontSize: 11, color: '#6B7280', marginTop: 2 },
-
-  detailSection: { marginBottom: spacing.sm },
-  detailSectionLabel: { color: '#9E9E9E', marginBottom: 4, fontWeight: '600', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
-
-  chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  objectChip: { backgroundColor: '#F3F4F6' },
-  objectChipText: { fontSize: 11, includeFontPadding: false, lineHeight: 14 },
-
-  statsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.sm },
-  statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  statText: { color: '#374151' },
-
-  servicesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  serviceChip: { backgroundColor: '#EEF2FF' },
-  serviceChipText: { fontSize: 11, color: '#4338CA', includeFontPadding: false, lineHeight: 14 },
-  noServicesText: { color: '#9CA3AF', fontStyle: 'italic', fontSize: 12 },
-
-  actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
-  rejectBtn: { flex: 1, borderColor: colors.error },
-  acceptBtn: { flex: 2 },
-
-  emptyContainer: { alignItems: 'center' },
-  emptyTitle: { marginTop: spacing.lg, fontWeight: 'bold', color: '#374151' },
-  emptySubtext: { marginTop: spacing.xs, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
-});

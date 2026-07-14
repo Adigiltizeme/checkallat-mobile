@@ -7,14 +7,14 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Text, Chip, Button } from 'react-native-paper';
+import { Text, Chip } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TransportStackParamList } from '../../navigation/types';
 import { useOpenDisputeMutation } from '../../store/api/transportApi';
 import { colors } from '../../theme/colors';
-import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<TransportStackParamList, 'Dispute'>;
@@ -22,7 +22,6 @@ type Props = StackScreenProps<TransportStackParamList, 'Dispute'>;
 const CATEGORIES = ['quality', 'payment', 'cancellation', 'damage', 'fraud', 'other'] as const;
 
 export const DisputeScreen = ({ route, navigation }: Props) => {
-  const { tokens } = useAppTheme();
   const { t } = useTranslation();
   const { requestId } = route.params;
 
@@ -62,15 +61,13 @@ export const DisputeScreen = ({ route, navigation }: Props) => {
         <Icon name="check-circle" size={80} color={colors.success} />
         <Text variant="titleLarge" style={styles.successTitle}>{t('dispute.submitted_title')}</Text>
         <Text variant="bodyMedium" style={styles.successMsg}>{t('dispute.submitted_msg')}</Text>
-        <Button
-          mode="contained"
+        <ChocolateButton
+          variant="outline"
           onPress={() => navigation.goBack()}
-          buttonColor={tokens.primary}
           style={styles.doneBtn}
-          icon="arrow-left"
         >
           {t('common.back')}
-        </Button>
+        </ChocolateButton>
       </View>
     );
   }
@@ -139,17 +136,14 @@ export const DisputeScreen = ({ route, navigation }: Props) => {
           )}
           <Text variant="bodySmall" style={styles.charCount}>{description.length}/2000</Text>
 
-          <Button
-            mode="contained"
+          <ChocolateButton
             onPress={handleSubmit}
             loading={isLoading}
             disabled={isLoading}
-            buttonColor={colors.error}
-            icon="flag"
             style={styles.submitBtn}
           >
             {isLoading ? t('dispute.submitting') : t('dispute.submit_btn')}
-          </Button>
+          </ChocolateButton>
         </View>
 
         <View style={{ height: spacing.xl * 2 }} />
@@ -224,7 +218,7 @@ const styles = StyleSheet.create({
   errorText: { color: colors.error, marginTop: 4 },
   charCount: { color: '#9CA3AF', textAlign: 'right', marginTop: 4 },
 
-  submitBtn: { marginTop: spacing.lg, borderRadius: 10 },
+  submitBtn: { marginTop: spacing.lg },
 
   successContainer: {
     flex: 1,
@@ -235,5 +229,5 @@ const styles = StyleSheet.create({
   },
   successTitle: { fontWeight: 'bold', color: '#111827', marginTop: spacing.lg, textAlign: 'center' },
   successMsg: { color: '#6B7280', textAlign: 'center', marginTop: spacing.sm, lineHeight: 22 },
-  doneBtn: { marginTop: spacing.xl, borderRadius: 10, minWidth: 180 },
+  doneBtn: { marginTop: spacing.xl, minWidth: 180 },
 });

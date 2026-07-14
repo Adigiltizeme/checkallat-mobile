@@ -52,7 +52,7 @@ export const AddressesScreen = () => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   centered: {
     flex: 1,
@@ -77,15 +77,15 @@ export const AddressesScreen = () => {
     marginBottom: spacing.md,
   },
   emptyTitle: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: 8,
   },
   emptyHint: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     padding: spacing.md,
     flexDirection: 'row',
@@ -124,7 +124,7 @@ export const AddressesScreen = () => {
     marginBottom: 2,
   },
   cardLabel: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '600',
   },
   defaultBadge: {
@@ -139,14 +139,14 @@ export const AddressesScreen = () => {
     fontWeight: '600',
   },
   cardAddress: {
-    color: colors.dark,
+    color: tokens.text.primary,
   },
   cardDetail: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginTop: 2,
   },
   cardInstructions: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontStyle: 'italic',
     marginTop: 2,
   },
@@ -158,7 +158,7 @@ export const AddressesScreen = () => {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.backgroundAlt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -178,32 +178,32 @@ export const AddressesScreen = () => {
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.modal,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: spacing.lg,
     maxHeight: '90%',
   },
   modalTitle: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '700',
     marginBottom: spacing.md,
     textAlign: 'center',
   },
   label: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: 4,
     marginTop: spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     fontSize: 15,
-    color: colors.dark,
-    backgroundColor: colors.white,
+    color: tokens.text.primary,
+    backgroundColor: tokens.backgroundAlt,
   },
   radioGroup: {
     flexDirection: 'row',
@@ -212,7 +212,7 @@ export const AddressesScreen = () => {
   },
   radioBtn: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: spacing.md,
@@ -222,7 +222,7 @@ export const AddressesScreen = () => {
     backgroundColor: tokens.primary + '15',
   },
   radioBtnText: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontSize: 14,
   },
   radioBtnTextActive: {
@@ -240,7 +240,7 @@ export const AddressesScreen = () => {
     height: 22,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -254,7 +254,7 @@ export const AddressesScreen = () => {
     fontWeight: '700',
   },
   checkLabel: {
-    color: colors.dark,
+    color: tokens.text.primary,
   },
   modalActions: {
     flexDirection: 'row',
@@ -264,13 +264,13 @@ export const AddressesScreen = () => {
   cancelBtn: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
   },
   cancelBtnText: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -494,7 +494,7 @@ const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.
                 value={form.address}
                 onChangeText={(v) => setForm((f) => ({ ...f, address: v }))}
                 placeholder={t('addresses.address_placeholder')}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
                 multiline
               />
 
@@ -506,7 +506,7 @@ const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.
                 onChangeText={(v) => setForm((f) => ({ ...f, floor: v }))}
                 keyboardType="numeric"
                 placeholder="0"
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
               />
 
               {/* Ascenseur */}
@@ -527,7 +527,7 @@ const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.
                 value={form.instructions}
                 onChangeText={(v) => setForm((f) => ({ ...f, instructions: v }))}
                 placeholder={t('addresses.instructions_placeholder')}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
                 multiline
               />
 

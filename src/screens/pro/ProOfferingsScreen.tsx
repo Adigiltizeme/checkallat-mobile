@@ -36,16 +36,16 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   list: { padding: spacing.md, paddingBottom: 100 },
 
   offeringCard: {
-    backgroundColor: colors.white, borderRadius: 14, padding: spacing.md,
-    borderWidth: 1, borderColor: colors.border,
+    backgroundColor: tokens.card, borderRadius: 14, padding: spacing.md,
+    borderWidth: 1, borderColor: tokens.border,
   },
   offeringTop: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  offeringName: { fontSize: 14, fontWeight: '700', color: colors.dark },
-  offeringDesc: { fontSize: 12, color: colors.gray, marginTop: 2, marginBottom: 4 },
+  offeringName: { fontSize: 14, fontWeight: '700', color: tokens.text.primary },
+  offeringDesc: { fontSize: 12, color: tokens.text.secondary, marginTop: 2, marginBottom: 4 },
   offeringPrice: { fontSize: 13, fontWeight: '600', color: tokens.primary },
   offeringActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   deleteBtn: { padding: 6 },
@@ -56,8 +56,8 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
   unavailableText: { fontSize: 11, color: colors.error, fontWeight: '600' },
 
   emptyState: { alignItems: 'center', paddingTop: spacing.xxl, gap: spacing.sm },
-  emptyText: { fontSize: 15, fontWeight: '600', color: colors.dark },
-  emptyHint: { fontSize: 13, color: colors.gray, textAlign: 'center' },
+  emptyText: { fontSize: 15, fontWeight: '600', color: tokens.text.primary },
+  emptyHint: { fontSize: 13, color: tokens.text.secondary, textAlign: 'center' },
 
   fab: {
     position: 'absolute', bottom: 24, right: 24,
@@ -68,19 +68,19 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
 
   modalOverlay: { flex: 1, backgroundColor: '#00000055', justifyContent: 'flex-end' },
   modalSheet: {
-    backgroundColor: colors.white, borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    backgroundColor: tokens.modal, borderTopLeftRadius: 24, borderTopRightRadius: 24,
     padding: spacing.lg, paddingBottom: spacing.xl, maxHeight: '85%',
   },
-  modalHandle: { width: 40, height: 4, backgroundColor: colors.border, borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: colors.dark, marginBottom: spacing.lg },
+  modalHandle: { width: 40, height: 4, backgroundColor: tokens.border, borderRadius: 2, alignSelf: 'center', marginBottom: spacing.md },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.lg },
 
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: colors.dark, marginBottom: spacing.xs },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: tokens.text.primary, marginBottom: spacing.xs },
   catChip: {
     paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: 20,
-    borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white,
+    borderWidth: 1, borderColor: tokens.border, backgroundColor: tokens.card,
   },
   catChipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
-  catChipText: { fontSize: 13, color: colors.gray },
+  catChipText: { fontSize: 13, color: tokens.text.secondary },
 
   createBtn: {
     backgroundColor: tokens.primary, borderRadius: 12, paddingVertical: 14,
@@ -187,8 +187,8 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
             <Switch
               value={isAvailable}
               onValueChange={() => handleToggleAvailability(item.id, isAvailable)}
-              trackColor={{ false: colors.border, true: tokens.primary + '80' }}
-              thumbColor={isAvailable ? tokens.primary : colors.gray}
+              trackColor={{ false: tokens.border, true: tokens.primary + '80' }}
+              thumbColor={isAvailable ? tokens.primary : tokens.text.secondary}
             />
             <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteBtn}>
               <Icon name="trash-can-outline" size={18} color={colors.error} />
@@ -214,7 +214,7 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
         ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Icon name="briefcase-plus-outline" size={48} color={colors.border} />
+            <Icon name="briefcase-plus-outline" size={48} color={tokens.border} />
             <Text style={styles.emptyText}>{t('pro_space.no_offerings')}</Text>
             <Text style={styles.emptyHint}>{t('pro_space.no_offerings_hint')}</Text>
           </View>
@@ -267,14 +267,14 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
                 onChangeText={setPriceMin}
                 keyboardType="numeric"
                 placeholder="Ex: 200"
-                outlineColor={colors.border}
+                outlineColor={tokens.border}
                 activeOutlineColor={tokens.primary}
-                style={{ backgroundColor: colors.white, marginBottom: spacing.md }}
+                style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.md }}
                 right={<TextInput.Affix text="EGP" />}
               />
 
               <Text style={styles.fieldLabel}>
-                {t('pro_space.offering_price_max')} <Text style={{ color: colors.gray, fontWeight: '400' }}>({t('common.optional')})</Text>
+                {t('pro_space.offering_price_max')} <Text style={{ color: tokens.text.secondary, fontWeight: '400' }}>({t('common.optional')})</Text>
               </Text>
               <TextInput
                 mode="outlined"
@@ -282,15 +282,15 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
                 onChangeText={setPriceMax}
                 keyboardType="numeric"
                 placeholder="Ex: 500"
-                outlineColor={colors.border}
+                outlineColor={tokens.border}
                 activeOutlineColor={tokens.primary}
-                style={{ backgroundColor: colors.white, marginBottom: spacing.md }}
+                style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.md }}
                 right={<TextInput.Affix text="EGP" />}
               />
 
               {/* Description */}
               <Text style={styles.fieldLabel}>
-                {t('pro_space.offering_description')} <Text style={{ color: colors.gray, fontWeight: '400' }}>({t('common.optional')})</Text>
+                {t('pro_space.offering_description')} <Text style={{ color: tokens.text.secondary, fontWeight: '400' }}>({t('common.optional')})</Text>
               </Text>
               <TextInput
                 mode="outlined"
@@ -299,9 +299,9 @@ export const ProOfferingsScreen = ({ navigation }: Props) => {
                 placeholder={t('pro_space.offering_desc_placeholder')}
                 multiline
                 numberOfLines={2}
-                outlineColor={colors.border}
+                outlineColor={tokens.border}
                 activeOutlineColor={tokens.primary}
-                style={{ backgroundColor: colors.white, marginBottom: spacing.lg }}
+                style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.lg }}
               />
 
               <TouchableOpacity

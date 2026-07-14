@@ -1,19 +1,21 @@
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Text, Card, ActivityIndicator } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useStripe } from '@stripe/stripe-react-native';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { getLocalizedName } from '../../utils/localize';
 import { spacing } from '../../theme/spacing';
 import { formatCurrency, CURRENCY_PRESETS } from '../../config/currency';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
-import { useGetProStatsQuery } from '../../store/api/prosApi';
+import { useGetProStatsQuery, usePayProCommissionMutation } from '../../store/api/prosApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { RootState } from '../../store';
 
@@ -56,22 +58,22 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: tokens.background },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
 
-  tabsContainer: { flexDirection: 'row', backgroundColor: '#F3F4F6', borderRadius: 10, padding: 4, marginBottom: spacing.md },
+  tabsContainer: { flexDirection: 'row', backgroundColor: tokens.backgroundAlt, borderRadius: 10, padding: 4, marginBottom: spacing.md },
   tab: { flex: 1, paddingVertical: spacing.xs, paddingHorizontal: 4, borderRadius: 8, alignItems: 'center' },
-  tabActive: { backgroundColor: colors.white, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
-  tabText: { fontSize: 11, color: colors.gray, fontWeight: '500', textAlign: 'center' },
+  tabActive: { backgroundColor: tokens.card, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+  tabText: { fontSize: 11, color: tokens.text.secondary, fontWeight: '500', textAlign: 'center' },
   tabTextActive: { color: tokens.primary, fontWeight: '700' },
 
-  periodNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: colors.white, borderRadius: 10, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.md, elevation: 2 },
+  periodNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: tokens.card, borderRadius: 10, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.md, elevation: 2 },
   navArrow: { padding: 4 },
   navArrowDisabled: { opacity: 0.3 },
   periodLabelContainer: { flex: 1, alignItems: 'center' },
-  periodLabel: { fontSize: 15, fontWeight: '700', color: '#111827', textAlign: 'center' },
-  periodSublabel: { fontSize: 12, color: colors.gray, marginTop: 2, textAlign: 'center' },
+  periodLabel: { fontSize: 15, fontWeight: '700', color: tokens.text.primary, textAlign: 'center' },
+  periodSublabel: { fontSize: 12, color: tokens.text.secondary, marginTop: 2, textAlign: 'center' },
 
   totalCard: { marginBottom: spacing.md, backgroundColor: tokens.primary, elevation: 4 },
   totalLabel: { color: colors.white, marginBottom: spacing.xs },
@@ -79,30 +81,46 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   totalSubtext: { color: 'rgba(255,255,255,0.8)' },
 
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
-  statCard: { width: '48%', backgroundColor: colors.white, elevation: 2 },
+  statCard: { width: '48%', backgroundColor: tokens.card, elevation: 2 },
   clickableCard: { backgroundColor: 'transparent', elevation: 0 },
   statContent: { alignItems: 'center', paddingVertical: spacing.md },
   statNumber: { fontWeight: 'bold', marginTop: spacing.xs },
-  statLabel: { color: colors.gray, marginTop: spacing.xs, textAlign: 'center' },
+  statLabel: { color: tokens.text.secondary, marginTop: spacing.xs, textAlign: 'center' },
   viewReviewsText: { color: tokens.primary, marginTop: spacing.xs, textAlign: 'center', fontSize: 12 },
 
   recentSection: { marginTop: spacing.md },
   sectionTitle: { fontWeight: 'bold', marginBottom: spacing.md },
-  emptyCard: { backgroundColor: colors.white, elevation: 2 },
+  emptyCard: { backgroundColor: tokens.card, elevation: 2 },
   emptyContent: { alignItems: 'center', paddingVertical: spacing.xl },
-  emptyText: { color: colors.gray, marginTop: spacing.md },
-  earningCard: { marginBottom: spacing.sm, backgroundColor: colors.white, elevation: 2 },
+  emptyText: { color: tokens.text.secondary, marginTop: spacing.md },
+  earningCard: { marginBottom: spacing.sm, backgroundColor: tokens.card, elevation: 2 },
   earningHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
   earningInfo: { flex: 1 },
   earningTitle: { fontWeight: 'bold', marginBottom: 2 },
-  earningDate: { color: colors.gray, fontSize: 12 },
+  earningDate: { color: tokens.text.secondary, fontSize: 12 },
   earningAmount: { fontWeight: 'bold', color: colors.success },
   earningMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: 6 },
   earningDetail: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
-  earningDetailText: { color: colors.gray, fontSize: 12, flexShrink: 1 },
+  earningDetailText: { color: tokens.text.secondary, fontSize: 12, flexShrink: 1 },
+
+  commissionAlert: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: '#FFF8E1',
+    borderRadius: 10,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.warning,
+  },
+  commissionAlertTitle: { fontSize: 14, fontWeight: '700', color: '#7B5800', marginBottom: 2 },
+  commissionAlertText: { fontSize: 13, color: '#7B5800', lineHeight: 18 },
+  commissionPayButton: { marginTop: spacing.sm, alignSelf: 'flex-start' },
 }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const pro = useSelector((state: RootState) => (state.auth.user as any)?.pro);
   const proId: string = pro?.id ?? '';
 
@@ -118,6 +136,32 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   });
   useRefetchOnFocus(refetch);
   useRefetchOnFocus(refetchStats);
+  const [payProCommission, { isLoading: payingCommission }] = usePayProCommissionMutation();
+  const [commissionPaid, setCommissionPaid] = useState(false);
+
+  const handlePayCommissionOnline = async () => {
+    try {
+      const result = await payProCommission().unwrap();
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: 'CheckAll@t',
+        paymentIntentClientSecret: result.clientSecret,
+        allowsDelayedPaymentMethods: false,
+      });
+      if (initError) { Alert.alert(t('common.error'), initError.message); return; }
+
+      const { error: payError } = await presentPaymentSheet();
+      if (payError) {
+        if (payError.code !== 'Canceled') Alert.alert(t('common.error'), payError.message);
+        return;
+      }
+
+      setCommissionPaid(true);
+      refetchStats();
+      Alert.alert(t('payment.success_title'), t('pro_space.commission_paid_success_msg'), [{ text: t('common.ok') }]);
+    } catch (error: any) {
+      Alert.alert(t('common.error'), error?.data?.message || t('pro_space.commission_payment_error'));
+    }
+  };
 
   const [periodMode, setPeriodMode] = useState<PeriodMode>('monthly');
   const [periodOffset, setPeriodOffset] = useState(0);
@@ -125,7 +169,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   const allBookings: any[] = Array.isArray(bookingsData) ? bookingsData : ((bookingsData as any)?.bookings ?? []);
 
   const formatAmount = (amount: number) => {
-    const currencyCode = 'EGP';
+    const currencyCode = (stats as any)?.currency || 'EUR';
     const preset = CURRENCY_PRESETS[currencyCode as keyof typeof CURRENCY_PRESETS];
     if (!preset) return formatCurrency(amount);
     const rounded = amount.toFixed(preset.decimals);
@@ -151,7 +195,8 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
 
   const getBookingAmount = (b: any): number => {
     if (b.paymentMethod === 'cash') {
-      return b.finalPrice ?? b.cashAmountDeclaredByPro ?? b.cashAmountDeclaredByClient ?? b.estimatedPrice ?? 0;
+      // Pour le cash, le pro reçoit le net (après déduction de la commission plateforme)
+      return b.cashNetAmount ?? b.finalPrice ?? b.cashAmountDeclaredByPro ?? b.estimatedPrice ?? 0;
     }
     return b.finalPrice ?? b.estimatedPrice ?? 0;
   };
@@ -182,6 +227,32 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
+      {/* Alerte commission cash pendante */}
+      {(stats as any)?.pendingCashCommission > 0 && !commissionPaid && (
+        <View style={styles.commissionAlert}>
+          <Icon name="alert-circle" size={20} color={colors.warning} style={{ marginTop: 2 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.commissionAlertTitle}>
+              {t('pro_space.cash_commission_due_title')}
+            </Text>
+            <Text style={styles.commissionAlertText}>
+              {t('pro_space.cash_commission_due_msg', {
+                amount: formatAmount((stats as any).pendingCashCommission),
+              })}
+            </Text>
+            <ChocolateButton
+              onPress={handlePayCommissionOnline}
+              loading={payingCommission}
+              disabled={payingCommission}
+              style={styles.commissionPayButton}
+              size="sm"
+            >
+              {t('pro_space.pay_commission_online')}
+            </ChocolateButton>
+          </View>
+        </View>
+      )}
+
       {/* Onglets de période */}
       <View style={styles.tabsContainer}>
         {PERIOD_TABS.map(({ key, label }) => (
@@ -204,7 +275,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
             )}
           </View>
           <TouchableOpacity onPress={() => setPeriodOffset(o => Math.min(o + 1, 0))} style={[styles.navArrow, periodOffset >= 0 && styles.navArrowDisabled]} disabled={periodOffset >= 0}>
-            <Icon name="chevron-right" size={28} color={periodOffset >= 0 ? colors.gray : tokens.primary} />
+            <Icon name="chevron-right" size={28} color={periodOffset >= 0 ? tokens.text.secondary : tokens.primary} />
           </TouchableOpacity>
         </View>
       )}
@@ -278,7 +349,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
         {periodBookings.length === 0 ? (
           <Card style={styles.emptyCard}>
             <Card.Content style={styles.emptyContent}>
-              <Icon name="cash-remove" size={48} color={colors.gray} />
+              <Icon name="cash-remove" size={48} color={tokens.text.secondary} />
               <Text variant="bodyMedium" style={styles.emptyText}>{t('pro_space.no_bookings_period')}</Text>
             </Card.Content>
           </Card>
@@ -307,19 +378,19 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
                         <Text variant="titleMedium" style={styles.earningAmount}>{formatAmount(amount)}</Text>
-                        {booking.finalPrice && <Text variant="bodySmall" style={{ color: colors.gray, fontSize: 10 }}>{t('pro_space.final')}</Text>}
+                        {booking.finalPrice && <Text variant="bodySmall" style={{ color: tokens.text.secondary, fontSize: 10 }}>{t('pro_space.final')}</Text>}
                       </View>
                     </View>
                     <View style={styles.earningMeta}>
                       <View style={styles.earningDetail}>
-                        <Icon name={isCash ? 'cash' : 'credit-card-outline'} size={14} color={colors.gray} />
+                        <Icon name={isCash ? 'cash' : 'credit-card-outline'} size={14} color={tokens.text.secondary} />
                         <Text variant="bodySmall" style={styles.earningDetailText}>
                           {isCash ? t('payment.cash') : t('payment.card')}
                         </Text>
                       </View>
                       {booking.address && (
                         <View style={styles.earningDetail}>
-                          <Icon name="map-marker-outline" size={14} color={colors.gray} />
+                          <Icon name="map-marker-outline" size={14} color={tokens.text.secondary} />
                           <Text variant="bodySmall" style={styles.earningDetailText} numberOfLines={1}>
                             {booking.address}
                           </Text>

@@ -9,7 +9,9 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { TextInput, Button, Text, IconButton, Card, TouchableRipple } from 'react-native-paper';
+import { TextInput, Text, IconButton, Card } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
+import { ChocolateChip } from '../../components/shared/ChocolateChip';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -35,18 +37,18 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   title: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: spacing.lg,
   },
   label: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: spacing.sm,
     marginTop: spacing.md,
   },
@@ -56,25 +58,6 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  typeButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-  },
-  typeButtonActive: {
-    backgroundColor: tokens.primary,
-    borderColor: tokens.primary,
-  },
-  typeButtonText: {
-    color: colors.dark,
-  },
-  typeButtonTextActive: {
-    color: colors.white,
-    fontWeight: '600',
-  },
   selectedTypesHint: {
     color: colors.success,
     marginTop: -spacing.sm,
@@ -82,11 +65,11 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
     fontWeight: '500',
   },
   textarea: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.backgroundAlt,
   },
   charCount: {
     textAlign: 'right',
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginTop: 4,
   },
   photoSection: {
@@ -102,7 +85,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
   },
   volumeHelpCard: {
     marginTop: spacing.sm,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   volumeHelpTitle: {
     color: tokens.primary,
@@ -113,22 +96,16 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: tokens.border,
   },
   volumeHelpValue: {
     color: tokens.primary,
     fontWeight: '600',
   },
   volumeHelpNote: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginTop: spacing.sm,
     fontStyle: 'italic',
-  },
-  actions: {
-    marginTop: spacing.xl,
-  },
-  nextButton: {
-    paddingVertical: spacing.sm,
   },
   uploadingContainer: {
     alignItems: 'center',
@@ -137,7 +114,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
   },
   uploadingText: {
     marginTop: spacing.sm,
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontSize: 14,
   },
   }), [tokens]);
@@ -253,23 +230,12 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
       </Text>
       <View style={styles.typeButtons}>
         {(Object.keys(OBJECT_TYPE_LABELS) as TransportObjectType[]).map((key) => (
-          <TouchableOpacity
+          <ChocolateChip
             key={key}
-            style={[
-              styles.typeButton,
-              objectTypes.includes(key) && styles.typeButtonActive,
-            ]}
+            label={t(`transport.obj_${key}`)}
+            selected={objectTypes.includes(key)}
             onPress={() => toggleObjectType(key)}
-          >
-            <Text
-              style={[
-                styles.typeButtonText,
-                objectTypes.includes(key) && styles.typeButtonTextActive,
-              ]}
-            >
-              {t(`transport.obj_${key}`)}
-            </Text>
-          </TouchableOpacity>
+          />
         ))}
       </View>
       {objectTypes.length > 1 && (
@@ -290,7 +256,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
         multiline
         numberOfLines={4}
         maxLength={500}
-        outlineColor={colors.border}
+        outlineColor={tokens.border}
         activeOutlineColor={tokens.primary}
         style={styles.textarea}
       />
@@ -333,7 +299,7 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
             setEstimatedVolume(isNaN(value) ? 0 : value);
           }}
           keyboardType="decimal-pad"
-          outlineColor={colors.border}
+          outlineColor={tokens.border}
           activeOutlineColor={tokens.primary}
           right={<TextInput.Affix text="m³" />}
         />
@@ -376,19 +342,14 @@ export const TransportRequestStep1Screen = ({ route, navigation }: Props) => {
         </View>
       )}
 
-      {/* Boutons navigation */}
-      <View style={styles.actions}>
-        <Button
-          mode="contained"
-          onPress={handleNext}
-          disabled={!description.trim() || estimatedVolume <= 0 || uploading}
-          buttonColor={tokens.primary}
-          style={styles.nextButton}
-          loading={uploading}
-        >
-          {uploading ? t('transport.uploading_photos') : t('transport.next')}
-        </Button>
-      </View>
+      <ChocolateButton
+        onPress={handleNext}
+        disabled={!description.trim() || estimatedVolume <= 0 || uploading}
+        loading={uploading}
+        style={{ marginTop: spacing.xl }}
+      >
+        {uploading ? t('transport.uploading_photos') : t('transport.next')}
+      </ChocolateButton>
     </ScrollView>
     </KeyboardAvoidingView>
   );

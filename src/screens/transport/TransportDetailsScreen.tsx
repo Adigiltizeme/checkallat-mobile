@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, Modal, Dimensions, Linking } from 'react-native';
-import { Text, Card, Button, Divider, ActivityIndicator, Chip, IconButton } from 'react-native-paper';
+import { Text, Card, Divider, ActivityIndicator, Chip, IconButton } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
@@ -33,7 +34,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   content: {
     padding: spacing.lg,
@@ -69,29 +70,29 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   },
   card: {
     marginBottom: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   sectionTitle: {
     color: tokens.primary,
     marginBottom: spacing.sm,
   },
   value: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '600',
   },
   description: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginTop: spacing.xs,
   },
   detail: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginTop: 4,
   },
   addressBlock: {
     marginVertical: spacing.xs,
   },
   addressLabel: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: 4,
   },
   instructions: {
@@ -106,12 +107,12 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     marginTop: spacing.xs,
   },
   service: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginVertical: 4,
   },
   priceCard: {
     marginBottom: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderWidth: 2,
     borderColor: tokens.primary,
   },
@@ -135,25 +136,25 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     fontWeight: '700',
   },
   paymentMethod: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     textAlign: 'center',
     marginTop: spacing.sm,
   },
   noteContainer: {
     marginTop: spacing.sm,
     padding: spacing.sm,
-    backgroundColor: colors.lightBlue,
+    backgroundColor: tokens.backgroundAlt,
     borderRadius: 8,
     borderLeftWidth: 3,
     borderLeftColor: tokens.primary,
   },
   noteLabel: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontWeight: '600',
     marginBottom: 4,
   },
   noteText: {
-    color: colors.dark,
+    color: tokens.text.primary,
     lineHeight: 20,
   },
   infoCard: {
@@ -161,19 +162,15 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     marginBottom: spacing.md,
   },
   infoText: {
-    color: colors.dark,
+    color: tokens.text.primary,
     textAlign: 'center',
     lineHeight: 20,
   },
   actions: {
     gap: spacing.md,
   },
-  button: {
-    paddingVertical: spacing.sm,
-  },
-  cancelButton: {
-    borderColor: colors.error,
-  },
+  button: {},
+  cancelButton: {},
   escrowCard: {
     borderWidth: 1,
     borderColor: tokens.primary + '40',
@@ -186,7 +183,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     fontWeight: '700',
   },
   escrowNote: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginTop: 4,
   },
   warningCard: {
@@ -201,7 +198,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     marginTop: spacing.md,
   },
   photosLabel: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: spacing.xs,
   },
   photosGrid: {
@@ -215,7 +212,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
   },
   thumbnailImage: {
     width: '100%',
@@ -245,11 +242,11 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     gap: 3,
   },
   driverName: {
-    color: colors.dark,
+    color: tokens.text.primary,
     fontWeight: '600',
   },
   driverDetail: {
-    color: colors.gray,
+    color: tokens.text.secondary,
   },
   contactRow: {
     flexDirection: 'row',
@@ -332,6 +329,49 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   },
   navButtonDisabled: {
     opacity: 0.3,
+  },
+  disputeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: 14,
+    paddingVertical: 14,
+    backgroundColor: `${colors.error}20`,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: `${colors.error}60`,
+  },
+  disputeBtnText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: colors.error,
+  },
+  renewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: 14,
+    paddingVertical: 14,
+    backgroundColor: tokens.card,
+    marginBottom: spacing.sm,
+    borderWidth: 1.5,
+    borderColor: tokens.primary,
+  },
+  renewBtnText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: tokens.primary,
+  },
+  backBtn: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginBottom: spacing.sm,
+  },
+  backBtnText: {
+    fontSize: 14,
+    color: tokens.text.secondary,
   },
   }), [tokens]);
 
@@ -500,9 +540,9 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     return (
       <View style={styles.error}>
         <Text variant="titleLarge">{t('transport.request_not_found')}</Text>
-        <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.errorButton}>
+        <ChocolateButton variant="outline" onPress={() => navigation.goBack()} style={styles.errorButton}>
           {t('common.back')}
-        </Button>
+        </ChocolateButton>
       </View>
     );
   }
@@ -950,93 +990,79 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
       {/* Actions */}
       <View style={styles.actions}>
         {canConfirm && (
-          <Button
-            mode="contained"
+          <ChocolateButton
             onPress={() => navigation.navigate('TransportCompletion', { requestId })}
-            buttonColor={colors.success}
             style={styles.button}
-            icon="check-circle"
           >
             {t('transport.confirm_delivery')}
-          </Button>
+          </ChocolateButton>
         )}
 
         {canValidateCash && (
-          <Button
-            mode="contained"
+          <ChocolateButton
             onPress={() => navigation.navigate('CashValidation', { requestId, totalPrice: request.price })}
-            buttonColor={colors.warning}
             style={styles.button}
-            icon="cash"
           >
             {t('transport.validate_cash')}
-          </Button>
+          </ChocolateButton>
         )}
 
         {canTrack && (
-          <Button
-            mode="contained"
+          <ChocolateButton
             onPress={handleTrack}
-            buttonColor={tokens.primary}
             style={styles.button}
-            icon="map-marker-path"
           >
             {t('transport.track')}
-          </Button>
+          </ChocolateButton>
         )}
 
         {canCancel && (
-          <Button
-            mode="outlined"
+          <ChocolateButton
+            variant="outline"
             onPress={handleCancel}
             loading={isCancelling}
             disabled={isCancelling}
-            textColor={colors.error}
-            style={[styles.button, styles.cancelButton]}
-            icon="close-circle"
+            style={styles.button}
           >
             {t('transport.cancel')}
-          </Button>
+          </ChocolateButton>
         )}
 
         {request.paymentMethod === 'in_app' && (
-          <Button
-            mode="text"
-            icon="credit-card-clock"
+          <ChocolateButton
+            variant="ghost"
             onPress={() => navigation.navigate('PaymentHistory')}
             style={styles.button}
           >
             {t('payment.history_view_btn')}
-          </Button>
+          </ChocolateButton>
         )}
 
-        {/* Dispute button — only after completion or when a problem occurred */}
         {(request.status === 'completed' || request.status === 'cancelled') && (
-          <Button
-            mode="text"
-            icon="flag"
-            textColor={colors.error}
+          <TouchableOpacity
+            style={styles.disputeBtn}
             onPress={() => navigation.navigate('Dispute', { requestId })}
-            style={styles.button}
+            activeOpacity={0.8}
           >
-            {t('dispute.open_btn')}
-          </Button>
+            <Icon name="flag" size={18} color={colors.error} />
+            <Text style={styles.disputeBtnText}>{t('dispute.open_btn')}</Text>
+          </TouchableOpacity>
         )}
 
         {!isDriver && (request.status === 'completed' || request.status === 'cancelled') && (
-          <Button
-            mode="outlined"
-            icon="refresh"
+          <TouchableOpacity
+            style={styles.renewBtn}
             onPress={handleRenew}
-            style={styles.button}
+            activeOpacity={0.8}
           >
-            {t('transport.renew_order')}
-          </Button>
+            <Icon name="refresh" size={18} color={tokens.primary} />
+            <Text style={styles.renewBtnText}>{t('transport.renew_order')}</Text>
+          </TouchableOpacity>
         )}
 
-        <Button mode="text" onPress={() => navigation.goBack()} style={styles.button}>
-          {t('transport.back_to_list')}
-        </Button>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>{t('transport.back_to_list')}</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Modal de visualisation des photos */}

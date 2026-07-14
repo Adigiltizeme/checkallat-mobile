@@ -2,7 +2,8 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { StyleSheet, KeyboardAvoidingView, ScrollView, Platform, View, Image, Dimensions } from 'react-native';
 
 const LOGO_SIZE = Dimensions.get('window').width * 0.85;
-import { TextInput, Button, Text } from 'react-native-paper';
+import { TextInput, Text } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,7 +31,7 @@ export const LoginScreen = ({ navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.background,
   },
   content: {
     flex: 1,
@@ -39,7 +40,7 @@ export const LoginScreen = ({ navigation }: Props) => {
   },
   title: {
     marginBottom: 32,
-    color: colors.dark,
+    color: tokens.text.primary,
     textAlign: 'center',
   },
   logoContainer: {
@@ -52,11 +53,10 @@ export const LoginScreen = ({ navigation }: Props) => {
   },
   input: {
     marginBottom: 16,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.backgroundAlt,
   },
   button: {
     marginTop: 16,
-    paddingVertical: 8,
   },
   linkButton: {
     marginTop: 8,
@@ -136,7 +136,7 @@ export const LoginScreen = ({ navigation }: Props) => {
               error={!!errors.identifier}
               style={styles.input}
               mode="outlined"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
             />
           )}
@@ -157,13 +157,13 @@ export const LoginScreen = ({ navigation }: Props) => {
               error={!!errors.password}
               style={styles.input}
               mode="outlined"
-              outlineColor={colors.border}
+              outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               right={
                 <TextInput.Icon
                   icon={showPassword ? 'eye-off' : 'eye'}
                   onPress={() => setShowPassword(v => !v)}
-                  color={colors.gray}
+                  color={tokens.text.secondary}
                 />
               }
             />
@@ -179,23 +179,21 @@ export const LoginScreen = ({ navigation }: Props) => {
           </Text>
         )}
 
-        <Button
-          mode="contained"
+        <ChocolateButton
           onPress={handleSubmit(onSubmit)}
           loading={isLoading}
           style={styles.button}
-          buttonColor={tokens.primary}
         >
           {t('auth.login_btn')}
-        </Button>
+        </ChocolateButton>
 
-        <Button
-          mode="text"
+        <ChocolateButton
+          variant="ghost"
           onPress={() => navigation.navigate('Register')}
           style={styles.linkButton}
         >
-          {t('auth.no_account')} {t('auth.register_link')}
-        </Button>
+          {`${t('auth.no_account')} ${t('auth.register_link')}`}
+        </ChocolateButton>
       </ScrollView>
     </KeyboardAvoidingView>
   );

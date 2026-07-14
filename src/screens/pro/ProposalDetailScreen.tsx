@@ -32,19 +32,19 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.background },
+  flex: { flex: 1, backgroundColor: tokens.background },
   scroll: { flex: 1 },
   content: { padding: spacing.md, paddingBottom: spacing.xxl },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  gray: { color: colors.gray, fontSize: 13 },
+  gray: { color: tokens.text.secondary, fontSize: 13 },
   header: { marginBottom: spacing.md },
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: spacing.sm },
   statusText: { fontWeight: '700', fontSize: 12 },
-  title: { fontSize: 20, fontWeight: '800', color: colors.dark, marginBottom: 2 },
-  subtitle: { fontSize: 13, color: colors.gray, marginBottom: 2 },
-  date: { fontSize: 11, color: colors.gray },
+  title: { fontSize: 20, fontWeight: '800', color: tokens.text.primary, marginBottom: 2 },
+  subtitle: { fontSize: 13, color: tokens.text.secondary, marginBottom: 2 },
+  date: { fontSize: 11, color: tokens.text.secondary },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.sm,
@@ -54,9 +54,9 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
     shadowRadius: 4,
     elevation: 2,
   },
-  label: { fontSize: 11, fontWeight: '700', color: colors.gray, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
-  value: { fontSize: 14, color: colors.dark, lineHeight: 20 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: colors.dark, marginBottom: spacing.sm },
+  label: { fontSize: 11, fontWeight: '700', color: tokens.text.secondary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  value: { fontSize: 14, color: tokens.text.primary, lineHeight: 20 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: tokens.text.primary, marginBottom: spacing.sm },
   messages: { gap: spacing.sm },
   bubble: { maxWidth: '80%', borderRadius: 12, padding: spacing.sm },
   bubbleAdmin: { alignSelf: 'flex-start', backgroundColor: '#EFF6FF' },
@@ -98,19 +98,19 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
     flexDirection: 'row',
     gap: spacing.sm,
     padding: spacing.sm,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: tokens.border,
   },
   replyInput: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: tokens.backgroundAlt,
     borderRadius: 10,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     fontSize: 14,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     maxHeight: 90,
   },
   sendBtn: {
@@ -177,7 +177,7 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
   }
 
   const canReply = proposal.status !== 'accepted' && proposal.status !== 'refused';
-  const statusColor = STATUS_COLOR[proposal.status] ?? colors.gray;
+  const statusColor = STATUS_COLOR[proposal.status] ?? tokens.text.secondary;
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>

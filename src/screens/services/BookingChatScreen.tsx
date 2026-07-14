@@ -32,9 +32,9 @@ export const BookingChatScreen = ({ route, navigation }: Props) => {
 
 
   const styles = useMemo(() => StyleSheet.create({
-  container:   { flex: 1, backgroundColor: '#F0F2F5' },
+  container:   { flex: 1, backgroundColor: tokens.backgroundAlt },
   centered:    { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  emptyText:   { color: colors.gray, fontSize: 14 },
+  emptyText:   { color: tokens.text.secondary, fontSize: 14 },
 
   privacyBanner: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -56,32 +56,32 @@ export const BookingChatScreen = ({ route, navigation }: Props) => {
   avatarLetter: { fontSize: 12, fontWeight: '700', color: tokens.primary },
 
   bubble:      { maxWidth: '75%', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 },
-  bubbleOther: { backgroundColor: colors.white, borderBottomLeftRadius: 4 },
+  bubbleOther: { backgroundColor: tokens.card, borderBottomLeftRadius: 4 },
   bubbleMe:    { backgroundColor: tokens.primary, borderBottomRightRadius: 4 },
 
-  bubbleText:   { fontSize: 14, color: colors.dark, lineHeight: 20 },
+  bubbleText:   { fontSize: 14, color: tokens.text.primary, lineHeight: 20 },
   bubbleTextMe: { color: colors.white },
 
-  bubbleTime:   { fontSize: 10, color: colors.gray, marginTop: 4, textAlign: 'right' },
+  bubbleTime:   { fontSize: 10, color: tokens.text.secondary, marginTop: 4, textAlign: 'right' },
   bubbleTimeMe: { color: 'rgba(255,255,255,0.7)' },
 
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end', gap: 8,
     paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border,
+    backgroundColor: tokens.card, borderTopWidth: 1, borderTopColor: tokens.border,
   },
   input: {
     flex: 1, minHeight: 40, maxHeight: 100,
-    borderRadius: 20, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 20, borderWidth: 1, borderColor: tokens.border,
     paddingHorizontal: 16, paddingVertical: 8,
-    fontSize: 14, color: colors.dark, backgroundColor: '#F9FAFB',
+    fontSize: 14, color: tokens.text.primary, backgroundColor: tokens.backgroundAlt,
   },
   sendBtn: {
     width: 40, height: 40, borderRadius: 20,
     backgroundColor: tokens.primary,
     alignItems: 'center', justifyContent: 'center',
   },
-  sendBtnDisabled: { backgroundColor: colors.gray },
+  sendBtnDisabled: { backgroundColor: tokens.text.secondary },
   }), [tokens]);
 
   const { t } = useTranslation();
@@ -181,7 +181,7 @@ export const BookingChatScreen = ({ route, navigation }: Props) => {
           value={inputText}
           onChangeText={setInputText}
           placeholder={t('chat.type_message')}
-          placeholderTextColor={colors.gray}
+          placeholderTextColor={tokens.text.secondary}
           multiline
           maxLength={1000}
           returnKeyType="send"

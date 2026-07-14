@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { Button, Text, Switch, IconButton, Card, Checkbox } from 'react-native-paper';
+import { Text, Switch, IconButton, Card, Checkbox } from 'react-native-paper';
+import { StepNavButtons } from '../../components/shared/StepNavButtons';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
@@ -20,23 +21,23 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   content: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   title: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: spacing.sm,
   },
   subtitle: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: spacing.lg,
   },
   card: {
     marginBottom: spacing.md,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   serviceHeader: {
     flexDirection: 'row',
@@ -52,11 +53,11 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
     flex: 1,
   },
   serviceTitle: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: 4,
   },
   serviceDescription: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: 4,
   },
   servicePrice: {
@@ -68,7 +69,7 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: tokens.border,
   },
   stepper: {
     flexDirection: 'row',
@@ -90,22 +91,9 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
     marginBottom: spacing.sm,
   },
   infoText: {
-    color: colors.dark,
+    color: tokens.text.primary,
     textAlign: 'center',
     lineHeight: 22,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-  },
-  nextButton: {
-    flex: 2,
-    paddingVertical: spacing.sm,
   },
   }), [tokens]);
 
@@ -294,25 +282,12 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
         </Card.Content>
       </Card>
 
-      {/* Boutons navigation */}
-      <View style={styles.actions}>
-        <Button
-          mode="outlined"
-          onPress={handleBack}
-          style={styles.backButton}
-          textColor={colors.gray}
-        >
-          {t('common.back')}
-        </Button>
-        <Button
-          mode="contained"
-          onPress={handleNext}
-          buttonColor={tokens.primary}
-          style={styles.nextButton}
-        >
-          {t('transport.next')}
-        </Button>
-      </View>
+      <StepNavButtons
+        onBack={handleBack}
+        onNext={handleNext}
+        backLabel={t('common.back')}
+        nextLabel={t('transport.next')}
+      />
     </ScrollView>
   );
 };

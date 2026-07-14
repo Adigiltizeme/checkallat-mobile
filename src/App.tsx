@@ -6,6 +6,7 @@ import { Provider as PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-na
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { secureStorage } from './utils/secureStorage';
 import Constants from 'expo-constants';
 import * as Sentry from '@sentry/react-native';
 import { store } from './store';
@@ -143,8 +144,8 @@ function AppContent() {
 
       // 2. Restore auth
       try {
-        const accessToken = await AsyncStorage.getItem('accessToken');
-        const refreshToken = await AsyncStorage.getItem('refreshToken');
+        const accessToken = await secureStorage.getToken();
+        const refreshToken = await secureStorage.getRefreshToken();
 
         if (accessToken && refreshToken) {
           store.dispatch(restoreAuth({ accessToken, refreshToken }));

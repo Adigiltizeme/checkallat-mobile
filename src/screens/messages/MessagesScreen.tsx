@@ -30,16 +30,16 @@ export const MessagesScreen = () => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.white },
+    container: { flex: 1, backgroundColor: tokens.background },
     centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-    emptyText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
+    emptyText: { color: tokens.text.secondary, fontSize: 14, textAlign: 'center' },
 
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
       paddingVertical: 14,
-      backgroundColor: colors.white,
+      backgroundColor: tokens.card,
       gap: spacing.sm,
     },
     avatar: {
@@ -54,11 +54,11 @@ export const MessagesScreen = () => {
 
     rowBody: { flex: 1 },
     rowHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
-    name: { fontSize: 15, color: colors.dark, flex: 1, marginRight: 8 },
+    name: { fontSize: 15, color: tokens.text.primary, flex: 1, marginRight: 8 },
     nameBold: { fontWeight: '700' },
-    time: { fontSize: 11, color: colors.gray },
-    preview: { fontSize: 13, color: colors.gray },
-    previewBold: { color: colors.dark, fontWeight: '600' },
+    time: { fontSize: 11, color: tokens.text.secondary },
+    preview: { fontSize: 13, color: tokens.text.secondary },
+    previewBold: { color: tokens.text.primary, fontWeight: '600' },
 
     badge: {
       minWidth: 20,
@@ -71,7 +71,7 @@ export const MessagesScreen = () => {
     },
     badgeText: { color: colors.white, fontSize: 11, fontWeight: '700' },
 
-    separator: { height: 1, backgroundColor: colors.light, marginLeft: 74 },
+    separator: { height: 1, backgroundColor: tokens.backgroundAlt, marginLeft: 74 },
   }), [tokens]);
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = React.useState(false);
@@ -148,7 +148,7 @@ export const MessagesScreen = () => {
   if (items.length === 0) {
     return (
       <View style={styles.centered}>
-        <Icon name="message-off-outline" size={48} color={colors.border} />
+        <Icon name="message-off-outline" size={48} color={tokens.border} />
         <Text style={styles.emptyText}>{t('messages.empty')}</Text>
       </View>
     );

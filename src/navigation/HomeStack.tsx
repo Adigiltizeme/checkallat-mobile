@@ -27,6 +27,8 @@ import { TransportRequestStep4Screen } from '../screens/transport/TransportReque
 import { TransportRequestStep5Screen } from '../screens/transport/TransportRequestStep5Screen';
 import { TransportTrackingScreen } from '../screens/transport/TransportTrackingScreen';
 import { TransportDetailsScreen } from '../screens/transport/TransportDetailsScreen';
+import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
+import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
 import { StripePaymentScreen } from '../screens/transport/StripePaymentScreen';
 import { DisputeScreen } from '../screens/transport/DisputeScreen';
 
@@ -155,6 +157,16 @@ export const HomeStack = () => {
         name="StripePayment"
         component={StripePaymentScreen}
         options={{ title: t('payment.title') }}
+      />
+      <Stack.Screen
+        name="TransportCompletion"
+        component={TransportCompletionScreen}
+        options={{ title: t('transport.completion_title') }}
+      />
+      <Stack.Screen
+        name="CashValidation"
+        component={CashValidationScreen}
+        options={{ title: t('transport.cash_validation_title') }}
       />
       <Stack.Screen
         name="Dispute"

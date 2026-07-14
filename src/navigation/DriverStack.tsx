@@ -19,6 +19,7 @@ import { CashValidationScreen } from '../screens/transport/CashValidationScreen'
 import { PaymentDetailsScreen } from '../screens/payment/PaymentDetailsScreen';
 import { SupportScreen } from '../screens/profile/SupportScreen';
 import { BookingChatScreen } from '../screens/services/BookingChatScreen';
+import { DisputeScreen } from '../screens/transport/DisputeScreen';
 
 const Stack = createStackNavigator<DriverStackParamList>();
 
@@ -93,6 +94,11 @@ export const DriverStack = () => {
         name="BookingChat"
         component={BookingChatScreen}
         options={({ route }) => ({ title: route.params.otherPartyName })}
+      />
+      <Stack.Screen
+        name="Dispute"
+        component={DisputeScreen}
+        options={{ title: t('dispute.title') }}
       />
     </Stack.Navigator>
   );

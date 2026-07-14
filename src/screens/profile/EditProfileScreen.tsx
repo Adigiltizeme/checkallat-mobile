@@ -31,10 +31,10 @@ export const EditProfileScreen = ({ navigation }: any) => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.background,
   },
   avatarSection: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     alignItems: 'center',
     paddingVertical: spacing.xl,
     marginBottom: spacing.md,
@@ -66,20 +66,20 @@ export const EditProfileScreen = ({ navigation }: any) => {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 12,
     width: 28,
     height: 28,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
   },
   avatarEditIcon: {
     fontSize: 14,
   },
   section: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
@@ -91,19 +91,19 @@ export const EditProfileScreen = ({ navigation }: any) => {
     marginBottom: spacing.sm,
   },
   label: {
-    color: colors.dark,
+    color: tokens.text.primary,
     marginBottom: 4,
     marginTop: spacing.sm,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
     fontSize: 15,
-    color: colors.dark,
-    backgroundColor: colors.white,
+    color: tokens.text.primary,
+    backgroundColor: tokens.backgroundAlt,
   },
   textArea: {
     height: 100,
@@ -118,11 +118,11 @@ export const EditProfileScreen = ({ navigation }: any) => {
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: 10,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   phoneText: {
     fontSize: 15,
-    color: colors.dark,
+    color: tokens.text.primary,
     flex: 1,
   },
   phoneChevron: {
@@ -131,7 +131,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
     fontWeight: '600',
   },
   hint: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginTop: 4,
   },
   radioGroup: {
@@ -147,7 +147,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
   },
   capacityUnit: {
     fontSize: 15,
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontWeight: '600',
   },
   docsLink: {
@@ -160,7 +160,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
     borderWidth: 1,
     borderColor: tokens.primary,
     borderRadius: 8,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
   },
   docsLinkText: {
     color: tokens.primary,
@@ -174,7 +174,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
   },
   radioBtn: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: spacing.md,
@@ -184,7 +184,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
     backgroundColor: tokens.primary + '15',
   },
   radioBtnText: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     fontSize: 14,
   },
   radioBtnTextActive: {
@@ -220,7 +220,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
     width: 88,
     height: 88,
     borderRadius: 8,
-    backgroundColor: colors.light,
+    backgroundColor: tokens.backgroundAlt,
   },
   photoSlotRemove: {
     position: 'absolute',
@@ -617,7 +617,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
           value={firstName}
           onChangeText={setFirstName}
           placeholder={t('profile.first_name')}
-          placeholderTextColor={colors.gray}
+          placeholderTextColor={tokens.text.secondary}
           returnKeyType="next"
           onSubmitEditing={() => lastNameRef.current?.focus()}
           autoCapitalize="words"
@@ -630,7 +630,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
           value={lastName}
           onChangeText={setLastName}
           placeholder={t('profile.last_name')}
-          placeholderTextColor={colors.gray}
+          placeholderTextColor={tokens.text.secondary}
           returnKeyType="next"
           onSubmitEditing={() => emailRef.current?.focus()}
           autoCapitalize="words"
@@ -643,7 +643,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
           value={email}
           onChangeText={setEmail}
           placeholder={t('auth.email_optional')}
-          placeholderTextColor={colors.gray}
+          placeholderTextColor={tokens.text.secondary}
           keyboardType="email-address"
           autoCapitalize="none"
           returnKeyType="done"
@@ -696,7 +696,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
             value={vehiclePlate}
             onChangeText={setVehiclePlate}
             placeholder={t('profile.plate_placeholder')}
-            placeholderTextColor={colors.gray}
+            placeholderTextColor={tokens.text.secondary}
             autoCapitalize="characters"
             returnKeyType="next"
             onSubmitEditing={() => {}}
@@ -709,7 +709,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
               value={vehicleCapacity}
               onChangeText={setVehicleCapacity}
               placeholder="Ex: 10"
-              placeholderTextColor={colors.gray}
+              placeholderTextColor={tokens.text.secondary}
               keyboardType="decimal-pad"
               returnKeyType="done"
             />
@@ -773,7 +773,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
                 value={activityDescription}
                 onChangeText={setActivityDescription}
                 placeholder={t('profile.activity_description_placeholder')}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -791,7 +791,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
                 value={bio}
                 onChangeText={setBio}
                 placeholder={t('profile.bio_placeholder')}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={tokens.text.secondary}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"

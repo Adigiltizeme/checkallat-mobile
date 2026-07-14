@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
-import { Text, Button, TextInput, Divider, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Divider, ActivityIndicator } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
@@ -21,6 +22,23 @@ type Props = StackScreenProps<any, 'TransportCompletion'>;
 
 export const TransportCompletionScreen = ({ route, navigation }: Props) => {
   const { tokens } = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    content: { padding: spacing.lg },
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    title: { fontSize: 24, fontWeight: 'bold', color: tokens.text.primary, marginBottom: spacing.sm },
+    subtitle: { fontSize: 14, color: tokens.text.secondary, marginBottom: spacing.md },
+    divider: { marginVertical: spacing.lg },
+    sectionTitle: { fontSize: 16, fontWeight: '600', color: tokens.text.primary, marginBottom: spacing.sm, marginTop: spacing.md },
+    input: { marginBottom: spacing.md, backgroundColor: tokens.backgroundAlt },
+    confirmButton: { marginTop: spacing.lg },
+    submitButton: { marginTop: spacing.lg },
+    cancelButton: { marginTop: spacing.md },
+    starsContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: spacing.sm },
+    star: { marginHorizontal: spacing.xs },
+  }), [tokens]);
+
   const { requestId } = route.params as { requestId: string };
   const { t } = useTranslation();
   const { data: request, isLoading, refetch } = useGetTransportRequestQuery(requestId, {
@@ -129,7 +147,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
             <Ionicons
               name={star <= currentRating ? 'star' : 'star-outline'}
               size={32}
-              color={star <= currentRating ? colors.warning : colors.gray}
+              color={star <= currentRating ? colors.warning : tokens.text.secondary}
               style={styles.star}
             />
           </TouchableOpacity>
@@ -169,23 +187,20 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
               : t('transport.completion_already_subtitle_client')}
           </Text>
           {!isDriver && (
-            <Button
-              mode="contained"
+            <ChocolateButton
               onPress={() => setShowReviewForm(true)}
               style={styles.confirmButton}
-              buttonColor={tokens.primary}
-              icon="star"
             >
               {t('transport.completion_leave_review')}
-            </Button>
+            </ChocolateButton>
           )}
-          <Button
-            mode="outlined"
+          <ChocolateButton
+            variant="outline"
             onPress={() => navigation.goBack()}
             style={styles.cancelButton}
           >
             {t('common.back')}
-          </Button>
+          </ChocolateButton>
         </View>
       </View>
     );
@@ -221,29 +236,27 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
           multiline
           numberOfLines={4}
           style={styles.input}
-          outlineColor={colors.border}
+          outlineColor={tokens.border}
           activeOutlineColor={tokens.primary}
         />
 
-        <Button
-          mode="contained"
+        <ChocolateButton
           onPress={handleSubmitReview}
           loading={isSubmittingReview}
           disabled={isSubmittingReview || (!punctualityRating && !qualityRating && !cleanlinessRating && !courtesyRating)}
           style={styles.submitButton}
-          buttonColor={tokens.primary}
         >
           {t('transport.review_submit')}
-        </Button>
+        </ChocolateButton>
 
-        <Button
-          mode="text"
+        <ChocolateButton
+          variant="ghost"
           onPress={() => navigation.goBack()}
           disabled={isSubmittingReview}
           style={styles.cancelButton}
         >
           {t('transport.completion_review_later')}
-        </Button>
+        </ChocolateButton>
       </ScrollView>
     );
   }
@@ -271,87 +284,28 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
         numberOfLines={3}
         placeholder={t('transport.completion_notes_placeholder')}
         style={styles.input}
-        outlineColor={colors.border}
+        outlineColor={tokens.border}
         activeOutlineColor={tokens.primary}
       />
 
-      <Button
-        mode="contained"
+      <ChocolateButton
         onPress={handleConfirmCompletion}
         loading={isConfirming}
         disabled={isConfirming}
         style={styles.confirmButton}
-        buttonColor={colors.success}
-        icon="check-circle"
       >
         {t('common.confirm')}
-      </Button>
+      </ChocolateButton>
 
-      <Button
-        mode="outlined"
+      <ChocolateButton
+        variant="outline"
         onPress={() => navigation.goBack()}
         disabled={isConfirming}
         style={styles.cancelButton}
       >
         {t('common.back')}
-      </Button>
+      </ChocolateButton>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text.primary,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.text.secondary,
-    marginBottom: spacing.md,
-  },
-  divider: {
-    marginVertical: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text.primary,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  input: {
-    marginBottom: spacing.md,
-    backgroundColor: colors.white,
-  },
-  confirmButton: {
-    marginTop: spacing.lg,
-  },
-  submitButton: {
-    marginTop: spacing.lg,
-  },
-  cancelButton: {
-    marginTop: spacing.md,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  star: {
-    marginHorizontal: spacing.xs,
-  },
-});

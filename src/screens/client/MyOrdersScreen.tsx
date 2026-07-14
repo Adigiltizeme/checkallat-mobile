@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   FlatList,
@@ -50,6 +50,44 @@ export const MyOrdersScreen = () => {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<Tab>('transport');
   const [refreshing, setRefreshing] = useState(false);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    centered:  { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
+    emptyText: { color: tokens.text.secondary, fontSize: 14, textAlign: 'center' },
+    tabBar: {
+      flexDirection: 'row',
+      backgroundColor: tokens.card,
+      borderBottomWidth: 1,
+      borderBottomColor: tokens.border,
+    },
+    tab: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      paddingVertical: 12,
+      borderBottomWidth: 2,
+      borderBottomColor: 'transparent',
+    },
+    tabText: { fontSize: 12, color: tokens.text.secondary, fontWeight: '600' },
+    list: { padding: spacing.md, paddingBottom: spacing.xxl },
+    card: {
+      backgroundColor: tokens.card,
+      borderRadius: 14,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: tokens.border,
+      gap: 6,
+    },
+    cardRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    cardTitle: { fontSize: 14, fontWeight: '700', color: tokens.text.primary, flex: 1 },
+    cardMeta: { fontSize: 12, color: tokens.text.secondary, flex: 1 },
+    badge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+    badgeText: { fontSize: 10, fontWeight: '700' },
+  }), [tokens]);
 
   const {
     data: transports = [],
@@ -112,19 +150,19 @@ export const MyOrdersScreen = () => {
         onPress={() => navigation.navigate('TransportDetails', { requestId: item.id })}
       >
         <View style={styles.cardRow}>
-          <Icon name="map-marker" size={14} color={colors.gray} />
+          <Icon name="map-marker" size={14} color={tokens.text.secondary} />
           <Text style={styles.cardTitle} numberOfLines={1}>
             {item.pickupAddress?.split(',')[0] ?? '—'}
           </Text>
           <View style={[styles.badge, { backgroundColor: badge.bg }]}>
             <Text style={[styles.badgeText, { color: badge.color }]}>
-              {t(`transport_status.${item.status}`, { defaultValue: item.status })}
+              {t(`status.${item.status}`, { defaultValue: item.status })}
             </Text>
           </View>
         </View>
         {item.deliveryAddress && (
           <View style={styles.cardRow}>
-            <Icon name="flag-checkered" size={14} color={colors.gray} />
+            <Icon name="flag-checkered" size={14} color={tokens.text.secondary} />
             <Text style={styles.cardMeta} numberOfLines={1}>
               {item.deliveryAddress.split(',')[0]}
             </Text>
@@ -140,7 +178,7 @@ export const MyOrdersScreen = () => {
         )}
         {item.scheduledDate && (
           <View style={styles.cardRow}>
-            <Icon name="calendar" size={14} color={colors.gray} />
+            <Icon name="calendar" size={14} color={tokens.text.secondary} />
             <Text style={styles.cardMeta}>
               {new Date(item.scheduledDate).toLocaleDateString(i18n.language, {
                 day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
@@ -162,7 +200,7 @@ export const MyOrdersScreen = () => {
         onPress={() => navigation.navigate('BookingDetails', { bookingId: item.id })}
       >
         <View style={styles.cardRow}>
-          <Icon name="briefcase" size={14} color={colors.gray} />
+          <Icon name="briefcase" size={14} color={tokens.text.secondary} />
           <Text style={styles.cardTitle} numberOfLines={1}>{categoryName}</Text>
           <View style={[styles.badge, { backgroundColor: badge.bg }]}>
             <Text style={[styles.badgeText, { color: badge.color }]}>
@@ -172,21 +210,21 @@ export const MyOrdersScreen = () => {
         </View>
         {item.address && (
           <View style={styles.cardRow}>
-            <Icon name="map-marker" size={14} color={colors.gray} />
+            <Icon name="map-marker" size={14} color={tokens.text.secondary} />
             <Text style={styles.cardMeta} numberOfLines={1}>{item.address}</Text>
           </View>
         )}
-        {item.estimatedPrice != null && (
+        {(item.finalPrice != null || item.estimatedPrice != null) && (
           <View style={styles.cardRow}>
             <Icon name="cash" size={14} color={colors.primary} />
             <Text style={[styles.cardMeta, { color: colors.primary, fontWeight: '700' }]}>
-              {formatCurrency(item.estimatedPrice)}
+              {formatCurrency(item.finalPrice ?? item.estimatedPrice)}
             </Text>
           </View>
         )}
         {item.scheduledAt && (
           <View style={styles.cardRow}>
-            <Icon name="calendar" size={14} color={colors.gray} />
+            <Icon name="calendar" size={14} color={tokens.text.secondary} />
             <Text style={styles.cardMeta}>
               {new Date(item.scheduledAt).toLocaleDateString(i18n.language, {
                 day: '2-digit', month: 'short',
@@ -203,7 +241,7 @@ export const MyOrdersScreen = () => {
     return (
       <View style={styles.card}>
         <View style={styles.cardRow}>
-          <Icon name="package-variant" size={14} color={colors.gray} />
+          <Icon name="package-variant" size={14} color={tokens.text.secondary} />
           <Text style={styles.cardTitle} numberOfLines={1}>
             {product?.name ?? t('commandes.order_label')}
           </Text>
@@ -247,7 +285,7 @@ export const MyOrdersScreen = () => {
             <Icon
               name={tab.icon}
               size={16}
-              color={activeTab === tab.key ? tokens.primary : colors.gray}
+              color={activeTab === tab.key ? tokens.primary : tokens.text.secondary}
             />
             <Text style={[styles.tabText, activeTab === tab.key && { color: tokens.primary }]}>
               {t(tab.labelKey)}
@@ -262,7 +300,7 @@ export const MyOrdersScreen = () => {
         </View>
       ) : currentData.length === 0 ? (
         <View style={styles.centered}>
-          <Icon name="inbox-outline" size={48} color={colors.border} />
+          <Icon name="inbox-outline" size={48} color={tokens.border} />
           <Text style={styles.emptyText}>{t(emptyKey)}</Text>
         </View>
       ) : (
@@ -283,43 +321,3 @@ export const MyOrdersScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
-  centered:  { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
-  emptyText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
-
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 12,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabText: { fontSize: 12, color: colors.gray, fontWeight: '600' },
-
-  list: { padding: spacing.md, paddingBottom: spacing.xxl },
-
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 14,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    gap: 6,
-  },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: colors.dark, flex: 1 },
-  cardMeta: { fontSize: 12, color: colors.gray, flex: 1 },
-  badge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeText: { fontSize: 10, fontWeight: '700' },
-});

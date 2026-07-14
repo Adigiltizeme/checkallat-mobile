@@ -54,9 +54,9 @@ export const OnboardingScreen = ({ onDone }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
+  container: { flex: 1, backgroundColor: tokens.background },
   skip: { position: 'absolute', top: 56, right: spacing.lg, zIndex: 10 },
-  skipText: { color: colors.gray, fontSize: 14, fontWeight: '500' },
+  skipText: { color: tokens.text.secondary, fontSize: 14, fontWeight: '500' },
   slide: {
     flex: 1,
     alignItems: 'center',
@@ -66,10 +66,10 @@ export const OnboardingScreen = ({ onDone }: Props) => {
     paddingBottom: 160,
   },
   emoji: { fontSize: 80, marginBottom: spacing.xl },
-  title: { fontSize: 26, fontWeight: '800', color: '#111827', textAlign: 'center', marginBottom: spacing.md },
-  subtitle: { fontSize: 16, color: '#6B7280', textAlign: 'center', lineHeight: 24 },
+  title: { fontSize: 26, fontWeight: '800', color: tokens.text.primary, textAlign: 'center', marginBottom: spacing.md },
+  subtitle: { fontSize: 16, color: tokens.text.secondary, textAlign: 'center', lineHeight: 24 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: spacing.lg },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#D1D5DB' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: tokens.border },
   dotActive: { backgroundColor: tokens.primary, width: 24 },
   btn: {
     marginHorizontal: spacing.lg,

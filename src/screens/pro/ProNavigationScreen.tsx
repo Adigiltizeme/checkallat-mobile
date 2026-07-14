@@ -38,7 +38,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
   const styles = useMemo(() => StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: spacing.md },
-  loadingText: { color: colors.gray, fontSize: 14, textAlign: 'center' },
+  loadingText: { color: tokens.text.secondary, fontSize: 14, textAlign: 'center' },
   map: { flex: 1 },
 
   // Marqueurs
@@ -65,8 +65,8 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
   },
   destIconWrap: { width: 32, alignItems: 'center' },
   destTextWrap: { flex: 1 },
-  destLabel: { fontSize: 11, color: colors.gray, textTransform: 'uppercase', letterSpacing: 0.5 },
-  destAddress: { fontSize: 14, fontWeight: '700', color: colors.dark, marginTop: 2 },
+  destLabel: { fontSize: 11, color: tokens.text.secondary, textTransform: 'uppercase', letterSpacing: 0.5 },
+  destAddress: { fontSize: 14, fontWeight: '700', color: tokens.text.primary, marginTop: 2 },
   callButton: {
     width: 44, height: 44, borderRadius: 22, backgroundColor: colors.success,
     justifyContent: 'center', alignItems: 'center',
@@ -86,14 +86,14 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
   // Bouton recentrer
   centerButton: {
     position: 'absolute', bottom: 220, right: spacing.md,
-    backgroundColor: colors.white, width: 52, height: 52, borderRadius: 26,
+    backgroundColor: tokens.card, width: 52, height: 52, borderRadius: 26,
     justifyContent: 'center', alignItems: 'center', elevation: 4,
   },
 
   // Actions bas
   bottomActions: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
@@ -117,15 +117,15 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
   primaryBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
   backBtn: {
     borderRadius: 12, paddingVertical: 12, alignItems: 'center',
-    borderWidth: 1.5, borderColor: colors.border,
+    borderWidth: 1.5, borderColor: tokens.border,
   },
-  backBtnText: { fontSize: 14, color: colors.gray, fontWeight: '600' },
+  backBtnText: { fontSize: 14, color: tokens.text.secondary, fontWeight: '600' },
   btnDisabled: { opacity: 0.6 },
   backBtnCenter: {
     marginTop: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm,
-    borderRadius: 8, borderWidth: 1, borderColor: colors.border,
+    borderRadius: 8, borderWidth: 1, borderColor: tokens.border,
   },
-  backBtnCenterText: { color: colors.gray, fontSize: 14 },
+  backBtnCenterText: { color: tokens.text.secondary, fontSize: 14 },
   }), [tokens]);
 
   const { t } = useTranslation();
@@ -269,7 +269,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
   if (!booking.addressLat || !booking.addressLng) {
     return (
       <View style={styles.loadingContainer}>
-        <Icon name="map-marker-off" size={48} color={colors.gray} />
+        <Icon name="map-marker-off" size={48} color={tokens.text.secondary} />
         <Text style={styles.loadingText}>{t('pro_navigation.no_coords')}</Text>
         <TouchableOpacity style={styles.backBtnCenter} onPress={() => navigation.goBack()}>
           <Text style={styles.backBtnCenterText}>{t('common.back')}</Text>

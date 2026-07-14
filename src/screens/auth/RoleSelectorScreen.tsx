@@ -1,7 +1,8 @@
 'use client';
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -25,7 +26,7 @@ export const RoleSelectorScreen = () => {
   const styles = useMemo(() => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tokens.background,
     padding: spacing.lg,
     paddingTop: spacing.xl * 2,
   },
@@ -33,22 +34,22 @@ export const RoleSelectorScreen = () => {
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: spacing.xs,
-    color: colors.text.primary,
+    color: tokens.text.primary,
   },
   subtitle: {
     textAlign: 'center',
-    color: colors.gray,
+    color: tokens.text.secondary,
     marginBottom: spacing.xl,
   },
   rolesContainer: {
     gap: spacing.md,
   },
   roleCard: {
-    backgroundColor: colors.white,
+    backgroundColor: tokens.card,
     borderRadius: 16,
     padding: spacing.lg,
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: tokens.border,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
@@ -63,10 +64,10 @@ export const RoleSelectorScreen = () => {
   roleLabel: {
     fontWeight: '600',
     flex: 1,
-    color: colors.text.primary,
+    color: tokens.text.primary,
   },
   roleDesc: {
-    color: colors.gray,
+    color: tokens.text.secondary,
     flex: 1,
     position: 'absolute',
     bottom: spacing.sm,
@@ -95,15 +96,11 @@ export const RoleSelectorScreen = () => {
     paddingHorizontal: spacing.sm,
   },
   defaultToggleText: {
-    color: colors.text.primary,
+    color: tokens.text.primary,
     fontSize: 14,
   },
   confirmBtn: {
     marginTop: spacing.md,
-    borderRadius: 12,
-  },
-  confirmBtnContent: {
-    paddingVertical: spacing.sm,
   },
   }), [tokens]);
 const dispatch = useDispatch();
@@ -176,15 +173,13 @@ const dispatch = useDispatch();
         </TouchableOpacity>
       )}
 
-      <Button
-        mode="contained"
+      <ChocolateButton
         onPress={handleConfirm}
         disabled={!selected}
         style={styles.confirmBtn}
-        contentStyle={styles.confirmBtnContent}
       >
         {t('role_selector.confirm')}
-      </Button>
+      </ChocolateButton>
     </View>
   );
 };

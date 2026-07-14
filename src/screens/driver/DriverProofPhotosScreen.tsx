@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import { Text } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
@@ -30,6 +31,20 @@ export const DriverProofPhotosScreen = ({ navigation, route }: Props) => {
   const [uploadProofPhotos] = useUploadProofPhotosMutation();
   const [updateStatus] = useUpdateTransportStatusMutation();
   const token = useSelector((state: RootState) => state.auth.token);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    content: { padding: spacing.md, paddingBottom: spacing.xxl },
+    title: { fontWeight: 'bold', marginBottom: spacing.xs },
+    subtitle: { color: tokens.text.secondary, marginBottom: spacing.md },
+    hint: { color: tokens.text.secondary, fontStyle: 'italic', marginTop: spacing.md },
+    bottomActions: {
+      flexDirection: 'row', padding: spacing.md, gap: spacing.sm,
+      backgroundColor: tokens.card, borderTopWidth: 1, borderTopColor: tokens.border, elevation: 4,
+    },
+    cancelButton: { flex: 1 },
+    submitButton: { flex: 2 },
+  }), [tokens]);
 
   const isLoading = uploading;
 
@@ -110,66 +125,24 @@ export const DriverProofPhotosScreen = ({ navigation, route }: Props) => {
 
       {/* Actions */}
       <View style={styles.bottomActions}>
-        <Button
-          mode="outlined"
+        <ChocolateButton
+          variant="outline"
           onPress={() => navigation.goBack()}
           disabled={isLoading}
           style={styles.cancelButton}
         >
           {t('common.cancel')}
-        </Button>
-        <Button
-          mode="contained"
+        </ChocolateButton>
+        <ChocolateButton
           onPress={handleConfirm}
           loading={isLoading}
           disabled={isLoading || photos.length === 0}
-          buttonColor={tokens.primary}
           style={styles.submitButton}
         >
-          {isLoading
-            ? uploadProgress
-            : t('driver.confirm_photos_and_continue')}
-        </Button>
+          {isLoading ? uploadProgress : t('driver.confirm_photos_and_continue')}
+        </ChocolateButton>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
-  },
-  title: {
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    color: colors.gray,
-    marginBottom: spacing.md,
-  },
-  hint: {
-    color: colors.gray,
-    fontStyle: 'italic',
-    marginTop: spacing.md,
-  },
-  bottomActions: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    gap: spacing.sm,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    elevation: 4,
-  },
-  cancelButton: {
-    flex: 1,
-  },
-  submitButton: {
-    flex: 2,
-  },
-});

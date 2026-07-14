@@ -19,16 +19,16 @@ export const ProReviewsScreen = ({ route }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.light },
+  container: { flex: 1, backgroundColor: tokens.background },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  emptyText: { fontSize: 18, fontWeight: '600', color: colors.text.primary, textAlign: 'center', marginBottom: spacing.sm },
-  emptySubtext: { fontSize: 14, color: colors.text.secondary, textAlign: 'center' },
-  statsHeader: { flexDirection: 'row', backgroundColor: colors.white, padding: spacing.lg, elevation: 2, marginBottom: spacing.md },
+  emptyText: { fontSize: 18, fontWeight: '600', color: tokens.text.primary, textAlign: 'center', marginBottom: spacing.sm },
+  emptySubtext: { fontSize: 14, color: tokens.text.secondary, textAlign: 'center' },
+  statsHeader: { flexDirection: 'row', backgroundColor: tokens.card, padding: spacing.lg, elevation: 2, marginBottom: spacing.md },
   statBox: { flex: 1, alignItems: 'center' },
-  statDivider: { width: 1, backgroundColor: colors.border, marginHorizontal: spacing.md },
+  statDivider: { width: 1, backgroundColor: tokens.border, marginHorizontal: spacing.md },
   statValue: { fontSize: 32, fontWeight: 'bold', color: '#10B981' },
-  statLabel: { fontSize: 14, color: colors.text.secondary, marginTop: spacing.xs },
+  statLabel: { fontSize: 14, color: tokens.text.secondary, marginTop: spacing.xs },
   list: { padding: spacing.lg },
   footerLoader: { paddingVertical: spacing.lg, alignItems: 'center' },
 }), [tokens]);
