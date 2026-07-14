@@ -4,7 +4,10 @@ module.exports = ({ config }) => {
   return {
     ...config,
     updates: {
-      enabled: false,
+      url: "https://u.expo.dev/c7b49218-9afc-4e25-9c72-9dc29e40917d",
+    },
+    runtimeVersion: {
+      policy: "appVersion",
     },
     plugins: [
       [
@@ -15,6 +18,7 @@ module.exports = ({ config }) => {
         },
       ],
       'expo-localization',
+      "expo-secure-store",
       [
         'expo-build-properties',
         {
