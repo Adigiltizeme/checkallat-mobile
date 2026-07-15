@@ -33,7 +33,7 @@
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#00B8A9"
+        "backgroundColor": "#FFFFFF"
       },
       "package": "com.digiltizeme.checkallat",
       "permissions": [

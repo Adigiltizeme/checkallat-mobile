@@ -1,7 +1,7 @@
 import React, { useRef, useState, useMemo } from 'react';
 import {
   View, StyleSheet, FlatList, TouchableOpacity,
-  Dimensions, NativeScrollEvent, NativeSyntheticEvent,
+  Dimensions, NativeScrollEvent, NativeSyntheticEvent, Image,
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -65,6 +65,7 @@ export const OnboardingScreen = ({ onDone }: Props) => {
     paddingTop: 80,
     paddingBottom: 160,
   },
+  logo: { width: 160, height: 160, marginBottom: spacing.md, resizeMode: 'contain' },
   emoji: { fontSize: 80, marginBottom: spacing.xl },
   title: { fontSize: 26, fontWeight: '800', color: tokens.text.primary, textAlign: 'center', marginBottom: spacing.md },
   subtitle: { fontSize: 16, color: tokens.text.secondary, textAlign: 'center', lineHeight: 24 },
@@ -120,9 +121,13 @@ export const OnboardingScreen = ({ onDone }: Props) => {
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <View style={[styles.slide, { width, backgroundColor: item.bg }]}>
-            <Text style={styles.emoji}>{item.emoji}</Text>
+            {index === 0 ? (
+              <Image source={require('../../../assets/splash.png')} style={styles.logo} />
+            ) : (
+              <Text style={styles.emoji}>{item.emoji}</Text>
+            )}
             <Text style={styles.title}>{t(item.titleKey)}</Text>
             <Text style={styles.subtitle}>{t(item.subtitleKey)}</Text>
           </View>

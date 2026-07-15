@@ -169,6 +169,24 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
           <SummaryRow label={t('booking_request.summary_category')} value={categoryName} />
           <Divider style={styles.divider} />
           <SummaryRow label={t('booking_request.summary_address')} value={step2Data.address.address} />
+          {(step2Data.address.floor > 0 || step2Data.address.hasElevator) && (
+            <>
+              <Divider style={styles.divider} />
+              <SummaryRow
+                label={t('booking_request.summary_floor')}
+                value={[
+                  step2Data.address.floor > 0 ? `${t('booking_request.floor_label')} ${step2Data.address.floor}` : null,
+                  step2Data.address.hasElevator ? `· ${t('booking_request.elevator_yes')}` : null,
+                ].filter(Boolean).join(' ')}
+              />
+            </>
+          )}
+          {step2Data.address.instructions ? (
+            <>
+              <Divider style={styles.divider} />
+              <SummaryRow label={t('booking_request.summary_instructions')} value={step2Data.address.instructions} />
+            </>
+          ) : null}
           <Divider style={styles.divider} />
           <SummaryRow label={t('booking_request.summary_schedule')} value={scheduleLabel()} />
           <Divider style={styles.divider} />
@@ -192,6 +210,24 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
           )}
         </Card.Content>
       </Card>
+
+      {/* Détails spécifiques à la catégorie */}
+      {step1Data.categoryData && Object.keys(step1Data.categoryData).length > 0 && (
+        <Card style={styles.card}>
+          <Card.Content>
+            <Text style={styles.sectionLabel}>{t('booking_request.summary_details')}</Text>
+            {Object.entries(step1Data.categoryData).map(([key, value], i, arr) => (
+              <React.Fragment key={key}>
+                <SummaryRow
+                  label={t(`booking_request.field_${key}`, { defaultValue: key })}
+                  value={Array.isArray(value) ? value.join(', ') : String(value ?? '—')}
+                />
+                {i < arr.length - 1 && <Divider style={styles.divider} />}
+              </React.Fragment>
+            ))}
+          </Card.Content>
+        </Card>
+      )}
 
       {/* Description */}
       <Card style={styles.card}>

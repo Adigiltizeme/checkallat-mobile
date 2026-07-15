@@ -225,7 +225,7 @@ const SIZE_LABEL: Record<string, TextStyle> = {
 // ── Styles statiques ───────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   wrapper: { alignSelf: 'stretch' },
-  tealSurface: { alignItems: 'center', justifyContent: 'center', borderRadius: 8, overflow: 'hidden' },
+  tealSurface: { alignItems: 'center', justifyContent: 'center', borderRadius: 8 },
   surface: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   sheen: {
     position: 'absolute',

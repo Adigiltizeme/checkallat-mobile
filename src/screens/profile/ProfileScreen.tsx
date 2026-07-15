@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootState } from '../../store';
 import { logout, setActiveRole, clearDefaultRole } from '../../store/slices/authSlice';
+import { useLogoutApiMutation } from '../../store/api/authApi';
 import { ProfileStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -100,6 +101,7 @@ export const ProfileScreen = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileNavProp>();
+  const [logoutApi] = useLogoutApiMutation();
   const user = useSelector((state: RootState) => state.auth.user);
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
   const availableRoles = useSelector((state: RootState) => state.auth.availableRoles);
@@ -121,7 +123,12 @@ export const ProfileScreen = () => {
     AsyncStorage.setItem(NOTIF_KEY, String(value));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logoutApi().unwrap();
+    } catch {
+      // On déconnecte quand même localement même si l'API échoue
+    }
     dispatch(logout());
   };
 

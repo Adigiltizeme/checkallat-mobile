@@ -1,5 +1,4 @@
 import React from 'react';
-import { Alert, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -36,8 +35,6 @@ export const MainNavigator = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const isDriver = activeRole === 'driver';
   const isPro = activeRole === 'pro';
-
-  const isActiveDriver = user?.driver?.status === 'active' && user?.driver?.isAvailable === true;
 
   const { data: conversations } = useGetMyConversationsListQuery(undefined, {
     pollingInterval: 8000,
@@ -183,16 +180,6 @@ export const MainNavigator = () => {
             options={{
               title: t('nav.search'),
               tabBarIcon: ({ color, size }) => <Icon name="magnify" size={size} color={color} />,
-              tabBarButton: isActiveDriver
-                ? (props) => (
-                    <TouchableOpacity
-                      {...props}
-                      onPress={() =>
-                        Alert.alert(t('common.access_denied'), t('home.driver_cannot_book_transport'))
-                      }
-                    />
-                  )
-                : undefined,
             }}
           />
           <Tab.Screen
