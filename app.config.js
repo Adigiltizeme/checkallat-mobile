@@ -29,7 +29,10 @@ module.exports = ({ config }) => {
       ],
       '@rnmapbox/maps',
       '@react-native-community/datetimepicker',
-      "@sentry/react-native"
+      "@sentry/react-native/expo", {
+        organization: "digiltizeme",
+        project: "checkallat-mobile",
+      }
     ],
   };
 };
