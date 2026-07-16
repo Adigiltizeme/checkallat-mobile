@@ -145,6 +145,15 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
                     { name: 'BookingTracking', params: { bookingId: result.id, role: 'client' } },
                   ],
                 });
+              } else if (result?.id) {
+                // Mode auto : aller sur BookingDetails pour voir et accepter les offres de prix
+                navigation.reset({
+                  index: 1,
+                  routes: [
+                    { name: 'HomeScreen' },
+                    { name: 'BookingDetails', params: { bookingId: result.id } },
+                  ],
+                });
               } else {
                 navigation.reset({ index: 0, routes: [{ name: 'HomeScreen' }] });
               }

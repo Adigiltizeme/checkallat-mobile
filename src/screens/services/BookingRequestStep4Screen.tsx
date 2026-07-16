@@ -15,7 +15,6 @@ import { Text, Card, Avatar, ActivityIndicator } from 'react-native-paper';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import Constants from 'expo-constants';
 import RNMapView, { Marker, Circle } from 'react-native-maps';
 import { HomeStackParamList } from '../../navigation/types';
 import { BookingStep4Data, AssignmentType } from '../../types/booking';
@@ -30,9 +29,6 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep4'>;
-
-const isExpoGo = Constants.appOwnership === 'expo';
-const Mapbox = isExpoGo ? null : require('@rnmapbox/maps').default;
 
 const { height } = Dimensions.get('window');
 
@@ -825,108 +821,72 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
             {viewMode === 'map' && (pros.length > 0 || filteredPros.length > 0) && (
               <View>
                 <View style={styles.mapContainer}>
-                  {isExpoGo || !Mapbox ? (
-                    <RNMapView
-                      ref={mapRef}
-                      style={styles.map}
-                      initialRegion={{
-                        latitude: addressLat,
-                        longitude: addressLng,
-                        latitudeDelta: 0.18,
-                        longitudeDelta: 0.18,
-                      }}
-                    >
-                      {/* Cercle de rayon */}
-                      <Circle
-                        center={{ latitude: addressLat, longitude: addressLng }}
-                        radius={maxDistance * 1000}
-                        strokeColor={tokens.primary}
-                        fillColor={tokens.primary + '18'}
-                        strokeWidth={1.5}
-                      />
+                  <RNMapView
+                    ref={mapRef}
+                    style={styles.map}
+                    initialRegion={{
+                      latitude: addressLat,
+                      longitude: addressLng,
+                      latitudeDelta: 0.18,
+                      longitudeDelta: 0.18,
+                    }}
+                  >
+                    {/* Cercle de rayon */}
+                    <Circle
+                      center={{ latitude: addressLat, longitude: addressLng }}
+                      radius={maxDistance * 1000}
+                      strokeColor={tokens.primary}
+                      fillColor={tokens.primary + '18'}
+                      strokeWidth={1.5}
+                    />
 
-                      {/* Marker client avec callout d'infos */}
-                      <Marker
-                        coordinate={{ latitude: addressLat, longitude: addressLng }}
-                        pinColor={tokens.primary}
-                        title={`📍 ${step2Data.address.address?.split(',')[0] ?? ''}`}
-                        description={[
-                          i18n.language === 'ar'
-                            ? (step1Data.categoryNameAr ?? categorySlug)
-                            : i18n.language === 'en'
-                              ? (step1Data.categoryNameEn ?? categorySlug)
-                              : (step1Data.categoryNameFr ?? categorySlug),
-                          step3Data.scheduledAt
-                            ? new Date(step3Data.scheduledAt).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short' })
-                            : null,
-                        ].filter(Boolean).join(' · ')}
-                      />
+                    {/* Marker client */}
+                    <Marker
+                      coordinate={{ latitude: addressLat, longitude: addressLng }}
+                      pinColor={tokens.primary}
+                      title={`📍 ${step2Data.address.address?.split(',')[0] ?? ''}`}
+                      description={[
+                        i18n.language === 'ar'
+                          ? (step1Data.categoryNameAr ?? categorySlug)
+                          : i18n.language === 'en'
+                            ? (step1Data.categoryNameEn ?? categorySlug)
+                            : (step1Data.categoryNameFr ?? categorySlug),
+                        step3Data.scheduledAt
+                          ? new Date(step3Data.scheduledAt).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short' })
+                          : null,
+                      ].filter(Boolean).join(' · ')}
+                    />
 
-                      {/* Markers pros — title/description natif pour onPress fiable */}
-                      {filteredPros.map((pro: any, idx: number) => {
-                        const rawLat = pro.lat;
-                        const rawLng = pro.lng;
-                        const hasCoords = rawLat != null && rawLng != null &&
-                          !(Math.abs(rawLat) < 0.001 && Math.abs(rawLng) < 0.001);
-                        const lat = hasCoords ? rawLat : addressLat + (idx + 1) * 0.003;
-                        const lng = hasCoords ? rawLng : addressLng + (idx + 1) * 0.004;
-                        const proName = `${pro.user?.firstName ?? ''} ${pro.user?.lastName ?? ''}`.trim();
-                        const priceText = pro.serviceOfferings?.[0]
-                          ? `${pro.serviceOfferings[0].priceMin}–${pro.serviceOfferings[0].priceMax} ${baseCurrency}`
-                          : basePrice != null
-                            ? `≥ ${basePrice} ${baseCurrency}`
-                            : null;
-                        return (
-                          <Marker
-                            key={pro.id}
-                            coordinate={{ latitude: lat, longitude: lng }}
-                            pinColor={selectedProId === pro.id ? '#EF4444' : (hasCoords ? colors.proGreen : '#F59E0B')}
-                            title={`${proName}${pro.isStudyltizemeGraduate ? ' ✦' : ''}`}
-                            description={[
-                              `⭐ ${(pro.averageRating || 5).toFixed(1)}${pro.distanceKm != null ? ` · ${pro.distanceKm.toFixed(1)} km` : ''}`,
-                              priceText,
-                              !hasCoords ? `📍 ${t('booking_request.location_approx')}` : null,
-                            ].filter(Boolean).join('  •  ')}
-                            onPress={() => setSelectedProId(pro.id === selectedProId ? null : pro.id)}
-                          />
-                        );
-                      })}
-                    </RNMapView>
-                  ) : (
-                    <Mapbox.MapView style={styles.map}>
-                      <Mapbox.Camera
-                        centerCoordinate={[addressLng, addressLat]}
-                        zoomLevel={Math.max(4, Math.log2(11742 / maxDistance))}
-                        animationMode="easeTo"
-                        animationDuration={400}
-                      />
-                      <Mapbox.PointAnnotation id="client" coordinate={[addressLng, addressLat]}>
-                        <View style={styles.clientMarker} />
-                      </Mapbox.PointAnnotation>
-                      {filteredPros.map((pro: any, idx: number) => {
-                        const rawLat = pro.lat;
-                        const rawLng = pro.lng;
-                        const hasCoords = rawLat != null && rawLng != null &&
-                          !(Math.abs(rawLat) < 0.001 && Math.abs(rawLng) < 0.001);
-                        const lat = hasCoords ? rawLat : addressLat + (idx + 1) * 0.003;
-                        const lng = hasCoords ? rawLng : addressLng + (idx + 1) * 0.004;
-                        return (
-                          <Mapbox.PointAnnotation
-                            key={pro.id}
-                            id={pro.id}
-                            coordinate={[lng, lat]}
-                            onSelected={() => setSelectedProId(pro.id === selectedProId ? null : pro.id)}
-                          >
-                            <View style={[
-                              styles.proMarker,
-                              selectedProId === pro.id && styles.proMarkerSelected,
-                              !hasCoords && { backgroundColor: '#F59E0B' },
-                            ]} />
-                          </Mapbox.PointAnnotation>
-                        );
-                      })}
-                    </Mapbox.MapView>
-                  )}
+                    {/* Markers pros avec callout d'infos */}
+                    {filteredPros.map((pro: any, idx: number) => {
+                      const rawLat = pro.lat;
+                      const rawLng = pro.lng;
+                      const hasCoords = rawLat != null && rawLng != null &&
+                        !(Math.abs(rawLat) < 0.001 && Math.abs(rawLng) < 0.001);
+                      const lat = hasCoords ? rawLat : addressLat + (idx + 1) * 0.003;
+                      const lng = hasCoords ? rawLng : addressLng + (idx + 1) * 0.004;
+                      const proName = `${pro.user?.firstName ?? ''} ${pro.user?.lastName ?? ''}`.trim();
+                      const priceText = pro.serviceOfferings?.[0]
+                        ? `${pro.serviceOfferings[0].priceMin}–${pro.serviceOfferings[0].priceMax} ${baseCurrency}`
+                        : basePrice != null
+                          ? `≥ ${basePrice} ${baseCurrency}`
+                          : null;
+                      return (
+                        <Marker
+                          key={pro.id}
+                          coordinate={{ latitude: lat, longitude: lng }}
+                          pinColor={selectedProId === pro.id ? '#EF4444' : (hasCoords ? colors.proGreen : '#F59E0B')}
+                          title={`${proName}${pro.isStudyltizemeGraduate ? ' ✦' : ''}`}
+                          description={[
+                            `⭐ ${(pro.averageRating || 5).toFixed(1)}${pro.distanceKm != null ? ` · ${pro.distanceKm.toFixed(1)} km` : ''}`,
+                            priceText,
+                            !hasCoords ? `📍 ${t('booking_request.location_approx')}` : null,
+                          ].filter(Boolean).join('  •  ')}
+                          onPress={() => setSelectedProId(pro.id === selectedProId ? null : pro.id)}
+                        />
+                      );
+                    })}
+                  </RNMapView>
                 </View>
 
                 {/* Fiche pro sélectionné — immédiatement sous la carte, sans scroll */}
