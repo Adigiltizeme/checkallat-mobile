@@ -28,7 +28,7 @@ const SLIDES: Slide[] = [
     emoji: '👋',
     titleKey: 'onboarding.slide1_title',
     subtitleKey: 'onboarding.slide1_sub',
-    bg: '#EFF6FF',
+    bg: '#FFFFFF',
   },
   {
     key: 'services',
