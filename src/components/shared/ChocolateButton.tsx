@@ -18,7 +18,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import type { ViewStyle, TextStyle } from 'react-native';
+import type { StyleProp, ViewStyle, TextStyle } from 'react-native';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -31,7 +31,7 @@ interface ChocolateButtonProps {
   disabled?: boolean;
   loading?: boolean;
   variant?: ChocolateButtonVariant;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   labelStyle?: TextStyle;
   size?: 'sm' | 'md' | 'lg';
 }
