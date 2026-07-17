@@ -1060,6 +1060,8 @@
     "renew_order": "Renew this booking",
     "back_to_list": "Back to list",
     "bids_section_title": "Received Proposals",
+    "bids_section_title_manual": "Price proposed by your provider",
+    "share_message": "Track my {{service}} service in real time on CheckAll@t:\nAddress: {{address}}\nProvider: {{pro}}\nStatus: {{status}}",
     "no_bids_yet": "No proposals yet. Pros have been notified and can submit their prices.",
     "bid_proposed_price": "Proposed price",
     "accept_bid": "Accept this offer",

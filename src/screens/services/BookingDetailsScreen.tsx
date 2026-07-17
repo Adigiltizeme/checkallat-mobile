@@ -9,6 +9,7 @@ import {
   Modal,
   Dimensions,
   Linking,
+  Share,
 } from 'react-native';
 import { Text, TextInput, IconButton } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -278,7 +279,10 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   const [confirmCompletion, { isLoading: isConfirming }] = useConfirmBookingCompletionMutation();
   const [acceptBid, { isLoading: isAcceptingBid }] = useAcceptBidMutation();
 
-  const isAutoBidBooking = (booking as any)?.assignmentType === 'auto' && (booking as any)?.status === 'pending' && !(booking as any)?.proId;
+  const isAutoBidBooking = (booking as any)?.status === 'pending' && (
+    ((booking as any)?.assignmentType === 'auto' && !(booking as any)?.proId) ||
+    (booking as any)?.assignmentType === 'manual'
+  );
   const { data: bookingBids } = useGetBookingBidsQuery(bookingId, {
     skip: !isAutoBidBooking,
     pollingInterval: 8000,
@@ -507,6 +511,19 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     );
   };
 
+  const handleShare = async () => {
+    const webUrl = process.env.EXPO_PUBLIC_WEB_URL || '';
+    const trackingLink = `${webUrl}/track/booking/${bookingId}`;
+    const message =
+      t('booking.share_message', {
+        service: serviceName,
+        address: (booking as any).address ?? '',
+        pro: proName,
+        status: t(`status.${status}`),
+      }) + `\n\n🔗 ${trackingLink}`;
+    await Share.share({ message });
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
@@ -516,6 +533,9 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         <Text style={[styles.statusText, { color: statusCfg.color }]}>
           {t(`booking_status.${status}`, { defaultValue: status })}
         </Text>
+        <TouchableOpacity onPress={handleShare} style={{ marginLeft: 'auto' }} activeOpacity={0.7}>
+          <Icon name="share-variant" size={20} color={statusCfg.color} />
+        </TouchableOpacity>
       </View>
 
       {/* Pro info */}
@@ -854,10 +874,14 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         </TouchableOpacity>
       )}
 
-      {/* Section propositions reçues (mode auto — en attente) */}
+      {/* Section propositions reçues (auto) ou prix proposé (manual) */}
       {isAutoBidBooking && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t('booking.bids_section_title')}</Text>
+          <Text style={styles.cardTitle}>
+            {(booking as any)?.assignmentType === 'manual'
+              ? t('booking.bids_section_title_manual')
+              : t('booking.bids_section_title')}
+          </Text>
           {!bookingBids || bookingBids.length === 0 ? (
             <Text style={styles.noBidsText}>{t('booking.no_bids_yet')}</Text>
           ) : (

@@ -1060,6 +1060,8 @@
     "renew_order": "Renouveler cette réservation",
     "back_to_list": "Retour à la liste",
     "bids_section_title": "Propositions reçues",
+    "bids_section_title_manual": "Prix proposé par votre prestataire",
+    "share_message": "Suivez ma prestation {{service}} en temps réel sur CheckAll@t :\nAdresse : {{address}}\nPrestataire : {{pro}}\nStatut : {{status}}",
     "no_bids_yet": "Aucune proposition pour l'instant. Les pros seront notifiés et pourront soumettre leurs prix.",
     "bid_proposed_price": "Prix proposé",
     "accept_bid": "Accepter cette offre",

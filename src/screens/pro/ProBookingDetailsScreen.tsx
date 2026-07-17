@@ -230,7 +230,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
 
   const isAutoBid = (booking as any)?.assignmentType === 'auto';
   const { data: myBids } = useGetBookingBidsQuery(bookingId, {
-    skip: !isAutoBid || bookingStatus !== 'pending',
+    skip: bookingStatus !== 'pending',
     refetchOnMountOrArgChange: true,
   });
 
@@ -879,46 +879,84 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
         </TouchableOpacity>
       )}
 
-      {/* Mode MANUAL : accepter/refuser direct */}
+      {/* Mode MANUAL : proposer un prix → le client doit confirmer avant acceptation */}
       {isPending && !showCancelForm && !isAutoBid && (
         <>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>{t('pro_space.set_price_title')}</Text>
-            <Text style={{ color: tokens.text.secondary, fontSize: 13, marginBottom: spacing.sm }}>
-              {t('pro_space.set_price_hint')}
-            </Text>
-            <TextInput
-              mode="outlined"
-              value={proposedPrice}
-              onChangeText={setProposedPrice}
-              keyboardType="numeric"
-              placeholder={t('pro_space.set_price_placeholder')}
-              outlineColor={tokens.border}
-              activeOutlineColor={tokens.primary}
-              style={{ backgroundColor: tokens.backgroundAlt }}
-              right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
-            />
+            {myExistingBid ? (
+              <>
+                <Text style={styles.cardTitle}>{t('pro_space.set_price_title')}</Text>
+                {myExistingBid.status === 'accepted' ? (
+                  <Text style={{ color: colors.success, fontSize: 14, fontWeight: '700' }}>
+                    {t('pro_space.bid_submitted_accepted')}
+                  </Text>
+                ) : (
+                  <Text style={{ color: tokens.text.secondary, fontSize: 13 }}>
+                    {t('pro_space.bid_submitted_waiting', {
+                      price: `${myExistingBid.proposedPrice} ${CURRENCY_CONFIG.code}`,
+                    })}
+                  </Text>
+                )}
+              </>
+            ) : (
+              <>
+                <Text style={styles.cardTitle}>{t('pro_space.set_price_title')}</Text>
+                <Text style={{ color: tokens.text.secondary, fontSize: 13, marginBottom: spacing.sm }}>
+                  {t('pro_space.set_price_hint')}
+                </Text>
+                <TextInput
+                  mode="outlined"
+                  value={proposedPrice}
+                  onChangeText={setProposedPrice}
+                  keyboardType="numeric"
+                  placeholder={t('pro_space.set_price_placeholder')}
+                  outlineColor={tokens.border}
+                  activeOutlineColor={tokens.primary}
+                  style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm }}
+                  right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
+                />
+                <TextInput
+                  mode="outlined"
+                  value={bidMessage}
+                  onChangeText={setBidMessage}
+                  placeholder={t('pro_space.bid_message_placeholder')}
+                  outlineColor={tokens.border}
+                  activeOutlineColor={tokens.primary}
+                  style={{ backgroundColor: tokens.backgroundAlt }}
+                />
+              </>
+            )}
           </View>
-          <View style={styles.actionsRow}>
+          {!myExistingBid ? (
+            <View style={styles.actionsRow}>
+              <TouchableOpacity
+                style={[styles.actionBtnSecondary, isSubmittingBid && { opacity: 0.5 }]}
+                onPress={() => setShowCancelForm(true)}
+                disabled={isSubmittingBid}
+              >
+                <Icon name="close" size={18} color={colors.error} />
+                <Text style={[styles.actionBtnText, { color: colors.error }]}>{t('pro_space.refuse_btn')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionBtnPrimary, isSubmittingBid && { opacity: 0.5 }]}
+                onPress={handleSubmitBid}
+                disabled={isSubmittingBid}
+              >
+                <Icon name="send" size={18} color={colors.white} />
+                <Text style={[styles.actionBtnText, { color: colors.white }]}>
+                  {isSubmittingBid ? t('common.loading') : t('pro_space.submit_bid_btn')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
             <TouchableOpacity
-              style={[styles.actionBtnSecondary, isUpdating && { opacity: 0.5 }]}
+              style={[styles.actionBtnSecondary, { marginBottom: spacing.sm }]}
               onPress={() => setShowCancelForm(true)}
-              disabled={isUpdating}
             >
               <Icon name="close" size={18} color={colors.error} />
               <Text style={[styles.actionBtnText, { color: colors.error }]}>{t('pro_space.refuse_btn')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtnPrimary, isUpdating && { opacity: 0.5 }]}
-              onPress={handleAccept}
-              disabled={isUpdating}
-            >
-              <Icon name="check" size={18} color={colors.white} />
-              <Text style={[styles.actionBtnText, { color: colors.white }]}>
-                {isUpdating ? t('common.loading') : t('pro_space.accept_btn')}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          )}
         </>
       )}
 

@@ -59,6 +59,8 @@ if (!isExpoGo) {
       shouldSetBadge: true,
     }),
   });
+  // Delete first so Android doesn't keep a cached channel without sound
+  Notifications.deleteNotificationChannelAsync('default').catch(() => {});
   Notifications.setNotificationChannelAsync('default', {
     name: 'Notifications',
     importance: Notifications.AndroidImportance.MAX,

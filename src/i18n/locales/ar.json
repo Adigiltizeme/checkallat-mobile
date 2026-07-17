@@ -1060,6 +1060,8 @@
     "renew_order": "تجديد هذا الحجز",
     "back_to_list": "العودة إلى القائمة",
     "bids_section_title": "العروض المستلمة",
+    "bids_section_title_manual": "السعر المقترح من مزودك",
+    "share_message": "تابع خدمة {{service}} الخاصة بي في الوقت الفعلي على CheckAll@t:\nالعنوان: {{address}}\nمزود الخدمة: {{pro}}\nالحالة: {{status}}",
     "no_bids_yet": "لا توجد عروض حتى الآن. تم إخطار المزودين ويمكنهم تقديم أسعارهم.",
     "bid_proposed_price": "السعر المقترح",
     "accept_bid": "قبول هذا العرض",

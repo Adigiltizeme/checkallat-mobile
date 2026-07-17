@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   Animated,
+  Share,
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator, IconButton, TextInput } from 'react-native-paper';
 import Constants from 'expo-constants';
@@ -333,6 +334,22 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
     Linking.openURL(`tel:${phone}`);
   };
 
+  const handleShare = async () => {
+    if (!booking) return;
+    const webUrl = process.env.EXPO_PUBLIC_WEB_URL || '';
+    const trackingLink = `${webUrl}/track/booking/${bookingId}`;
+    const serviceName = (booking as any).category?.nameFr ?? (booking as any).category?.nameEn ?? '';
+    const assignedPro = proName ?? t('booking_tracking.waiting_pro');
+    const message =
+      t('booking.share_message', {
+        service: serviceName,
+        address: (booking as any).address ?? '',
+        pro: assignedPro,
+        status: t(`status.${booking.status}`),
+      }) + `\n\n🔗 ${trackingLink}`;
+    await Share.share({ message });
+  };
+
   const getMilestoneState = (milestone: typeof MILESTONES[number]) => {
     if (!booking) return 'pending';
     if ('timestampField' in milestone) {
@@ -460,6 +477,13 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
           iconColor={tokens.text.primary}
           style={styles.fab}
           onPress={() => navigation.goBack()}
+        />
+        <IconButton
+          icon="share-variant"
+          size={22}
+          iconColor={tokens.text.primary}
+          style={styles.fab}
+          onPress={handleShare}
         />
       </View>
 

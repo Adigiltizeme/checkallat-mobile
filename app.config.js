@@ -14,4 +14,13 @@ module.exports = ({ config }) => ({
       },
     },
   },
+  plugins: [
+    // Preserve all plugins from app.json
+    ...base.plugins,
+    // Mapbox — provides the download token so Gradle can fetch Mapbox Maven artifacts.
+    // RNMAPBOX_MAPS_DOWNLOAD_TOKEN must be set in EAS secrets (eas secret:create).
+    ['@rnmapbox/maps', {
+      RNMapboxMapsDownloadToken: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN ?? '',
+    }],
+  ],
 });
