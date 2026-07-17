@@ -1,38 +1,17 @@
-// Dynamic Expo config — extends app.json with env-var-dependent plugin settings.
-// This file takes precedence over app.json for the fields it defines.
-module.exports = ({ config }) => {
-  return {
-    ...config,
-    updates: {
-      url: "https://u.expo.dev/c7b49218-9afc-4e25-9c72-9dc29e40917d",
+// app.config.js extends app.json and injects secrets that cannot live in a static JSON file.
+// Expo merges this with app.json at build time (app.config.js takes precedence).
+const base = require('./app.json').expo;
+
+module.exports = ({ config }) => ({
+  ...base,
+  android: {
+    ...base.android,
+    config: {
+      googleMaps: {
+        // Reuses the Maps Platform key already present in .env / EAS secrets.
+        // Make sure the key has "Maps SDK for Android" enabled in Google Cloud Console.
+        apiKey: process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY ?? '',
+      },
     },
-    runtimeVersion: {
-      policy: "appVersion",
-    },
-    plugins: [
-      [
-        'expo-location',
-        {
-          locationAlwaysAndWhenInUsePermission:
-            'Allow CheckAll@t to use your location for nearby pros.',
-        },
-      ],
-      'expo-localization',
-      "expo-secure-store",
-      [
-        'expo-build-properties',
-        {
-          android: {
-            usesCleartextTraffic: true,
-          },
-        },
-      ],
-      '@rnmapbox/maps',
-      '@react-native-community/datetimepicker',
-      ["@sentry/react-native/expo", {
-        organization: "digiltizeme",
-        project: "checkallat-mobile",
-      }],
-    ],
-  };
-};
+  },
+});
