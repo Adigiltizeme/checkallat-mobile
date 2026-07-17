@@ -39,6 +39,7 @@ android/.gradle
 android/app/build
 android/.idea
 android/local.properties
+android/gradle.properties
 
 # iOS
 ios/Pods/
