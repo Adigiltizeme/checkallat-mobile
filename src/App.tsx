@@ -96,6 +96,28 @@ async function registerDriverPushToken(accessToken: string): Promise<void> {
   }
 }
 
+async function registerClientPushToken(accessToken: string): Promise<void> {
+  try {
+    if (isExpoGo) return;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Notifications = require('expo-notifications');
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    if (existing !== 'granted') return;
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    await fetch(`${API_CONFIG.BASE_URL}/auth/push-token`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: JSON.stringify({ pushToken: tokenData.data }),
+    });
+  } catch {
+    // Non-blocking
+  }
+}
+
 // Thème Paper dynamique — lit les tokens du ThemeProvider à chaque changement de mode
 const ThemedPaperProvider = ({ children }: { children: React.ReactNode }) => {
   const { tokens, isDark } = useAppTheme();
@@ -173,6 +195,7 @@ function AppContent() {
               });
 
               if (user.driver) registerDriverPushToken(accessToken);
+              registerClientPushToken(accessToken);
 
               if (user.preferredLanguage && user.preferredLanguage !== i18n.language) {
                 await applyLanguage(user.preferredLanguage);
