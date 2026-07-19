@@ -12,8 +12,6 @@ module.exports = ({ config }) => ({
   },
   plugins: [
     ...(config.plugins ?? []),
-    ['@rnmapbox/maps', {
-      RNMapboxMapsDownloadToken: process.env.RNMAPBOX_MAPS_DOWNLOAD_TOKEN ?? '',
-    }],
+    '@rnmapbox/maps',
   ],
 });
