@@ -178,7 +178,7 @@ export const bookingsApi = createApi({
       providesTags: ['Booking'],
     }),
 
-    submitBid: builder.mutation<any, { bookingId: string; proposedPrice: number; message?: string }>({
+    submitBid: builder.mutation<any, { bookingId: string; proposedPrice?: number; message?: string }>({
       query: ({ bookingId, proposedPrice, message }) => ({
         url: `/${bookingId}/bids`,
         method: 'POST',

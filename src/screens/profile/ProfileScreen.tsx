@@ -224,6 +224,18 @@ export const ProfileScreen = () => {
         />
       </View>
 
+      {/* Gérer mes tarifs — pros uniquement */}
+      {isPro && (
+        <View style={sectionStyle}>
+          <List.Item
+            title={t('pro_space.manage_pricing')}
+            left={(props) => <List.Icon {...props} icon="tag-multiple" color={tokens.primary} />}
+            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            onPress={() => navigation.navigate('ProOfferings')}
+          />
+        </View>
+      )}
+
       {/* Mes activités / Ajouter une activité */}
       <View style={sectionStyle}>
         <List.Item

@@ -22,6 +22,7 @@ import { ProposalDetailScreen } from '../screens/pro/ProposalDetailScreen';
 import { SubmitProposalScreen } from '../screens/pro/SubmitProposalScreen';
 import { PayoutAccountsScreen } from '../screens/profile/PayoutAccountsScreen';
 import { PayoutAccountFormScreen } from '../screens/profile/PayoutAccountFormScreen';
+import { ProOfferingsScreen } from '../screens/pro/ProOfferingsScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -121,6 +122,11 @@ export const ProfileStack = () => {
             ? t('payout_accounts.edit_title')
             : t('payout_accounts.add_title'),
         })}
+      />
+      <Stack.Screen
+        name="ProOfferings"
+        component={ProOfferingsScreen}
+        options={{ title: t('pro_space.manage_pricing') }}
       />
     </Stack.Navigator>
   );

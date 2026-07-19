@@ -109,6 +109,41 @@ export const servicesApi = createApi({
       }),
       invalidatesTags: ['Offering'],
     }),
+
+    /**
+     * Créer ou récupérer l'offre d'un pro pour une catégorie (par slug)
+     */
+    ensureOffering: builder.mutation<any, { proId: string; categorySlug: string }>({
+      query: (body) => ({
+        url: '/offerings/ensure',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Offering'],
+    }),
+
+    /**
+     * Ajouter un extra à une offre
+     */
+    addOfferingExtra: builder.mutation<any, { offeringId: string; label: string; price: number; isOptional?: boolean }>({
+      query: ({ offeringId, ...body }) => ({
+        url: `/offerings/${offeringId}/extras`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Offering'],
+    }),
+
+    /**
+     * Supprimer un extra
+     */
+    deleteOfferingExtra: builder.mutation<any, string>({
+      query: (extraId) => ({
+        url: `/offerings/extras/${extraId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Offering'],
+    }),
   }),
 });
 
@@ -120,4 +155,7 @@ export const {
   useCreateOfferingMutation,
   useUpdateOfferingMutation,
   useDeleteOfferingMutation,
+  useEnsureOfferingMutation,
+  useAddOfferingExtraMutation,
+  useDeleteOfferingExtraMutation,
 } = servicesApi;

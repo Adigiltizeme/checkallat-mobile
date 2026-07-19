@@ -48,6 +48,7 @@ export type ProfileStackParamList = {
   SubmitProposal: undefined;
   PayoutAccounts: undefined;
   PayoutAccountForm: { accountId?: string } | undefined;
+  ProOfferings: undefined;
 };
 
 export type ProStackParamList = {

@@ -52,6 +52,13 @@ const flattenPro = (item: any) => ({
 });
 
 
+const calcProPrice = (pro: any, basePrice: number): number => {
+  const offering = pro.serviceOfferings?.[0];
+  const includedExtras = (offering?.extras ?? []).filter((e: any) => !e.isOptional);
+  const extrasSum = includedExtras.reduce((s: number, e: any) => s + (e.price ?? 0), 0);
+  return basePrice + extrasSum;
+};
+
 const ProCard = ({ pro, selected, onSelect, onViewShowcase, basePrice, currency, t }: any) => {
   const { tokens: pcTokens } = useAppTheme();
   const pcStyles = useMemo(() => StyleSheet.create({
@@ -90,13 +97,9 @@ const ProCard = ({ pro, selected, onSelect, onViewShowcase, basePrice, currency,
               <Text style={pcStyles.proBadge}> · ✦</Text>
             )}
           </View>
-          {pro.serviceOfferings?.[0] ? (
+          {basePrice != null ? (
             <Text style={[pcStyles.proPriceRange, { color: pcTokens.primary }]}>
-              {pro.serviceOfferings[0].priceMin}–{pro.serviceOfferings[0].priceMax} {currency}
-            </Text>
-          ) : basePrice != null ? (
-            <Text style={[pcStyles.proPriceRange, { color: pcTokens.primary }]}>
-              {t('booking_request.price_from', { price: basePrice, currency })}
+              {t('booking_request.price_from', { price: calcProPrice(pro, basePrice), currency })}
             </Text>
           ) : null}
           <TouchableOpacity
@@ -484,7 +487,6 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
 
   const handleNext = () => {
     const selectedPro = pros.find((p: any) => p.id === selectedProId);
-    const proPrice: number | undefined = selectedPro?.serviceOfferings?.[0]?.priceMin;
     const step4Data: BookingStep4Data = {
       assignmentType: assignMode,
       proId: assignMode === 'manual' ? selectedProId ?? undefined : undefined,
@@ -492,7 +494,9 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
         ? `${selectedPro.user?.firstName} ${selectedPro.user?.lastName}`
         : undefined,
       serviceOfferingId: selectedPro?.serviceOfferings?.[0]?.id,
-      estimatedPrice: proPrice ?? (basePrice ?? undefined),
+      estimatedPrice: selectedPro && basePrice != null
+        ? calcProPrice(selectedPro, basePrice)
+        : (basePrice ?? undefined),
       estimatedCurrency: baseCurrency,
     };
     navigation.navigate('BookingRequestStep5', { categorySlug, step1Data, step2Data, step3Data, step4Data });
@@ -866,11 +870,9 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
                       const lat = hasCoords ? rawLat : addressLat + (idx + 1) * 0.003;
                       const lng = hasCoords ? rawLng : addressLng + (idx + 1) * 0.004;
                       const proName = `${pro.user?.firstName ?? ''} ${pro.user?.lastName ?? ''}`.trim();
-                      const priceText = pro.serviceOfferings?.[0]
-                        ? `${pro.serviceOfferings[0].priceMin}–${pro.serviceOfferings[0].priceMax} ${baseCurrency}`
-                        : basePrice != null
-                          ? `≥ ${basePrice} ${baseCurrency}`
-                          : null;
+                      const priceText = basePrice != null
+                        ? `≥ ${calcProPrice(pro, basePrice)} ${baseCurrency}`
+                        : null;
                       return (
                         <Marker
                           key={pro.id}
@@ -893,11 +895,9 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
                 {(() => {
                   const mapPro = pros.find((p: any) => p.id === selectedProId);
                   if (!mapPro) return null;
-                  const mapProPrice = mapPro.serviceOfferings?.[0]
-                    ? `${mapPro.serviceOfferings[0].priceMin}–${mapPro.serviceOfferings[0].priceMax} ${baseCurrency}`
-                    : basePrice != null
-                      ? `≥ ${basePrice} ${baseCurrency}`
-                      : null;
+                  const mapProPrice = basePrice != null
+                    ? `≥ ${calcProPrice(mapPro, basePrice)} ${baseCurrency}`
+                    : null;
                   return (
                     <View style={styles.mapProCard}>
                       <Avatar.Image

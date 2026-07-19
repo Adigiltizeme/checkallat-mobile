@@ -13,6 +13,7 @@ import {
 import { Text, TextInput, IconButton } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
 import { CATEGORY_FIELDS, HAS_URGENCY, getCategoryOptionLabel } from '../../config/categoryFields';
@@ -28,12 +29,14 @@ import {
   useSubmitBidMutation,
   useGetBookingBidsQuery,
 } from '../../store/api/bookingsApi';
+import { useGetCategoriesQuery, useGetProOfferingsQuery } from '../../store/api/servicesApi';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { CURRENCY_CONFIG } from '../../config/currency';
+import { RootState } from '../../store';
 
 type Props = StackScreenProps<ProStackParamList, 'ProBookingDetails'>;
 
@@ -234,6 +237,39 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
     refetchOnMountOrArgChange: true,
   });
 
+  // Prix configuré par le pro dans sa gestion des tarifs
+  const proId: string = useSelector((state: RootState) => (state.auth.user as any)?.pro?.id ?? '');
+  const countryCode = useSelector((s: RootState) =>
+    (s as any).location?.selectedCountryCode ?? (s as any).location?.detectedCountryCode ?? undefined
+  );
+  const bookingCategorySlug: string = (booking as any)?.serviceOffering?.category?.slug
+    ?? (booking as any)?.category?.slug ?? '';
+
+  const { data: allCategories = [] } = useGetCategoriesQuery(
+    { activeOnly: true, countryCode },
+    { skip: !bookingCategorySlug }
+  );
+  const { data: proOfferings = [], refetch: refetchOfferings } = useGetProOfferingsQuery(proId, {
+    skip: !proId || !bookingCategorySlug,
+    pollingInterval: 8000,
+    refetchOnMountOrArgChange: true,
+  });
+  useRefetchOnFocus(refetchOfferings);
+
+  const configuredPrice = useMemo(() => {
+    if (!bookingCategorySlug) return null;
+    const catMeta = (allCategories as any[]).find((c: any) => c.slug === bookingCategorySlug);
+    const basePrice: number | null = catMeta?.basePrice ?? null;
+    if (basePrice === null) return null;
+    const offering = (proOfferings as any[]).find((o: any) => o.category?.slug === bookingCategorySlug);
+    if (!offering) return null;
+    const includedExtras = (offering.extras ?? []).filter((e: any) => !e.isOptional && e.status === 'approved');
+    const extrasSum = includedExtras.reduce((s: number, e: any) => s + (e.price ?? 0), 0);
+    return basePrice + extrasSum;
+  }, [allCategories, proOfferings, bookingCategorySlug]);
+
+  const hasConfiguredPrice = configuredPrice !== null;
+
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [selectedCancelReason, setSelectedCancelReason] = useState<string | null>(null);
   const [cancelOtherText, setCancelOtherText] = useState('');
@@ -244,12 +280,12 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   const [proposedPrice, setProposedPrice] = useState('');
   const [bidMessage, setBidMessage] = useState('');
 
-  const offeringPrice = (booking as any)?.serviceOffering?.priceMin;
   useEffect(() => {
-    if (offeringPrice && !proposedPrice) {
-      setProposedPrice(String(offeringPrice));
+    const price = configuredPrice ?? ((booking as any)?.serviceOffering?.priceMin ?? null);
+    if (price !== null && !proposedPrice) {
+      setProposedPrice(String(price));
     }
-  }, [offeringPrice]);
+  }, [configuredPrice, booking]);
 
   const openPhotoViewer = (index: number) => {
     setSelectedPhotoIndex(index);
@@ -315,7 +351,6 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
     : null;
 
   const myExistingBid = myBids?.find?.((b: any) => b.status !== 'rejected') ?? null;
-  const serviceOfferingPrice = (booking as any)?.serviceOffering?.priceMin ?? null;
 
   const handleAccept = async () => {
     const parsedPrice = parseFloat(proposedPrice);
@@ -332,15 +367,15 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   };
 
   const handleSubmitBid = async () => {
-    const parsedPrice = parseFloat(proposedPrice);
-    if (!proposedPrice.trim() || isNaN(parsedPrice) || parsedPrice <= 0) {
-      Alert.alert(t('common.error'), t('pro_space.bid_price_required'));
+    const parsedPrice = proposedPrice.trim() ? parseFloat(proposedPrice) : undefined;
+    if (parsedPrice !== undefined && (isNaN(parsedPrice) || parsedPrice <= 0)) {
+      Alert.alert(t('common.error'), t('pro_space.bid_price_invalid'));
       return;
     }
     try {
       await submitBid({
         bookingId,
-        proposedPrice: parsedPrice,
+        ...(parsedPrice !== undefined ? { proposedPrice: parsedPrice } : {}),
         message: bidMessage.trim() || undefined,
       }).unwrap();
       setProposedPrice('');
@@ -812,29 +847,39 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
           ) : (
             <>
               <Text style={styles.cardTitle}>{t('pro_space.submit_bid_title')}</Text>
-              {serviceOfferingPrice ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm, gap: spacing.sm }}>
-                  <Icon name="tag-check-outline" size={16} color={tokens.primary} />
-                  <Text style={{ color: tokens.text.secondary, fontSize: 13, flex: 1 }}>
-                    {t('pro_space.bid_from_offering', { price: serviceOfferingPrice, currency: CURRENCY_CONFIG.code })}
-                  </Text>
+              {hasConfiguredPrice ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md, gap: spacing.sm,
+                  backgroundColor: tokens.primary + '12', borderRadius: 10, padding: spacing.sm,
+                  borderWidth: 1, borderColor: tokens.primary + '40' }}>
+                  <Icon name="tag-check-outline" size={20} color={tokens.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 13, color: tokens.text.secondary }}>{t('pro_space.price_from_offerings')}</Text>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: tokens.primary }}>
+                      {configuredPrice} {CURRENCY_CONFIG.code}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => navigation.navigate('ProOfferings')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Icon name="pencil-outline" size={16} color={tokens.text.secondary} />
+                  </TouchableOpacity>
                 </View>
               ) : (
-                <Text style={{ color: tokens.text.secondary, fontSize: 13, marginBottom: spacing.sm }}>
-                  {t('pro_space.submit_bid_hint')}
-                </Text>
+                <>
+                  <Text style={{ color: tokens.text.secondary, fontSize: 13, marginBottom: spacing.sm }}>
+                    {t('pro_space.submit_bid_hint')}
+                  </Text>
+                  <TextInput
+                    mode="outlined"
+                    value={proposedPrice}
+                    onChangeText={setProposedPrice}
+                    keyboardType="numeric"
+                    placeholder={t('pro_space.set_price_placeholder')}
+                    outlineColor={tokens.border}
+                    activeOutlineColor={tokens.primary}
+                    style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm }}
+                    right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
+                  />
+                </>
               )}
-              <TextInput
-                mode="outlined"
-                value={proposedPrice}
-                onChangeText={setProposedPrice}
-                keyboardType="numeric"
-                placeholder={t('pro_space.set_price_placeholder')}
-                outlineColor={tokens.border}
-                activeOutlineColor={tokens.primary}
-                style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm }}
-                right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
-              />
               <TextInput
                 mode="outlined"
                 value={bidMessage}
@@ -854,15 +899,17 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                   {isSubmittingBid ? t('common.loading') : t('pro_space.submit_bid_btn')}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm, alignSelf: 'flex-end' }}
-                onPress={() => navigation.navigate('ProOfferings')}
-              >
-                <Icon name="pencil-outline" size={14} color={tokens.primary} />
-                <Text style={{ color: tokens.primary, fontSize: 12, fontWeight: '600' }}>
-                  {serviceOfferingPrice ? t('pro_space.update_pricing') : t('pro_space.define_pricing')}
-                </Text>
-              </TouchableOpacity>
+              {!hasConfiguredPrice && (
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm, alignSelf: 'flex-end' }}
+                  onPress={() => navigation.navigate('ProOfferings')}
+                >
+                  <Icon name="pencil-outline" size={14} color={tokens.primary} />
+                  <Text style={{ color: tokens.primary, fontSize: 12, fontWeight: '600' }}>
+                    {t('pro_space.define_pricing')}
+                  </Text>
+                </TouchableOpacity>
+              )}
             </>
           )}
         </View>
@@ -901,20 +948,39 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
             ) : (
               <>
                 <Text style={styles.cardTitle}>{t('pro_space.set_price_title')}</Text>
-                <Text style={{ color: tokens.text.secondary, fontSize: 13, marginBottom: spacing.sm }}>
-                  {t('pro_space.set_price_hint')}
-                </Text>
-                <TextInput
-                  mode="outlined"
-                  value={proposedPrice}
-                  onChangeText={setProposedPrice}
-                  keyboardType="numeric"
-                  placeholder={t('pro_space.set_price_placeholder')}
-                  outlineColor={tokens.border}
-                  activeOutlineColor={tokens.primary}
-                  style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm }}
-                  right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
-                />
+                {hasConfiguredPrice ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md, gap: spacing.sm,
+                    backgroundColor: tokens.primary + '12', borderRadius: 10, padding: spacing.sm,
+                    borderWidth: 1, borderColor: tokens.primary + '40' }}>
+                    <Icon name="tag-check-outline" size={20} color={tokens.primary} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, color: tokens.text.secondary }}>{t('pro_space.price_from_offerings')}</Text>
+                      <Text style={{ fontSize: 16, fontWeight: '700', color: tokens.primary }}>
+                        {configuredPrice} {CURRENCY_CONFIG.code}
+                      </Text>
+                    </View>
+                    <TouchableOpacity onPress={() => navigation.navigate('ProOfferings')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Icon name="pencil-outline" size={16} color={tokens.text.secondary} />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={{ color: tokens.text.secondary, fontSize: 13, marginBottom: spacing.sm }}>
+                      {t('pro_space.set_price_hint')}
+                    </Text>
+                    <TextInput
+                      mode="outlined"
+                      value={proposedPrice}
+                      onChangeText={setProposedPrice}
+                      keyboardType="numeric"
+                      placeholder={t('pro_space.set_price_placeholder')}
+                      outlineColor={tokens.border}
+                      activeOutlineColor={tokens.primary}
+                      style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm }}
+                      right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
+                    />
+                  </>
+                )}
                 <TextInput
                   mode="outlined"
                   value={bidMessage}

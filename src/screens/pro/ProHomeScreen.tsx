@@ -9,6 +9,7 @@ import {
   Switch,
   TextInput,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, FAB } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -26,12 +27,14 @@ import Animated, {
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { CURRENCY_CONFIG } from '../../config/currency';
+import { CURRENCY_CONFIG, formatCurrency } from '../../config/currency';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
-import { useUpdateProAvailabilityMutation } from '../../store/api/prosApi';
+import { useGetProStatsQuery, useUpdateProAvailabilityMutation, usePayProCommissionMutation } from '../../store/api/prosApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useBeatSound } from '../../hooks/useBeatSound';
+import { useStripe } from '@stripe/stripe-react-native';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { RootState } from '../../store';
 
 type Props = StackScreenProps<ProStackParamList, 'ProHome'>;
@@ -121,6 +124,14 @@ export const ProHomeScreen = ({ navigation }: Props) => {
   emptyText: { marginTop: spacing.md, fontWeight: 'bold', textAlign: 'center' },
   emptySubtext: { marginTop: spacing.xs, color: tokens.text.secondary, textAlign: 'center' },
   fab: { position: 'absolute', bottom: spacing.md, right: spacing.md, backgroundColor: tokens.primary },
+  commissionAlert: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
+    backgroundColor: '#FFF8E1', borderRadius: 12, padding: spacing.md,
+    margin: spacing.md, borderWidth: 1, borderColor: colors.warning,
+  },
+  commissionAlertTitle: { fontSize: 14, fontWeight: '700', color: '#7B5800', marginBottom: 2 },
+  commissionAlertText: { fontSize: 13, color: '#7B5800', lineHeight: 18 },
+  commissionPayButton: { marginTop: spacing.sm, alignSelf: 'flex-start' },
 }), [tokens]);
 
   const { t, i18n } = useTranslation();
@@ -133,6 +144,39 @@ export const ProHomeScreen = ({ navigation }: Props) => {
     skip: !proId,
   });
   useRefetchOnFocus(refetch, 450);
+
+  const { data: stats, refetch: refetchStats } = useGetProStatsQuery(proId, {
+    pollingInterval: 30_000,
+    refetchOnMountOrArgChange: true,
+    skip: !proId,
+  });
+  const [payProCommission, { isLoading: payingCommission }] = usePayProCommissionMutation();
+  const [commissionPaid, setCommissionPaid] = useState(false);
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+
+  const pendingCashCommission = (stats as any)?.pendingCashCommission ?? 0;
+
+  const handlePayCommissionOnline = async () => {
+    try {
+      const result = await payProCommission().unwrap();
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: 'CheckAll@t',
+        paymentIntentClientSecret: result.clientSecret,
+        allowsDelayedPaymentMethods: false,
+      });
+      if (initError) { Alert.alert(t('common.error'), initError.message); return; }
+      const { error: payError } = await presentPaymentSheet();
+      if (payError) {
+        if (payError.code !== 'Canceled') Alert.alert(t('common.error'), payError.message);
+        return;
+      }
+      setCommissionPaid(true);
+      refetchStats();
+      Alert.alert(t('payment.success_title'), t('pro_space.commission_paid_success_msg'), [{ text: t('common.ok') }]);
+    } catch (error: any) {
+      Alert.alert(t('common.error'), error?.data?.message || t('pro_space.commission_payment_error'));
+    }
+  };
 
   const [updateAvailability] = useUpdateProAvailabilityMutation();
   const [isAvailable, setIsAvailable] = useState<boolean>(pro?.isAvailable ?? true);
@@ -325,19 +369,40 @@ export const ProHomeScreen = ({ navigation }: Props) => {
 
   const renderHeader = () => (
     <>
-      <View style={styles.availabilityCard}>
-        <View style={styles.availabilityContent}>
-          <View>
-            <Text variant="titleMedium" style={styles.availabilityTitle}>
-              {isAvailable ? `✅ ${t('pro_space.available')}` : `⏸️ ${t('pro_space.unavailable')}`}
+      {pendingCashCommission > 0 && !commissionPaid ? (
+        <View style={styles.commissionAlert}>
+          <Icon name="alert-circle" size={20} color={colors.warning} style={{ marginTop: 2 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.commissionAlertTitle}>{t('pro_space.cash_commission_due_title')}</Text>
+            <Text style={styles.commissionAlertText}>
+              {t('pro_space.cash_commission_due_msg', { amount: formatCurrency(pendingCashCommission) })}
             </Text>
-            <Text variant="bodySmall" style={styles.availabilitySubtitle}>
-              {isAvailable ? t('pro_space.available_subtitle') : t('pro_space.unavailable_subtitle')}
-            </Text>
+            <ChocolateButton
+              onPress={handlePayCommissionOnline}
+              loading={payingCommission}
+              disabled={payingCommission}
+              style={styles.commissionPayButton}
+              size="sm"
+            >
+              {t('pro_space.pay_commission_online')}
+            </ChocolateButton>
           </View>
-          <Switch value={isAvailable} onValueChange={toggleAvailability} trackColor={{ false: tokens.border, true: tokens.primary }} thumbColor={colors.white} />
         </View>
-      </View>
+      ) : (
+        <View style={styles.availabilityCard}>
+          <View style={styles.availabilityContent}>
+            <View>
+              <Text variant="titleMedium" style={styles.availabilityTitle}>
+                {isAvailable ? `✅ ${t('pro_space.available')}` : `⏸️ ${t('pro_space.unavailable')}`}
+              </Text>
+              <Text variant="bodySmall" style={styles.availabilitySubtitle}>
+                {isAvailable ? t('pro_space.available_subtitle') : t('pro_space.unavailable_subtitle')}
+              </Text>
+            </View>
+            <Switch value={isAvailable} onValueChange={toggleAvailability} trackColor={{ false: tokens.border, true: tokens.primary }} thumbColor={colors.white} />
+          </View>
+        </View>
+      )}
 
       {pendingBookings.length > 0 && (() => {
         const first = pendingBookings[0];

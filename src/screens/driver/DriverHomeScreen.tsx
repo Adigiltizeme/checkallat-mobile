@@ -9,6 +9,7 @@ import {
   Switch,
   TextInput,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Text, Card, Chip, ActivityIndicator, FAB } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +23,11 @@ import {
   useGetMyDeliveriesQuery,
   useGetAvailableRequestsQuery,
   useUpdateDriverAvailabilityMutation,
+  useGetDriverStatsQuery,
+  usePayCommissionMutation,
 } from '../../store/api/transportApi';
+import { useStripe } from '@stripe/stripe-react-native';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useBeatSound } from '../../hooks/useBeatSound';
 import { TransportRequest, STATUS_COLORS, TransportStatus } from '../../types/transport';
@@ -158,6 +163,14 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   availableBannerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flex: 1 },
   availableBannerTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   availableBannerSub: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
+  commissionAlert: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
+    backgroundColor: '#FFF8E1', borderRadius: 12, padding: spacing.md,
+    margin: spacing.md, borderWidth: 1, borderColor: colors.warning,
+  },
+  commissionAlertTitle: { fontSize: 14, fontWeight: '700', color: '#7B5800', marginBottom: 2 },
+  commissionAlertText: { fontSize: 13, color: '#7B5800', lineHeight: 18 },
+  commissionPayButton: { marginTop: spacing.sm, alignSelf: 'flex-start' },
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
@@ -176,6 +189,38 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   const [updateAvailability] = useUpdateDriverAvailabilityMutation();
   const driverProfile = useSelector((state: any) => state.auth.user?.driver);
   const [isAvailable, setIsAvailable] = useState<boolean>(driverProfile?.isAvailable ?? true);
+
+  const { data: driverStats, refetch: refetchDriverStats } = useGetDriverStatsQuery(undefined, {
+    pollingInterval: 30_000,
+    refetchOnMountOrArgChange: true,
+  });
+  const [payCommission, { isLoading: payingCommission }] = usePayCommissionMutation();
+  const [commissionPaid, setCommissionPaid] = useState(false);
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+
+  const pendingCashCommission = (driverStats as any)?.pendingCashCommission ?? 0;
+
+  const handlePayCommissionOnline = async () => {
+    try {
+      const result = await payCommission().unwrap();
+      const { error: initError } = await initPaymentSheet({
+        merchantDisplayName: 'CheckAll@t',
+        paymentIntentClientSecret: result.clientSecret,
+        allowsDelayedPaymentMethods: false,
+      });
+      if (initError) { Alert.alert(t('common.error'), initError.message); return; }
+      const { error: payError } = await presentPaymentSheet();
+      if (payError) {
+        if (payError.code !== 'Canceled') Alert.alert(t('common.error'), payError.message);
+        return;
+      }
+      setCommissionPaid(true);
+      refetchDriverStats();
+      Alert.alert(t('payment.success_title'), t('driver.commission_paid_success_msg'), [{ text: t('common.ok') }]);
+    } catch (error: any) {
+      Alert.alert(t('common.error'), error?.data?.message || t('driver.commission_payment_error'));
+    }
+  };
   const [refreshing, setRefreshing] = useState(false);
   const [temporalFilter, setTemporalFilter] = useState<TemporalFilter>('all');
   const [search, setSearch] = useState('');
@@ -388,25 +433,45 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
 
   const renderHeader = () => (
     <>
-      {/* Availability Toggle */}
-      <View style={styles.availabilityCard}>
-        <View style={styles.availabilityContent}>
-          <View>
-            <Text variant="titleMedium" style={styles.availabilityTitle}>
-              {isAvailable ? `✅ ${t('driver.available')}` : `⏸️ ${t('driver.unavailable')}`}
+      {pendingCashCommission > 0 && !commissionPaid ? (
+        <View style={styles.commissionAlert}>
+          <Icon name="alert-circle" size={20} color={colors.warning} style={{ marginTop: 2 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.commissionAlertTitle}>{t('driver.cash_commission_due_title')}</Text>
+            <Text style={styles.commissionAlertText}>
+              {t('driver.cash_commission_due_msg', { amount: formatCurrency(pendingCashCommission) })}
             </Text>
-            <Text variant="bodySmall" style={styles.availabilitySubtitle}>
-              {isAvailable ? t('driver.available_subtitle') : t('driver.unavailable_subtitle')}
-            </Text>
+            <ChocolateButton
+              onPress={handlePayCommissionOnline}
+              loading={payingCommission}
+              disabled={payingCommission}
+              style={styles.commissionPayButton}
+              size="sm"
+            >
+              {t('driver.pay_commission_online')}
+            </ChocolateButton>
           </View>
-          <Switch
-            value={isAvailable}
-            onValueChange={toggleAvailability}
-            trackColor={{ false: tokens.border, true: tokens.primary }}
-            thumbColor={colors.white}
-          />
         </View>
-      </View>
+      ) : (
+        <View style={styles.availabilityCard}>
+          <View style={styles.availabilityContent}>
+            <View>
+              <Text variant="titleMedium" style={styles.availabilityTitle}>
+                {isAvailable ? `✅ ${t('driver.available')}` : `⏸️ ${t('driver.unavailable')}`}
+              </Text>
+              <Text variant="bodySmall" style={styles.availabilitySubtitle}>
+                {isAvailable ? t('driver.available_subtitle') : t('driver.unavailable_subtitle')}
+              </Text>
+            </View>
+            <Switch
+              value={isAvailable}
+              onValueChange={toggleAvailability}
+              trackColor={{ false: tokens.border, true: tokens.primary }}
+              thumbColor={colors.white}
+            />
+          </View>
+        </View>
+      )}
 
       {/* Bannière demandes disponibles */}
       {availableRequests.length > 0 && (
