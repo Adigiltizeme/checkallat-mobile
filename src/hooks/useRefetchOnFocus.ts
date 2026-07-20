@@ -12,11 +12,18 @@ import { useFocusEffect } from '@react-navigation/native';
 export function useRefetchOnFocus(refetch: () => void, delay = 0) {
   useFocusEffect(
     useCallback(() => {
+      const safeRefetch = () => {
+        try {
+          refetch();
+        } catch {
+          // Query not started yet (skip: true or uninitialized) — no-op, polling handles it
+        }
+      };
       if (delay === 0) {
-        refetch();
+        safeRefetch();
         return;
       }
-      const timer = setTimeout(refetch, delay);
+      const timer = setTimeout(safeRefetch, delay);
       return () => clearTimeout(timer);
     }, [refetch, delay])
   );
