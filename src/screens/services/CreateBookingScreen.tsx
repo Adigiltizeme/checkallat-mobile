@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -183,7 +183,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={'padding'}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}

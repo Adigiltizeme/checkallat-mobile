@@ -1280,6 +1280,15 @@
     "cancelled": "Cancelled",
     "rejected": "Rejected"
   },
+  "order_status": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "preparing": "Preparing",
+    "ready": "Ready",
+    "delivered": "Delivered",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
   "booking_request": {
     "step1_title": "Describe your need",
     "step2_title": "Service address",

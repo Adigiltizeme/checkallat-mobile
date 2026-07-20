@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -216,7 +216,7 @@ const [activeTab, setActiveTab] = useState<Tab>('written');
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={'padding'}
     >
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
         {/* Header */}

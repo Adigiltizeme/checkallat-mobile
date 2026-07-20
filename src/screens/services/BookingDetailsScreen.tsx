@@ -28,6 +28,7 @@ import {
 } from '../../store/api/bookingsApi';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { WEB_URL } from '../../config/api';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -512,14 +513,13 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   };
 
   const handleShare = async () => {
-    const webUrl = process.env.EXPO_PUBLIC_WEB_URL || '';
-    const trackingLink = `${webUrl}/track/booking/${bookingId}`;
+    const trackingLink = `${WEB_URL}/track/booking/${bookingId}`;
     const message =
       t('booking.share_message', {
         service: serviceName,
         address: (booking as any).address ?? '',
         pro: proName,
-        status: t(`status.${status}`),
+        status: t(`booking_status.${status}`),
       }) + `\n\n🔗 ${trackingLink}`;
     await Share.share({ message });
   };

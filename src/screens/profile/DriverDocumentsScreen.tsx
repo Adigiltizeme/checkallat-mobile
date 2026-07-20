@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
   Alert,
   TouchableOpacity,
   ActivityIndicator,
@@ -198,6 +199,7 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
   };
 
   return (
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
@@ -312,5 +314,6 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
         )}
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };

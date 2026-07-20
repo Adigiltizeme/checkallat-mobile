@@ -1280,6 +1280,15 @@
     "cancelled": "ملغى",
     "rejected": "مرفوض"
   },
+  "order_status": {
+    "pending": "قيد الانتظار",
+    "confirmed": "مؤكد",
+    "preparing": "قيد التحضير",
+    "ready": "جاهز",
+    "delivered": "تم التسليم",
+    "completed": "مكتمل",
+    "cancelled": "ملغى"
+  },
   "booking_request": {
     "step1_title": "صِف احتياجك",
     "step2_title": "عنوان الخدمة",

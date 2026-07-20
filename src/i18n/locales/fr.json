@@ -1280,6 +1280,15 @@
     "cancelled": "Annulée",
     "rejected": "Refusée"
   },
+  "order_status": {
+    "pending": "En attente",
+    "confirmed": "Confirmée",
+    "preparing": "En préparation",
+    "ready": "Prête",
+    "delivered": "Livrée",
+    "completed": "Terminée",
+    "cancelled": "Annulée"
+  },
   "booking_request": {
     "step1_title": "Décrivez votre besoin",
     "step2_title": "Adresse d'intervention",

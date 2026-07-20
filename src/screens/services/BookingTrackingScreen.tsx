@@ -26,6 +26,7 @@ import {
   useConfirmBookingCompletionMutation,
 } from '../../store/api/bookingsApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { WEB_URL } from '../../config/api';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import RNMapView, { Marker } from 'react-native-maps';
@@ -336,8 +337,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
 
   const handleShare = async () => {
     if (!booking) return;
-    const webUrl = process.env.EXPO_PUBLIC_WEB_URL || '';
-    const trackingLink = `${webUrl}/track/booking/${bookingId}`;
+    const trackingLink = `${WEB_URL}/track/booking/${bookingId}`;
     const serviceName = (booking as any).category?.nameFr ?? (booking as any).category?.nameEn ?? '';
     const assignedPro = proName ?? t('booking_tracking.waiting_pro');
     const message =
@@ -345,7 +345,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
         service: serviceName,
         address: (booking as any).address ?? '',
         pro: assignedPro,
-        status: t(`status.${booking.status}`),
+        status: t(`booking_status.${booking.status}`),
       }) + `\n\n🔗 ${trackingLink}`;
     await Share.share({ message });
   };

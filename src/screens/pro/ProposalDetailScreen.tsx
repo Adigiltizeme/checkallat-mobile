@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -180,7 +180,7 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
   const statusColor = STATUS_COLOR[proposal.status] ?? tokens.text.secondary;
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.flex} behavior={'padding'}>
       <ScrollView ref={scrollRef} style={styles.scroll} contentContainerStyle={styles.content}>
 
         {/* Status + title */}

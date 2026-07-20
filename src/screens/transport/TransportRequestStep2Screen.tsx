@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -552,7 +552,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={'padding'}
     >
       {/* Modal sélection de pays (pays non supporté ou changement manuel) */}
       <UnsupportedCountryModal

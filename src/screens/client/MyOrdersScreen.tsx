@@ -16,6 +16,7 @@ import { useGetMyBookingsQuery } from '../../store/api/bookingsApi';
 import { useGetMyOrdersQuery } from '../../store/api/marketplaceApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { formatCurrency } from '../../config/currency';
+import { getLocalizedName } from '../../utils/localize';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -192,7 +193,7 @@ export const MyOrdersScreen = () => {
 
   const renderBookingItem = ({ item }: { item: any }) => {
     const badge = BOOKING_STATUS_COLOR[item.status] ?? BOOKING_STATUS_COLOR.pending;
-    const categoryName = item.category?.nameFr ?? item.category?.slug ?? '—';
+    const categoryName = getLocalizedName(item.category, i18n.language);
     return (
       <TouchableOpacity
         style={styles.card}
@@ -204,7 +205,7 @@ export const MyOrdersScreen = () => {
           <Text style={styles.cardTitle} numberOfLines={1}>{categoryName}</Text>
           <View style={[styles.badge, { backgroundColor: badge.bg }]}>
             <Text style={[styles.badgeText, { color: badge.color }]}>
-              {t(`status.${item.status}`, { defaultValue: item.status })}
+              {t(`booking_status.${item.status}`, { defaultValue: item.status })}
             </Text>
           </View>
         </View>

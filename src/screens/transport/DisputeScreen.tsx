@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -75,7 +75,7 @@ export const DisputeScreen = ({ route, navigation }: Props) => {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={'padding'}
     >
       <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
         {/* Subtitle */}

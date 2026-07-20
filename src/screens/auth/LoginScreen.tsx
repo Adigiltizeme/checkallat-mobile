@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+﻿import React, { useMemo, useEffect, useState } from 'react';
 import { StyleSheet, KeyboardAvoidingView, ScrollView, Platform, View, Image, Dimensions } from 'react-native';
 
 const LOGO_SIZE = Dimensions.get('window').width * 0.85;
@@ -103,7 +103,7 @@ export const LoginScreen = ({ navigation }: Props) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={'padding'}
     >
       <LanguagePickerModal
         visible={showLangPicker}

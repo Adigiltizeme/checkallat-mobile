@@ -21,10 +21,8 @@ import { ProStackParamList } from '../../navigation/types';
 import {
   useGetBookingByIdQuery,
   useUpdateBookingStatusMutation,
-  useConfirmBookingCompletionMutation,
   useCancelBookingMutation,
   useMarkArrivedMutation,
-  useMarkStartedMutation,
   useMarkEnRouteMutation,
   useSubmitBidMutation,
   useGetBookingBidsQuery,
@@ -216,10 +214,8 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   useRefetchOnFocus(refetch);
 
   const [updateStatus, { isLoading: isUpdating }] = useUpdateBookingStatusMutation();
-  const [confirmCompletion, { isLoading: isConfirming }] = useConfirmBookingCompletionMutation();
   const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
   const [markArrived, { isLoading: isArrivedLoading }] = useMarkArrivedMutation();
-  const [markStarted, { isLoading: isStartedLoading }] = useMarkStartedMutation();
   const [markEnRoute, { isLoading: isEnRouteLoading }] = useMarkEnRouteMutation();
   const [submitBid, { isLoading: isSubmittingBid }] = useSubmitBidMutation();
 
@@ -273,8 +269,6 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [selectedCancelReason, setSelectedCancelReason] = useState<string | null>(null);
   const [cancelOtherText, setCancelOtherText] = useState('');
-  const [showCashModal, setShowCashModal] = useState(false);
-  const [cashAmountInput, setCashAmountInput] = useState('');
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [proposedPrice, setProposedPrice] = useState('');
@@ -402,51 +396,12 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
     }
   };
 
-  const handleStartWork = async () => {
-    try {
-      await markStarted(bookingId).unwrap();
-    } catch {
-      Alert.alert(t('common.error'), t('pro_space.error_update'));
-    }
+  const handleStartWork = () => {
+    navigation.navigate('ProProofPhotos', { bookingId, type: 'before', nextAction: 'start' });
   };
 
   const handleConfirmCompletion = () => {
-    if (isCash) {
-      setCashAmountInput('');
-      setShowCashModal(true);
-    } else {
-      Alert.alert(
-        t('booking.confirm_completion_title'),
-        t('booking.confirm_completion_msg'),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          {
-            text: t('common.confirm'),
-            onPress: async () => {
-              try {
-                await confirmCompletion({ id: bookingId, role: 'pro' }).unwrap();
-              } catch {
-                Alert.alert(t('common.error'), t('booking.error_confirm'));
-              }
-            },
-          },
-        ],
-      );
-    }
-  };
-
-  const submitCashConfirmation = async () => {
-    const cashAmount = parseFloat(cashAmountInput);
-    setShowCashModal(false);
-    try {
-      await confirmCompletion({
-        id: bookingId,
-        role: 'pro',
-        ...(isNaN(cashAmount) ? {} : { cashAmount }),
-      }).unwrap();
-    } catch {
-      Alert.alert(t('common.error'), t('booking.error_confirm'));
-    }
+    navigation.navigate('ProProofPhotos', { bookingId, type: 'after', nextAction: 'complete', isCash });
   };
 
   const handleCancel = async () => {
@@ -1097,13 +1052,12 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
             <Text style={[styles.actionBtnText, { color: colors.error }]}>{t('booking.cancel_btn')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.actionBtnPrimary, { flex: 2 }, isStartedLoading && { opacity: 0.5 }]}
+            style={[styles.actionBtnPrimary, { flex: 2 }]}
             onPress={handleStartWork}
-            disabled={isStartedLoading}
           >
             <Icon name="progress-wrench" size={18} color={colors.white} />
             <Text style={[styles.actionBtnText, { color: colors.white }]}>
-              {isStartedLoading ? t('common.loading') : t('pro_space.start_work_btn')}
+              {t('pro_space.start_work_btn')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -1112,17 +1066,14 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
       {/* Bouton de confirmation */}
       {(isInProgress || status === 'completed') && !(booking as any).proConfirmedCompletion && (
         <TouchableOpacity
-          style={[styles.actionBtnPrimary, { marginTop: spacing.sm }, isConfirming && { opacity: 0.5 }]}
+          style={[styles.actionBtnPrimary, { marginTop: spacing.sm }]}
           onPress={handleConfirmCompletion}
-          disabled={isConfirming}
         >
           <Icon name="check-all" size={20} color={colors.white} />
           <Text style={[styles.actionBtnText, { color: colors.white, fontSize: 15 }]}>
-            {isConfirming
-              ? t('common.loading')
-              : status === 'completed'
-                ? t('booking.confirm_completion_btn')
-                : t('pro_space.finish_work_btn')}
+            {status === 'completed'
+              ? t('booking.confirm_completion_btn')
+              : t('pro_space.finish_work_btn')}
           </Text>
         </TouchableOpacity>
       )}
@@ -1136,44 +1087,6 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
           </Text>
         </View>
       )}
-
-      {/* Modal saisie montant cash */}
-      <Modal visible={showCashModal} transparent animationType="fade" onRequestClose={() => setShowCashModal(false)}>
-        <View style={styles.cashModalOverlay}>
-          <View style={styles.cashModalBox}>
-            <Text style={styles.cashModalTitle}>{t('booking.cash_amount_title')}</Text>
-            <Text style={styles.cashModalMsg}>{t('booking.cash_amount_msg_pro')}</Text>
-            <TextInput
-              mode="outlined"
-              value={cashAmountInput}
-              onChangeText={setCashAmountInput}
-              keyboardType="numeric"
-              placeholder="0.00"
-              outlineColor={tokens.border}
-              activeOutlineColor={tokens.primary}
-              style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.sm }}
-              right={<TextInput.Affix text="EGP" />}
-            />
-            <View style={styles.cashModalActions}>
-              <TouchableOpacity
-                style={styles.cashModalCancel}
-                onPress={() => setShowCashModal(false)}
-              >
-                <Text style={{ color: tokens.text.secondary, fontWeight: '600' }}>{t('common.cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.cashModalConfirm, isConfirming && { opacity: 0.5 }]}
-                onPress={submitCashConfirmation}
-                disabled={isConfirming}
-              >
-                <Text style={{ color: colors.white, fontWeight: '700' }}>
-                  {isConfirming ? t('common.loading') : t('common.confirm')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       {/* Photo viewer modal */}
       {clientPhotos.length > 0 && (

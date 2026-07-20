@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   ScrollView,
+  KeyboardAvoidingView,
   TextInput as RNTextInput,
 } from 'react-native';
 import { Text, ActivityIndicator, FAB } from 'react-native-paper';
@@ -459,7 +460,7 @@ const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.
         transparent
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView behavior="padding" style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <ScrollView keyboardShouldPersistTaps="handled">
               <Text variant="titleMedium" style={styles.modalTitle}>
@@ -564,7 +565,7 @@ const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.
               </View>
             </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -245,7 +245,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.container} behavior={'padding'}>
       <UnsupportedCountryModal
         visible={showUnsupportedModal}
         detectedCountryCode={locationState.detectedCountryCode}

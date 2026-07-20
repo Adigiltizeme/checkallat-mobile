@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+﻿import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -587,7 +587,7 @@ export const EditProfileScreen = ({ navigation }: any) => {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={'padding'}
     >
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       {/* Avatar */}

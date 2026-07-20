@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
+  KeyboardAvoidingView,
   Alert,
 } from 'react-native';
 import { Text, TextInput } from 'react-native-paper';
@@ -106,6 +107,7 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   };
 
   return (
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.stepLabel}>{t('booking_request.step_of', { current: 1, total: 5 })}</Text>
       <Text style={styles.categoryTitle}>{categoryName}</Text>
@@ -188,6 +190,7 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
         {t('booking_request.next')}
       </ChocolateButton>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

@@ -15,6 +15,9 @@ export const API_CONFIG = {
   TIMEOUT: 30000,
 };
 
+// URL publique de l'app web (pages de suivi partagées avec les clients)
+export const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL || 'https://checkallat-web-admin.vercel.app';
+
 /**
  * Configuration réutilisable pour tous les APIs RTK Query
  * Ajoute automatiquement le token JWT et l'en-tête ngrok

@@ -9,6 +9,7 @@ import { spacing } from '../../theme/spacing';
 import { useGetTrackingInfoQuery, useGetTransportRequestQuery } from '../../store/api/transportApi';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useTranslation } from 'react-i18next';
+import { WEB_URL } from '../../config/api';
 import { STATUS_COLORS, TransportStatus } from '../../types/transport';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -201,8 +202,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
     if (!request) return;
     const driver = trackingInfo?.driverName || t('transport.assigned_driver');
     const status = t('status.' + request.status);
-    const webUrl = process.env.EXPO_PUBLIC_WEB_URL || '';
-    const trackingLink = `${webUrl}/track/${requestId}`;
+    const trackingLink = `${WEB_URL}/track/${requestId}`;
     const message =
       t('transport.share_tracking_message', {
         pickup: request.pickup.address,
