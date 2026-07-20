@@ -10,7 +10,7 @@ import { secureStorage } from './utils/secureStorage';
 import Constants from 'expo-constants';
 import * as Sentry from '@sentry/react-native';
 import { store } from './store';
-import { setCredentials, restoreAuth, restoreLanguage, LANGUAGE_STORAGE_KEY } from './store/slices/authSlice';
+import { setCredentials, restoreAuth, logout, restoreLanguage, LANGUAGE_STORAGE_KEY } from './store/slices/authSlice';
 import { RootNavigator } from './navigation/RootNavigator';
 import { colors } from './theme/colors';
 import { ThemeProvider, useAppTheme } from './theme/ThemeProvider';
@@ -201,8 +201,12 @@ function AppContent() {
                 await applyLanguage(user.preferredLanguage);
                 AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, user.preferredLanguage);
               }
+            } else {
+              // Token expiré ou invalide (401, 403…) → déconnexion propre
+              store.dispatch(logout());
             }
           } catch (error) {
+            // Erreur réseau → on garde la session pour le mode hors-ligne
             console.error('Failed to fetch user profile:', error);
           }
         }

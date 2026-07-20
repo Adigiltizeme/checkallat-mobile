@@ -186,7 +186,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   // de déclencher des re-renders (évite le clignotement au retour arrière).
   useRefetchOnFocus(refetch, 450);
   useRefetchOnFocus(refetchAvailable, 450);
-  const [updateAvailability] = useUpdateDriverAvailabilityMutation();
+  const [updateAvailability, { isLoading: isUpdatingAvailability }] = useUpdateDriverAvailabilityMutation();
   const driverProfile = useSelector((state: any) => state.auth.user?.driver);
   const [isAvailable, setIsAvailable] = useState<boolean>(driverProfile?.isAvailable ?? true);
 
@@ -466,6 +466,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
             <Switch
               value={isAvailable}
               onValueChange={toggleAvailability}
+              disabled={isUpdatingAvailability}
               trackColor={{ false: tokens.border, true: tokens.primary }}
               thumbColor={colors.white}
             />

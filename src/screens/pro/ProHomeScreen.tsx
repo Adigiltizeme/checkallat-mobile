@@ -178,7 +178,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
     }
   };
 
-  const [updateAvailability] = useUpdateProAvailabilityMutation();
+  const [updateAvailability, { isLoading: isUpdatingAvailability }] = useUpdateProAvailabilityMutation();
   const [isAvailable, setIsAvailable] = useState<boolean>(pro?.isAvailable ?? true);
   const [refreshing, setRefreshing] = useState(false);
   const [temporalFilter, setTemporalFilter] = useState<TemporalFilter>('all');
@@ -399,7 +399,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
                 {isAvailable ? t('pro_space.available_subtitle') : t('pro_space.unavailable_subtitle')}
               </Text>
             </View>
-            <Switch value={isAvailable} onValueChange={toggleAvailability} trackColor={{ false: tokens.border, true: tokens.primary }} thumbColor={colors.white} />
+            <Switch value={isAvailable} onValueChange={toggleAvailability} disabled={isUpdatingAvailability} trackColor={{ false: tokens.border, true: tokens.primary }} thumbColor={colors.white} />
           </View>
         </View>
       )}
