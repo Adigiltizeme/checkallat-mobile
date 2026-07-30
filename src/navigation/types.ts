@@ -43,11 +43,14 @@ export type ProfileStackParamList = {
   DriverApplication: undefined;
   DriverDocuments: undefined;
   ProApplication: undefined;
+  ProDocuments: undefined;
   MyProposals: undefined;
   ProposalDetail: { proposalId: string };
   SubmitProposal: undefined;
   PayoutAccounts: undefined;
   PayoutAccountForm: { accountId?: string } | undefined;
+  SavedCards: undefined;
+  AddCard: undefined;
   ProOfferings: undefined;
 };
 

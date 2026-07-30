@@ -7,7 +7,10 @@ import {
   Platform,
   Alert,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
+import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
+import { uploadMultipleImages } from '../../services/uploadService';
 import { Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
@@ -128,6 +131,8 @@ const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; 
     }
   };
 
+  const kycRenewalReason: string | null = (pro as any)?.kycRenewalReason ?? null;
+
   // ── Profil actif ──
   if (isActive) {
     const currentSlugs: string[] = pro?.serviceCategories ?? [];
@@ -137,6 +142,36 @@ const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; 
 
     return (
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        {kycRenewalReason && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#F59E0B22',
+              borderLeftWidth: 4,
+              borderLeftColor: '#F59E0B',
+              borderRadius: 8,
+              padding: 14,
+              marginBottom: 16,
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              gap: 10,
+            }}
+            onPress={() => navigation.navigate('ProDocuments')}
+            activeOpacity={0.85}
+          >
+            <Icon name="alert-circle" size={22} color="#F59E0B" style={{ marginTop: 1 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#F59E0B', fontWeight: '700', marginBottom: 4 }}>
+                {t('kyc.renewal_banner_title')}
+              </Text>
+              <Text style={{ color: tokens.text.primary, lineHeight: 20, fontSize: 13 }}>
+                {kycRenewalReason}
+              </Text>
+              <Text style={{ color: tokens.primary, fontSize: 12, marginTop: 6, fontWeight: '600' }}>
+                {t('common.update')} →
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
         <View style={styles.statusHeader}>
           <View style={[styles.statusIcon, { backgroundColor: '#D1FAE5' }]}>
             <Icon name="briefcase-check" size={40} color={tokens.primary} />
@@ -407,11 +442,21 @@ export const ProApplicationScreen = ({ navigation }: any) => {
     gap: spacing.sm, marginTop: spacing.lg,
   },
   submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '700' },
+
+  docTypeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.sm },
+  docTypeChip: {
+    paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20,
+    borderWidth: 1.5, borderColor: tokens.border, backgroundColor: 'transparent',
+  },
+  docTypeChipActive: { borderColor: tokens.primary, backgroundColor: tokens.primary + '18' },
+  docTypeChipText: { color: tokens.text.secondary, fontSize: 13 },
+  docTypeChipTextActive: { color: tokens.primary, fontWeight: '600' },
 }), [tokens]);
 
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
+  const token = useSelector((state: RootState) => state.auth.token);
   const { userLat, userLng } = useSelector((state: RootState) => state.location);
 
   const { data: categories = [] } = useGetCategoriesQuery({ activeOnly: true });
@@ -422,6 +467,16 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   const [companyName, setCompanyName] = useState('');
   const [serviceAreaRadius, setServiceAreaRadius] = useState('10');
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const [idDocumentType, setIdDocumentType] = useState<'national_id' | 'passport' | 'residence_permit'>('national_id');
+  const [idFrontPhotos, setIdFrontPhotos] = useState<string[]>([]);
+  const [idBackPhotos, setIdBackPhotos] = useState<string[]>([]);
+  const [selfiePhotos, setSelfiePhotos] = useState<string[]>([]);
+  const isPassport = idDocumentType === 'passport';
+  const kycValid = idFrontPhotos.length > 0 && (isPassport || idBackPhotos.length > 0) && selfiePhotos.length > 0;
+
+  const isLocalUri = (uri: string) => uri.startsWith('file://') || uri.startsWith('/') || uri.startsWith('content://');
 
   const pro = user?.pro;
   const hasApplication = !!pro;
@@ -439,13 +494,42 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   const canSubmit =
     selectedCategories.length > 0 &&
     bio.trim().length >= 20 &&
-    !isLoading;
+    kycValid &&
+    !isLoading &&
+    !uploading;
 
   const handleSubmit = async () => {
     setSubmitted(true);
     if (!canSubmit) return;
+    if (!token) return;
 
     try {
+      setUploading(true);
+
+      const [frontUrl] = await uploadMultipleImages(
+        idFrontPhotos.filter(isLocalUri),
+        token,
+      );
+      const finalFront = isLocalUri(idFrontPhotos[0]) ? frontUrl : idFrontPhotos[0];
+
+      let finalBack: string | undefined;
+      if (!isPassport && idBackPhotos.length > 0) {
+        if (isLocalUri(idBackPhotos[0])) {
+          const [backUrl] = await uploadMultipleImages([idBackPhotos[0]], token);
+          finalBack = backUrl;
+        } else {
+          finalBack = idBackPhotos[0];
+        }
+      }
+
+      const [selfieUrl] = await uploadMultipleImages(
+        selfiePhotos.filter(isLocalUri),
+        token,
+      );
+      const finalSelfie = isLocalUri(selfiePhotos[0]) ? selfieUrl : selfiePhotos[0];
+
+      setUploading(false);
+
       const result = await createProProfile({
         companyName: companyName.trim() || undefined,
         bio: bio.trim(),
@@ -453,12 +537,17 @@ export const ProApplicationScreen = ({ navigation }: any) => {
         serviceAreaRadius: parseFloat(serviceAreaRadius) || 10,
         serviceAreaCenterLat: userLat ?? 0,
         serviceAreaCenterLng: userLng ?? 0,
+        idDocumentType,
+        idDocumentFront: finalFront,
+        idDocumentBack: finalBack,
+        selfiePhoto: finalSelfie,
       }).unwrap();
 
       dispatch(updateUser({ pro: { ...result, serviceCategorySlugs: selectedCategories } }));
 
       Alert.alert(t('pro_apply.success_title'), t('pro_apply.success_msg'));
     } catch {
+      setUploading(false);
       Alert.alert(t('common.error'), t('pro_apply.error_msg'));
     }
   };
@@ -561,6 +650,59 @@ export const ProApplicationScreen = ({ navigation }: any) => {
           ))}
         </View>
 
+        {/* Section KYC */}
+        <Text style={[styles.sectionLabel, { marginTop: spacing.xl }]}>{t('kyc.section_title')} *</Text>
+        <Text style={styles.sectionHint}>{t('kyc.section_hint')}</Text>
+
+        <Text style={[styles.sectionLabel, { marginTop: spacing.sm }]}>{t('kyc.document_type')}</Text>
+        <View style={styles.docTypeRow}>
+          {(['national_id', 'passport', 'residence_permit'] as const).map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[styles.docTypeChip, idDocumentType === type && styles.docTypeChipActive]}
+              onPress={() => setIdDocumentType(type)}
+            >
+              <Text style={[styles.docTypeChipText, idDocumentType === type && styles.docTypeChipTextActive]}>
+                {t(`kyc.doc_${type}`)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <Text style={styles.sectionLabel}>{t('kyc.id_front')} *</Text>
+        <Text style={styles.sectionHint}>{t('kyc.id_front_hint')}</Text>
+        <PhotoPickerGrid photos={idFrontPhotos} onPhotosChange={setIdFrontPhotos} maxPhotos={1} />
+        {submitted && idFrontPhotos.length === 0 && (
+          <Text style={styles.errorHint}>{t('kyc.id_front_required')}</Text>
+        )}
+
+        {!isPassport && (
+          <>
+            <Text style={[styles.sectionLabel, { marginTop: spacing.md }]}>{t('kyc.id_back')} *</Text>
+            <Text style={styles.sectionHint}>{t('kyc.id_back_hint')}</Text>
+            <PhotoPickerGrid photos={idBackPhotos} onPhotosChange={setIdBackPhotos} maxPhotos={1} />
+            {submitted && idBackPhotos.length === 0 && (
+              <Text style={styles.errorHint}>{t('kyc.id_back_required')}</Text>
+            )}
+          </>
+        )}
+
+        <Text style={[styles.sectionLabel, { marginTop: spacing.md }]}>{t('kyc.selfie')} *</Text>
+        <Text style={styles.sectionHint}>{t('kyc.selfie_hint')}</Text>
+        <PhotoPickerGrid photos={selfiePhotos} onPhotosChange={setSelfiePhotos} maxPhotos={1} />
+        {submitted && selfiePhotos.length === 0 && (
+          <Text style={styles.errorHint}>{t('kyc.selfie_required')}</Text>
+        )}
+
+        {uploading && (
+          <View style={{ alignItems: 'center', padding: spacing.md }}>
+            <ActivityIndicator size="large" color={tokens.primary} />
+            <Text style={{ marginTop: spacing.sm, color: tokens.text.secondary, fontSize: 14 }}>
+              {t('transport.uploading_photos')}
+            </Text>
+          </View>
+        )}
+
         {/* Note légale */}
         <View style={styles.reviewNote}>
           <Icon name="information-outline" size={16} color={tokens.text.secondary} />
@@ -576,7 +718,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
         >
           <Icon name="briefcase-check" size={20} color={colors.white} />
           <Text style={styles.submitBtnText}>
-            {isLoading ? t('common.loading') : t('pro_apply.submit')}
+            {isLoading || uploading ? t('common.loading') : t('pro_apply.submit')}
           </Text>
         </TouchableOpacity>
 

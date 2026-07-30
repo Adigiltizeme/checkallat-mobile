@@ -17,11 +17,14 @@ import { AddActivityScreen } from '../screens/profile/AddActivityScreen';
 import { DriverApplicationScreen } from '../screens/profile/DriverApplicationScreen';
 import { DriverDocumentsScreen } from '../screens/profile/DriverDocumentsScreen';
 import { ProApplicationScreen } from '../screens/profile/ProApplicationScreen';
+import { ProDocumentsScreen } from '../screens/profile/ProDocumentsScreen';
 import { MyProposalsScreen } from '../screens/pro/MyProposalsScreen';
 import { ProposalDetailScreen } from '../screens/pro/ProposalDetailScreen';
 import { SubmitProposalScreen } from '../screens/pro/SubmitProposalScreen';
 import { PayoutAccountsScreen } from '../screens/profile/PayoutAccountsScreen';
 import { PayoutAccountFormScreen } from '../screens/profile/PayoutAccountFormScreen';
+import { SavedCardsScreen } from '../screens/profile/SavedCardsScreen';
+import { AddCardScreen } from '../screens/profile/AddCardScreen';
 import { ProOfferingsScreen } from '../screens/pro/ProOfferingsScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
@@ -95,6 +98,11 @@ export const ProfileStack = () => {
         options={{ title: t('pro_apply.title') }}
       />
       <Stack.Screen
+        name="ProDocuments"
+        component={ProDocumentsScreen}
+        options={{ title: t('kyc.section_title') }}
+      />
+      <Stack.Screen
         name="MyProposals"
         component={MyProposalsScreen}
         options={{ title: t('proposal.my_proposals') }}
@@ -122,6 +130,16 @@ export const ProfileStack = () => {
             ? t('payout_accounts.edit_title')
             : t('payout_accounts.add_title'),
         })}
+      />
+      <Stack.Screen
+        name="SavedCards"
+        component={SavedCardsScreen}
+        options={{ title: t('saved_cards.title') }}
+      />
+      <Stack.Screen
+        name="AddCard"
+        component={AddCardScreen}
+        options={{ title: t('saved_cards.add_title') }}
       />
       <Stack.Screen
         name="ProOfferings"

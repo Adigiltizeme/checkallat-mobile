@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { Text } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
@@ -97,6 +98,55 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
     fontSize: 16,
     fontWeight: '600',
   },
+  kycBanner: {
+    backgroundColor: '#F59E0B22',
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  kycBannerContent: {
+    flex: 1,
+  },
+  kycBannerTitle: {
+    color: '#F59E0B',
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  kycBannerMsg: {
+    color: tokens.text.primary,
+    lineHeight: 20,
+  },
+  docTypeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: spacing.sm,
+  },
+  docTypeChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: tokens.border,
+    backgroundColor: 'transparent',
+  },
+  docTypeChipActive: {
+    borderColor: tokens.primary,
+    backgroundColor: tokens.primary + '18',
+  },
+  docTypeChipText: {
+    color: tokens.text.secondary,
+    fontSize: 13,
+  },
+  docTypeChipTextActive: {
+    color: tokens.primary,
+    fontWeight: '600',
+  },
   }), [tokens]);
 
   const { t } = useTranslation();
@@ -105,6 +155,8 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
   const user = useSelector((state: RootState) => state.auth.user);
 
   const driver = user?.driver;
+
+  const kycRenewalReason: string | null = (driver as any)?.kycRenewalReason ?? null;
 
   // Photos véhicule — on pré-remplit avec les URLs existantes
   const [vehiclePhotos, setVehiclePhotos] = useState<string[]>(driver?.vehiclePhotos ?? []);
@@ -116,6 +168,22 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
   const [insurancePhotos, setInsurancePhotos] = useState<string[]>(
     driver?.vehicleInsurance ? [driver.vehicleInsurance] : []
   );
+  // KYC — pré-remplir si déjà soumis
+  const [idDocumentType, setIdDocumentType] = useState<'national_id' | 'passport' | 'residence_permit'>(
+    ((driver as any)?.idDocumentType as any) ?? 'national_id'
+  );
+  const [idFrontPhotos, setIdFrontPhotos] = useState<string[]>(
+    (driver as any)?.idDocumentFront ? [(driver as any).idDocumentFront] : []
+  );
+  const [idBackPhotos, setIdBackPhotos] = useState<string[]>(
+    (driver as any)?.idDocumentBack ? [(driver as any).idDocumentBack] : []
+  );
+  const [selfiePhotos, setSelfiePhotos] = useState<string[]>(
+    (driver as any)?.selfiePhoto ? [(driver as any).selfiePhoto] : []
+  );
+
+  const isPassport = idDocumentType === 'passport';
+  const kycValid = idFrontPhotos.length > 0 && (isPassport || idBackPhotos.length > 0) && selfiePhotos.length > 0;
 
   const [uploading, setUploading] = useState(false);
   const [updateDriverProfile, { isLoading }] = useUpdateDriverProfileMutation();
@@ -124,8 +192,12 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
     JSON.stringify(vehiclePhotos) !== JSON.stringify(driver?.vehiclePhotos ?? []);
   const licenseChanged = licensePhotos[0] !== driver?.drivingLicense;
   const insuranceChanged = insurancePhotos[0] !== driver?.vehicleInsurance;
+  const idFrontChanged = idFrontPhotos[0] !== (driver as any)?.idDocumentFront;
+  const idBackChanged = idBackPhotos[0] !== (driver as any)?.idDocumentBack;
+  const selfieChanged = selfiePhotos[0] !== (driver as any)?.selfiePhoto;
 
-  const hasChanges = vehiclePhotosChanged || licenseChanged || insuranceChanged;
+  const hasChanges = vehiclePhotosChanged || licenseChanged || insuranceChanged
+    || idFrontChanged || idBackChanged || selfieChanged;
 
   // Sépare les URIs locaux (nouveaux) des URLs Cloudinary (existants)
   const isLocalUri = (uri: string) => uri.startsWith('file://') || uri.startsWith('/') || uri.startsWith('content://');
@@ -174,10 +246,30 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
 
       setUploading(false);
 
+      let finalIdFront = idFrontPhotos[0] ?? (driver as any)?.idDocumentFront ?? '';
+      if (idFrontPhotos[0] && isLocalUri(idFrontPhotos[0])) {
+        const uploaded = await uploadMultipleImages([idFrontPhotos[0]], token);
+        finalIdFront = uploaded[0];
+      }
+      let finalIdBack: string | null = idBackPhotos[0] ?? (driver as any)?.idDocumentBack ?? null;
+      if (idBackPhotos[0] && isLocalUri(idBackPhotos[0])) {
+        const uploaded = await uploadMultipleImages([idBackPhotos[0]], token);
+        finalIdBack = uploaded[0];
+      }
+      let finalSelfie = selfiePhotos[0] ?? (driver as any)?.selfiePhoto ?? '';
+      if (selfiePhotos[0] && isLocalUri(selfiePhotos[0])) {
+        const uploaded = await uploadMultipleImages([selfiePhotos[0]], token);
+        finalSelfie = uploaded[0];
+      }
+
       await updateDriverProfile({
         vehiclePhotos: finalVehiclePhotos,
         drivingLicense: finalLicense,
         vehicleInsurance: finalInsurance,
+        idDocumentType,
+        idDocumentFront: finalIdFront,
+        idDocumentBack: finalIdBack,
+        selfiePhoto: finalSelfie,
       }).unwrap();
 
       dispatch(updateUser({
@@ -186,7 +278,7 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
           vehiclePhotos: finalVehiclePhotos,
           drivingLicense: finalLicense,
           vehicleInsurance: finalInsurance,
-        },
+        } as any,
       }));
 
       Alert.alert(t('common.success'), t('driver_docs.save_success'), [
@@ -205,6 +297,21 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
+      {/* Bannière renouvellement KYC */}
+      {kycRenewalReason && (
+        <View style={styles.kycBanner}>
+          <Icon name="alert-circle" size={22} color="#F59E0B" style={{ marginTop: 1 }} />
+          <View style={styles.kycBannerContent}>
+            <Text variant="labelMedium" style={styles.kycBannerTitle}>
+              {t('kyc.renewal_banner_title')}
+            </Text>
+            <Text variant="bodySmall" style={styles.kycBannerMsg}>
+              {kycRenewalReason}
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Photos véhicule */}
       <Text variant="labelLarge" style={styles.label}>
         {t('driver_apply.vehicle_photos_label')} *
@@ -292,6 +399,68 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
         </Text>
       )}
 
+      {/* Section KYC : Pièce d'identité & selfie */}
+      <Text variant="labelLarge" style={[styles.label, { marginTop: spacing.xl }]}>
+        {t('kyc.section_title')} *
+      </Text>
+      <Text variant="bodySmall" style={styles.hint}>
+        {t('kyc.section_hint')}
+      </Text>
+
+      <Text variant="labelMedium" style={[styles.label, { marginTop: spacing.sm }]}>
+        {t('kyc.document_type')}
+      </Text>
+      <View style={styles.docTypeRow}>
+        {(['national_id', 'passport', 'residence_permit'] as const).map((type) => (
+          <TouchableOpacity
+            key={type}
+            style={[styles.docTypeChip, idDocumentType === type && styles.docTypeChipActive]}
+            onPress={() => setIdDocumentType(type)}
+          >
+            <Text style={[styles.docTypeChipText, idDocumentType === type && styles.docTypeChipTextActive]}>
+              {t(`kyc.doc_${type}`)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text variant="labelMedium" style={styles.label}>
+        {t('kyc.id_front')} *
+      </Text>
+      <Text variant="bodySmall" style={styles.hint}>
+        {t('kyc.id_front_hint')}
+      </Text>
+      <PhotoPickerGrid photos={idFrontPhotos} onPhotosChange={setIdFrontPhotos} maxPhotos={1} />
+      {idFrontPhotos.length === 0 && (
+        <Text variant="bodySmall" style={styles.errorHint}>{t('kyc.id_front_required')}</Text>
+      )}
+
+      {!isPassport && (
+        <>
+          <Text variant="labelMedium" style={styles.label}>
+            {t('kyc.id_back')} *
+          </Text>
+          <Text variant="bodySmall" style={styles.hint}>
+            {t('kyc.id_back_hint')}
+          </Text>
+          <PhotoPickerGrid photos={idBackPhotos} onPhotosChange={setIdBackPhotos} maxPhotos={1} />
+          {idBackPhotos.length === 0 && (
+            <Text variant="bodySmall" style={styles.errorHint}>{t('kyc.id_back_required')}</Text>
+          )}
+        </>
+      )}
+
+      <Text variant="labelMedium" style={[styles.label, { marginTop: spacing.md }]}>
+        {t('kyc.selfie')} *
+      </Text>
+      <Text variant="bodySmall" style={styles.hint}>
+        {t('kyc.selfie_hint')}
+      </Text>
+      <PhotoPickerGrid photos={selfiePhotos} onPhotosChange={setSelfiePhotos} maxPhotos={1} />
+      {selfiePhotos.length === 0 && (
+        <Text variant="bodySmall" style={styles.errorHint}>{t('kyc.selfie_required')}</Text>
+      )}
+
       {/* Upload indicator */}
       {uploading && (
         <View style={styles.uploadingContainer}>
@@ -302,9 +471,9 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
 
       {/* Bouton Enregistrer */}
       <TouchableOpacity
-        style={[styles.saveBtn, (!hasChanges || uploading || isLoading || vehiclePhotos.length < 2 || licensePhotos.length === 0 || insurancePhotos.length === 0) && styles.saveBtnDisabled]}
+        style={[styles.saveBtn, (!hasChanges || uploading || isLoading || vehiclePhotos.length < 2 || licensePhotos.length === 0 || insurancePhotos.length === 0 || !kycValid) && styles.saveBtnDisabled]}
         onPress={handleSave}
-        disabled={!hasChanges || uploading || isLoading || vehiclePhotos.length < 2 || licensePhotos.length === 0 || insurancePhotos.length === 0}
+        disabled={!hasChanges || uploading || isLoading || vehiclePhotos.length < 2 || licensePhotos.length === 0 || insurancePhotos.length === 0 || !kycValid}
         activeOpacity={0.8}
       >
         {uploading || isLoading ? (

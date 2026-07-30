@@ -15,6 +15,7 @@ import { reviewsApi } from './api/reviewsApi';
 import { proposalsApi } from './api/proposalsApi';
 import { payoutAccountsApi } from './api/payoutAccountsApi';
 import { communicationApi } from './api/communicationApi';
+import { savedCardsApi } from './api/savedCardsApi';
 
 export const store = configureStore({
   reducer: {
@@ -33,6 +34,7 @@ export const store = configureStore({
     [proposalsApi.reducerPath]: proposalsApi.reducer,
     [payoutAccountsApi.reducerPath]: payoutAccountsApi.reducer,
     [communicationApi.reducerPath]: communicationApi.reducer,
+    [savedCardsApi.reducerPath]: savedCardsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -48,6 +50,7 @@ export const store = configureStore({
       proposalsApi.middleware,
       payoutAccountsApi.middleware,
       communicationApi.middleware,
+      savedCardsApi.middleware,
     ),
 });
 

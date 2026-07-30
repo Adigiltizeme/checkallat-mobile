@@ -220,8 +220,20 @@ export const ProfileScreen = () => {
           title={t('profile.payment_methods')}
           left={(props) => <List.Icon {...props} icon="credit-card" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => navigation.navigate('PayoutAccounts')}
+          onPress={() => navigation.navigate('SavedCards')}
         />
+        {(isDriver || isPro) && (
+          <>
+            <Divider />
+            <List.Item
+              title={t('profile.payout_accounts')}
+              description={t('profile.payout_accounts_desc')}
+              left={(props) => <List.Icon {...props} icon="bank-transfer" color={tokens.primary} />}
+              right={(props) => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('PayoutAccounts')}
+            />
+          </>
+        )}
       </View>
 
       {/* Gérer mes tarifs — pros uniquement */}

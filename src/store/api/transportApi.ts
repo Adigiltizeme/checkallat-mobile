@@ -304,6 +304,10 @@ export const transportApi = createApi({
         vehiclePhotos?: string[];
         drivingLicense?: string;
         vehicleInsurance?: string;
+        idDocumentType?: string;
+        idDocumentFront?: string;
+        idDocumentBack?: string | null;
+        selfiePhoto?: string;
       }
     >({
       query: (data) => ({
@@ -318,7 +322,7 @@ export const transportApi = createApi({
      */
     applyAsDriver: builder.mutation<
       any,
-      { vehicleType: string; vehicleCapacity: number; vehiclePlate: string; vehiclePhotos: string[]; drivingLicense: string; vehicleInsurance: string }
+      { vehicleType: string; vehicleCapacity: number; vehiclePlate: string; vehiclePhotos: string[]; drivingLicense: string; vehicleInsurance: string; idDocumentType: string; idDocumentFront: string; idDocumentBack?: string; selfiePhoto: string }
     >({
       query: (body) => ({
         url: '/driver/apply',
