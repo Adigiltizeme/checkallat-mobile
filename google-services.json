@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1074514792952",
+    "project_id": "checkallat-all",
+    "storage_bucket": "checkallat-all.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1074514792952:android:b22500530ca884eef1860d",
+        "android_client_info": {
+          "package_name": "com.digiltizeme.checkallat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDgjl2BcuR-AkZhc1iq9sQiF7OIcfv6RfM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
