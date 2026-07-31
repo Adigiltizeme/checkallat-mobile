@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, AudioPlayer } from 'expo-audio';
 
 const BEAT_MS = 600;
 
@@ -9,8 +9,8 @@ const BEAT_MS = 600;
 // sans interrompre le précédent.
 
 export function useBeatSound(active: boolean) {
-  const kickRef  = useRef<Audio.Sound | null>(null);
-  const tomRef   = useRef<Audio.Sound | null>(null);
+  const kickRef  = useRef<AudioPlayer | null>(null);
+  const tomRef   = useRef<AudioPlayer | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const beatRef  = useRef(0);
   const activeRef = useRef(false);
@@ -18,16 +18,16 @@ export function useBeatSound(active: boolean) {
   useEffect(() => {
     let cancelled = false;
 
-    const scheduleNext = async (delayMs: number) => {
-      timerRef.current = setTimeout(async () => {
+    const scheduleNext = (delayMs: number) => {
+      timerRef.current = setTimeout(() => {
         if (cancelled || !activeRef.current) return;
         const isKick = beatRef.current % 2 === 0;
         beatRef.current += 1;
         const sound = isKick ? kickRef.current : tomRef.current;
         if (sound) {
           try {
-            await sound.setPositionAsync(0);
-            await sound.playAsync();
+            sound.seekTo(0);
+            sound.play();
           } catch (_) {}
         }
         scheduleNext(BEAT_MS);
@@ -36,26 +36,22 @@ export function useBeatSound(active: boolean) {
 
     const start = async () => {
       try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: false,
-          shouldDuckAndroid: false, // ne pas baisser les autres sons — priorité max
-          staysActiveInBackground: false,
+        await setAudioModeAsync({
+          playsInSilentMode: false,
+          interruptionMode: 'mixWithOthers', // ne pas couper les autres sons — priorité max
+          shouldPlayInBackground: false,
+          allowsRecording: false,
+          shouldRouteThroughEarpiece: false,
         });
 
-        const [{ sound: kick }, { sound: tom }] = await Promise.all([
-          Audio.Sound.createAsync(
-            require('../../assets/sounds/perc_kick.wav'),
-            { shouldPlay: false, volume: 1.0 },
-          ),
-          Audio.Sound.createAsync(
-            require('../../assets/sounds/perc_tom.wav'),
-            { shouldPlay: false, volume: 1.0 },
-          ),
-        ]);
+        const kick = createAudioPlayer(require('../../assets/sounds/perc_kick.wav'));
+        const tom  = createAudioPlayer(require('../../assets/sounds/perc_tom.wav'));
+        kick.volume = 1.0;
+        tom.volume  = 1.0;
 
         if (cancelled) {
-          await kick.unloadAsync();
-          await tom.unloadAsync();
+          kick.remove();
+          tom.remove();
           return;
         }
 
@@ -69,7 +65,7 @@ export function useBeatSound(active: boolean) {
       } catch (_) {}
     };
 
-    const stop = async () => {
+    const stop = () => {
       activeRef.current = false;
       if (timerRef.current) {
         clearTimeout(timerRef.current);
@@ -78,7 +74,7 @@ export function useBeatSound(active: boolean) {
       // On laisse les sons terminer leur decay naturellement — pas de stopAsync()
       for (const ref of [kickRef, tomRef]) {
         if (ref.current) {
-          try { await ref.current.unloadAsync(); } catch (_) {}
+          try { ref.current.remove(); } catch (_) {}
           ref.current = null;
         }
       }

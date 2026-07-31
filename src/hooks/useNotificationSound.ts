@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 export function useNotificationSound(count: number) {
   const prevCountRef = useRef(count);
@@ -8,18 +8,22 @@ export function useNotificationSound(count: number) {
     if (count > prevCountRef.current) {
       const playOnce = async () => {
         try {
-          await Audio.setAudioModeAsync({
-            playsInSilentModeIOS: false,
-            shouldDuckAndroid: false,
-            staysActiveInBackground: false,
+          await setAudioModeAsync({
+            playsInSilentMode: false,
+            interruptionMode: 'mixWithOthers',
+            shouldPlayInBackground: false,
+            allowsRecording: false,
+            shouldRouteThroughEarpiece: false,
           });
-          const { sound } = await Audio.Sound.createAsync(
+          const player = createAudioPlayer(
             require('../../assets/sounds/perc_kick.wav'),
-            { shouldPlay: true, volume: 1.0 },
           );
-          sound.setOnPlaybackStatusUpdate((s) => {
-            if ('didJustFinish' in s && s.didJustFinish) {
-              sound.unloadAsync().catch(() => {});
+          player.volume = 1.0;
+          player.play();
+          const sub = player.addListener('playbackStatusUpdate', (status) => {
+            if (status.didJustFinish) {
+              sub.remove();
+              player.remove();
             }
           });
         } catch (_) {}

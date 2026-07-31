@@ -24,6 +24,8 @@
       "icon": "./assets/icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "CheckAll@t uses your location to find nearby service providers and enable real-time tracking.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "CheckAll@t uses your location to find nearby service providers and enable real-time tracking.",
         "NSCameraUsageDescription": "CheckAll@t uses your camera to take before/after photos for service orders.",
         "NSPhotoLibraryUsageDescription": "CheckAll@t accesses your photos to upload profile pictures and proof photos.",
         "NSPhotoLibraryAddUsageDescription": "CheckAll@t saves photos to your library."
