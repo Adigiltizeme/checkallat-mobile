@@ -53,6 +53,7 @@ export const ProAgendaScreen = () => {
   },
   dateDay: { fontSize: 10, fontWeight: '700', color: tokens.text.secondary, letterSpacing: 0.5 },
   dateDayNum: { fontSize: 22, fontWeight: '800', color: tokens.text.primary, lineHeight: 26 },
+  dateMonth: { fontSize: 10, fontWeight: '700', color: tokens.text.secondary, letterSpacing: 0.3 },
   dateTime: { fontSize: 10, color: tokens.primary, fontWeight: '600' },
   dateTbd: { fontSize: 11, color: tokens.text.secondary, fontWeight: '600' },
 
@@ -99,21 +100,27 @@ const navigation = useNavigation<any>();
       >
         {/* Date stripe */}
         <View style={styles.dateStripe}>
-          {scheduledAt ? (
-            <>
-              <Text style={styles.dateDay}>
-                {scheduledAt.toLocaleDateString(i18n.language, { weekday: 'short' }).toUpperCase()}
-              </Text>
-              <Text style={styles.dateDayNum}>
-                {scheduledAt.getDate()}
-              </Text>
-              <Text style={styles.dateTime}>
-                {scheduledAt.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-            </>
-          ) : (
-            <Text style={styles.dateTbd}>TBD</Text>
-          )}
+          {(() => {
+            const d = scheduledAt ?? (item.createdAt ? new Date(item.createdAt) : null);
+            if (!d) return <Text style={styles.dateTbd}>TBD</Text>;
+            const isScheduled = !!scheduledAt;
+            return (
+              <>
+                <Text style={styles.dateDay}>
+                  {d.toLocaleDateString(i18n.language, { weekday: 'short' }).toUpperCase()}
+                </Text>
+                <Text style={styles.dateDayNum}>{d.getDate()}</Text>
+                <Text style={styles.dateMonth}>
+                  {d.toLocaleDateString(i18n.language, { month: 'short' }).toUpperCase()}
+                </Text>
+                <Text style={styles.dateTime}>
+                  {isScheduled
+                    ? d.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
+                    : d.getFullYear().toString()}
+                </Text>
+              </>
+            );
+          })()}
         </View>
 
         {/* Content */}

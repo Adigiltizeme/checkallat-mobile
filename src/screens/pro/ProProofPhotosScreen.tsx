@@ -13,6 +13,7 @@ import { useUploadBookingPhotosMutation, useMarkStartedMutation, useConfirmBooki
 import { uploadMultipleImages } from '../../services/uploadService';
 import { RootState } from '../../store';
 import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
+import { CURRENCY_CONFIG } from '../../config/currency';
 
 type Props = StackScreenProps<ProStackParamList, 'ProProofPhotos'>;
 
@@ -147,7 +148,7 @@ export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
               outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.xs }}
-              right={<TextInput.Affix text="EGP" />}
+              right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
             />
           </View>
         )}

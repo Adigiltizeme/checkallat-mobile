@@ -13,7 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
-import { SUPPORTED_COUNTRIES, SupportedCountry } from '../../config/countries';
+import { SupportedCountry } from '../../config/countries';
+import { useCountries } from '../../hooks/useCountries';
 import { selectCountry } from '../../store/slices/locationSlice';
 import { useAppTheme } from '../../theme/ThemeProvider';
 
@@ -108,6 +109,7 @@ export const UnsupportedCountryModal = ({
   }), [tokens]);
   const { t } = useTranslation();
   const dispatch = useDispatch();
+  const countries = useCountries();
 
   const handleSelect = (country: SupportedCountry) => {
     dispatch(selectCountry(country.code));
@@ -146,7 +148,7 @@ export const UnsupportedCountryModal = ({
         </Text>
 
         <ScrollView contentContainerStyle={styles.list}>
-          {SUPPORTED_COUNTRIES.map((country) => (
+          {countries.map((country) => (
             <TouchableOpacity
               key={country.code}
               style={styles.countryItem}

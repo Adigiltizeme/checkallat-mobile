@@ -94,7 +94,9 @@ export const ProDemandesScreen = () => {
           <Text style={styles.cardDate}>
             {scheduledAt
               ? scheduledAt.toLocaleDateString(i18n.language, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
-              : t('common.date_tbd')}
+              : item.createdAt
+                ? new Date(item.createdAt).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short', year: 'numeric' })
+                : t('common.date_tbd')}
           </Text>
         </View>
 

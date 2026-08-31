@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { CURRENCY_CONFIG } from '../../config/currency';
 import {
   Step1Data,
   Step2Data,
@@ -585,18 +586,18 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
             <>
               <View style={styles.priceRow}>
                 <Text variant="bodyMedium">{t('transport.package_label', { vehicle: t('transport.vehicle_' + priceBreakdown.vehicleType) })}</Text>
-                <Text variant="bodyMedium">{priceBreakdown.baseFare} {priceBreakdown.currency || 'EGP'}</Text>
+                <Text variant="bodyMedium">{priceBreakdown.baseFare} {priceBreakdown.currency || CURRENCY_CONFIG.code}</Text>
               </View>
 
               <View style={styles.priceRow}>
                 <Text variant="bodyMedium">{t('transport.distance_label')} ({step2Data.distance} km)</Text>
-                <Text variant="bodyMedium">{priceBreakdown.distanceFare} {priceBreakdown.currency || 'EGP'}</Text>
+                <Text variant="bodyMedium">{priceBreakdown.distanceFare} {priceBreakdown.currency || CURRENCY_CONFIG.code}</Text>
               </View>
 
               {priceBreakdown.floorFare > 0 && (
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.floors_label')}</Text>
-                  <Text variant="bodyMedium">{priceBreakdown.floorFare} {priceBreakdown.currency || 'EGP'}</Text>
+                  <Text variant="bodyMedium">{priceBreakdown.floorFare} {priceBreakdown.currency || CURRENCY_CONFIG.code}</Text>
                 </View>
               )}
 
@@ -605,14 +606,14 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
                   <Text variant="bodyMedium">
                     {t('transport.helpers_fare_label')} ({step3Data.helpersCount} {t('transport.helpers_unit')})
                   </Text>
-                  <Text variant="bodyMedium">{priceBreakdown.helpersFare} {priceBreakdown.currency || 'EGP'}</Text>
+                  <Text variant="bodyMedium">{priceBreakdown.helpersFare} {priceBreakdown.currency || CURRENCY_CONFIG.code}</Text>
                 </View>
               )}
 
               {priceBreakdown.servicesFare > 0 && (
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.services_fare')}</Text>
-                  <Text variant="bodyMedium">{priceBreakdown.servicesFare} {priceBreakdown.currency || 'EGP'}</Text>
+                  <Text variant="bodyMedium">{priceBreakdown.servicesFare} {priceBreakdown.currency || CURRENCY_CONFIG.code}</Text>
                 </View>
               )}
 
@@ -623,7 +624,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
                   {t('transport.total')}
                 </Text>
                 <Text variant="titleLarge" style={styles.totalValue}>
-                  {priceBreakdown.total} {priceBreakdown.currency || 'EGP'}
+                  {priceBreakdown.total} {priceBreakdown.currency || CURRENCY_CONFIG.code}
                 </Text>
               </View>
             </>

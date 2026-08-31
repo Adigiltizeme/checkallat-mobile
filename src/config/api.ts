@@ -20,7 +20,7 @@ export const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL || 'https://checkallat-we
 
 /**
  * Configuration réutilisable pour tous les APIs RTK Query
- * Ajoute automatiquement le token JWT et l'en-tête ngrok
+ * Ajoute automatiquement le token JWT
  */
 export const createBaseQuery = (baseUrl?: string) =>
   fetchBaseQuery({
@@ -31,9 +31,6 @@ export const createBaseQuery = (baseUrl?: string) =>
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
-
-      // Bypasser l'avertissement ngrok (nécessaire en mode tunnel)
-      headers.set('ngrok-skip-browser-warning', 'true');
 
       return headers;
     },

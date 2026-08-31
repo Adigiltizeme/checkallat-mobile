@@ -25,9 +25,11 @@ import {
   useUpdateDriverAvailabilityMutation,
   useGetDriverStatsQuery,
   usePayCommissionMutation,
+  useConfirmCommissionPaymentMutation,
 } from '../../store/api/transportApi';
 import { useStripe } from '@stripe/stripe-react-native';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
+import { CountrySelectorRow } from '../../components/shared/CountrySelectorRow';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useBeatSound } from '../../hooks/useBeatSound';
 import { TransportRequest, STATUS_COLORS, TransportStatus } from '../../types/transport';
@@ -195,6 +197,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
     refetchOnMountOrArgChange: true,
   });
   const [payCommission, { isLoading: payingCommission }] = usePayCommissionMutation();
+  const [confirmCommissionPayment] = useConfirmCommissionPaymentMutation();
   const [commissionPaid, setCommissionPaid] = useState(false);
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -214,6 +217,8 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
         if (payError.code !== 'Canceled') Alert.alert(t('common.error'), payError.message);
         return;
       }
+      // Confirmation immédiate côté backend (sans attendre le webhook Stripe)
+      await confirmCommissionPayment({ paymentIntentId: result.paymentIntentId }).unwrap();
       setCommissionPaid(true);
       refetchDriverStats();
       Alert.alert(t('payment.success_title'), t('driver.commission_paid_success_msg'), [{ text: t('common.ok') }]);
@@ -433,6 +438,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
 
   const renderHeader = () => (
     <>
+      <CountrySelectorRow variant="row" />
       {pendingCashCommission > 0 && !commissionPaid ? (
         <View style={styles.commissionAlert}>
           <Icon name="alert-circle" size={20} color={colors.warning} style={{ marginTop: 2 }} />

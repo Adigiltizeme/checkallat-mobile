@@ -17,6 +17,7 @@ import { DriverReviewsScreen } from '../screens/driver/DriverReviewsScreen';
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
 import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
 import { PaymentDetailsScreen } from '../screens/payment/PaymentDetailsScreen';
+import { PaymentHistoryScreen } from '../screens/transport/PaymentHistoryScreen';
 import { SupportScreen } from '../screens/profile/SupportScreen';
 import { BookingChatScreen } from '../screens/services/BookingChatScreen';
 import { DisputeScreen } from '../screens/transport/DisputeScreen';
@@ -79,6 +80,11 @@ export const DriverStack = () => {
         name="CashValidation"
         component={CashValidationScreen}
         options={{ title: t('driver.cash_validation_title') }}
+      />
+      <Stack.Screen
+        name="PaymentHistory"
+        component={PaymentHistoryScreen}
+        options={{ title: t('payment.history_title') }}
       />
       <Stack.Screen
         name="PaymentDetails"

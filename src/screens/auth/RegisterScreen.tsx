@@ -1,7 +1,17 @@
-﻿import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Image, Dimensions } from 'react-native';
-
-const LOGO_SIZE = Dimensions.get('window').width * 0.75;
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+} from 'react-native';
+import * as Location from 'expo-location';
 import { TextInput, Text } from 'react-native-paper';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useForm, Controller } from 'react-hook-form';
@@ -15,6 +25,10 @@ import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
+import { SUPPORTED_COUNTRIES } from '../../config/countries';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+const LOGO_SIZE = Dimensions.get('window').width * 0.75;
 
 interface RegisterForm {
   phone: string;
@@ -29,58 +43,102 @@ type Props = StackScreenProps<AuthStackParamList, 'Register'>;
 
 export const RegisterScreen = ({ navigation }: Props) => {
   const { tokens } = useAppTheme();
-
-  const styles = useMemo(() => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tokens.background,
-  },
-  scrollContent: {
-    padding: 24,
-    paddingTop: 60,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  logo: {
-    width: LOGO_SIZE,
-    height: LOGO_SIZE,
-  },
-  title: {
-    marginBottom: 24,
-    color: tokens.text.primary,
-    textAlign: 'center',
-  },
-  input: {
-    marginBottom: 16,
-    backgroundColor: tokens.backgroundAlt,
-  },
-  button: {
-    marginTop: 16,
-  },
-  linkButton: {
-    marginTop: 8,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 12,
-    marginBottom: 8,
-    marginTop: -8,
-  },
-  helperText: {
-    color: tokens.text.secondary,
-    fontSize: 11,
-    marginBottom: 8,
-    marginTop: -8,
-    lineHeight: 16,
-  },
-  }), [tokens]);
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const [register, { isLoading, error }] = useRegisterMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Pays — détection silencieuse via géolocalisation
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
+  const [detectedIso, setDetectedIso] = useState<string | null>(null);
+  const [countryModalVisible, setCountryModalVisible] = useState(false);
+
+  const selectedCountry = useMemo(
+    () => SUPPORTED_COUNTRIES.find(c => c.code === selectedCountryCode) ?? null,
+    [selectedCountryCode],
+  );
+
+  // Pays détecté mais non supporté
+  const isUnsupportedCountry = useMemo(
+    () => !!detectedIso && !SUPPORTED_COUNTRIES.find(c => c.code === detectedIso),
+    [detectedIso],
+  );
+
+  // Géolocalisation silencieuse au montage
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+        const pos = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Low,
+        });
+        const [geo] = await Location.reverseGeocodeAsync({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        });
+        const isoCode = geo?.isoCountryCode?.toLowerCase();
+        if (!isoCode) return;
+        setDetectedIso(isoCode);
+        const found = SUPPORTED_COUNTRIES.find(c => c.code === isoCode);
+        if (found) setSelectedCountryCode(isoCode);
+      } catch {
+        // Silencieux — la sélection de pays n'est jamais bloquante à l'inscription
+      }
+    })();
+  }, []);
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: { flex: 1, backgroundColor: tokens.background },
+    scrollContent: { padding: 24, paddingTop: 60 },
+    logoContainer: { alignItems: 'center', marginBottom: 16 },
+    logo: { width: LOGO_SIZE, height: LOGO_SIZE },
+    title: { marginBottom: 24, color: tokens.text.primary, textAlign: 'center' },
+    input: { marginBottom: 16, backgroundColor: tokens.backgroundAlt },
+    button: { marginTop: 16 },
+    linkButton: { marginTop: 8 },
+    errorText: { color: colors.error, fontSize: 12, marginBottom: 8, marginTop: -8 },
+    helperText: { color: tokens.text.secondary, fontSize: 11, marginBottom: 8, marginTop: -8, lineHeight: 16 },
+    // Chip pays détecté
+    countryChip: {
+      flexDirection: 'row', alignItems: 'center', gap: 10,
+      backgroundColor: tokens.backgroundAlt,
+      borderWidth: 1, borderColor: tokens.border,
+      borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12,
+      marginBottom: 16,
+    },
+    countryChipFlag: { fontSize: 20 },
+    countryChipName: { flex: 1, fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+    countryChipHint: { fontSize: 11, color: tokens.text.secondary },
+    countryChipChange: { fontSize: 13, color: tokens.primary, fontWeight: '600' },
+    // Bannière pays non supporté
+    unsupportedBanner: {
+      flexDirection: 'row', gap: 10, alignItems: 'flex-start',
+      backgroundColor: tokens.backgroundAlt,
+      borderWidth: 1, borderColor: colors.warning,
+      borderRadius: 10, padding: 14, marginBottom: 16,
+    },
+    unsupportedText: { flex: 1, fontSize: 13, color: tokens.text.primary, lineHeight: 18 },
+    unsupportedLink: { fontSize: 13, color: tokens.primary, fontWeight: '600', marginTop: 6 },
+    // Modal
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+    modalContainer: { backgroundColor: tokens.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' },
+    modalHeader: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      padding: 20, borderBottomWidth: 1, borderColor: tokens.border,
+    },
+    modalTitle: { fontSize: 17, fontWeight: '700', color: tokens.text.primary },
+    modalClose: { padding: 4 },
+    countryItem: {
+      flexDirection: 'row', alignItems: 'center', gap: 14,
+      paddingHorizontal: 20, paddingVertical: 16,
+      borderBottomWidth: 1, borderColor: tokens.border,
+    },
+    countryFlag: { fontSize: 22 },
+    countryItemName: { flex: 1, fontSize: 15, color: tokens.text.primary, fontWeight: '500' },
+    countryItemCurrency: { fontSize: 13, color: tokens.text.secondary },
+  }), [tokens]);
 
   const registerSchema = useMemo(() => z.object({
     phone: z.string().regex(/^\+\d{10,15}$/, t('auth.phone_invalid')),
@@ -107,7 +165,11 @@ export const RegisterScreen = ({ navigation }: Props) => {
   const onSubmit = async (data: RegisterForm) => {
     try {
       const { confirmPassword, ...registerData } = data;
-      const result = await register(registerData).unwrap();
+      const result = await register({
+        ...registerData,
+        // homeCountryId envoyé uniquement si détecté/sélectionné — jamais bloquant
+        ...(selectedCountryCode && { homeCountryId: selectedCountryCode.toUpperCase() }),
+      }).unwrap();
       dispatch(setCredentials({
         user: result.user,
         accessToken: result.accessToken,
@@ -119,11 +181,12 @@ export const RegisterScreen = ({ navigation }: Props) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={'padding'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.logoContainer}>
           <Image
             source={require('../../../assets/splash.png')}
@@ -135,6 +198,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
           {t('auth.register_title')}
         </Text>
 
+        {/* ─── Prénom ─── */}
         <Controller
           control={control}
           name="firstName"
@@ -151,10 +215,9 @@ export const RegisterScreen = ({ navigation }: Props) => {
             />
           )}
         />
-        {errors.firstName && (
-          <Text style={styles.errorText}>{errors.firstName.message}</Text>
-        )}
+        {errors.firstName && <Text style={styles.errorText}>{errors.firstName.message}</Text>}
 
+        {/* ─── Nom ─── */}
         <Controller
           control={control}
           name="lastName"
@@ -171,10 +234,9 @@ export const RegisterScreen = ({ navigation }: Props) => {
             />
           )}
         />
-        {errors.lastName && (
-          <Text style={styles.errorText}>{errors.lastName.message}</Text>
-        )}
+        {errors.lastName && <Text style={styles.errorText}>{errors.lastName.message}</Text>}
 
+        {/* ─── Téléphone ─── */}
         <Controller
           control={control}
           name="phone"
@@ -193,10 +255,9 @@ export const RegisterScreen = ({ navigation }: Props) => {
             />
           )}
         />
-        {errors.phone && (
-          <Text style={styles.errorText}>{errors.phone.message}</Text>
-        )}
+        {errors.phone && <Text style={styles.errorText}>{errors.phone.message}</Text>}
 
+        {/* ─── Email (optionnel) ─── */}
         <Controller
           control={control}
           name="email"
@@ -209,15 +270,16 @@ export const RegisterScreen = ({ navigation }: Props) => {
               style={styles.input}
               mode="outlined"
               keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
               outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
             />
           )}
         />
-        {errors.email && (
-          <Text style={styles.errorText}>{errors.email.message}</Text>
-        )}
+        {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
 
+        {/* ─── Mot de passe ─── */}
         <Controller
           control={control}
           name="password"
@@ -242,15 +304,10 @@ export const RegisterScreen = ({ navigation }: Props) => {
             />
           )}
         />
-        {errors.password && (
-          <Text style={styles.errorText}>{errors.password.message}</Text>
-        )}
-        {!errors.password && (
-          <Text style={styles.helperText}>
-            {t('auth.password_hint')}
-          </Text>
-        )}
+        {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
+        {!errors.password && <Text style={styles.helperText}>{t('auth.password_hint')}</Text>}
 
+        {/* ─── Confirmation mot de passe ─── */}
         <Controller
           control={control}
           name="confirmPassword"
@@ -275,21 +332,44 @@ export const RegisterScreen = ({ navigation }: Props) => {
             />
           )}
         />
-        {errors.confirmPassword && (
-          <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
+        {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>}
+
+        {/* ─── Pays détecté (non bloquant) ─── */}
+        {selectedCountry && (
+          <TouchableOpacity
+            style={styles.countryChip}
+            onPress={() => setCountryModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.countryChipFlag}>{selectedCountry.flag}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.countryChipName}>{t(`country.${selectedCountry.nameKey}`)}</Text>
+              <Text style={styles.countryChipHint}>{t('auth.country_detected_hint')}</Text>
+            </View>
+            <Text style={styles.countryChipChange}>{t('location.change_country')}</Text>
+          </TouchableOpacity>
         )}
 
-        {error && (
-          <Text style={styles.errorText}>
-            {t('auth.register_failed')}
-          </Text>
+        {/* ─── Pays non supporté ─── */}
+        {isUnsupportedCountry && (
+          <View style={styles.unsupportedBanner}>
+            <Icon name="information-outline" size={18} color={colors.warning} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.unsupportedText}>
+                {t('location.unsupported_msg_with_country', {
+                  country: detectedIso?.toUpperCase() ?? '',
+                })}
+              </Text>
+              <TouchableOpacity onPress={() => setCountryModalVisible(true)}>
+                <Text style={styles.unsupportedLink}>{t('country.select_country')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
 
-        <ChocolateButton
-          onPress={handleSubmit(onSubmit)}
-          loading={isLoading}
-          style={styles.button}
-        >
+        {error && <Text style={styles.errorText}>{t('auth.register_failed')}</Text>}
+
+        <ChocolateButton onPress={handleSubmit(onSubmit)} loading={isLoading} style={styles.button}>
           {t('auth.register_btn')}
         </ChocolateButton>
 
@@ -301,7 +381,52 @@ export const RegisterScreen = ({ navigation }: Props) => {
           {`${t('auth.already_account')} ${t('auth.login_link')}`}
         </ChocolateButton>
       </ScrollView>
+
+      {/* ─── Modal correction pays ─── */}
+      <Modal
+        visible={countryModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setCountryModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setCountryModalVisible(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('country.select_country')}</Text>
+              <TouchableOpacity style={styles.modalClose} onPress={() => setCountryModalVisible(false)}>
+                <Icon name="close" size={22} color={tokens.text.primary} />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={SUPPORTED_COUNTRIES}
+              keyExtractor={item => item.code}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.countryItem,
+                    selectedCountryCode === item.code && { backgroundColor: tokens.primary + '15' },
+                  ]}
+                  onPress={() => {
+                    setSelectedCountryCode(item.code);
+                    setCountryModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.countryFlag}>{item.flag}</Text>
+                  <Text style={styles.countryItemName}>{t(`country.${item.nameKey}`)}</Text>
+                  <Text style={styles.countryItemCurrency}>{item.currency}</Text>
+                  {selectedCountryCode === item.code && (
+                    <Icon name="check" size={18} color={tokens.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+            />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };
-

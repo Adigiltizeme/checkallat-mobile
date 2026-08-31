@@ -17,6 +17,7 @@ import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { CURRENCY_CONFIG } from '../../config/currency';
 
 type Props = StackScreenProps<HomeStackParamList, 'ProDetail'>;
 
@@ -253,7 +254,7 @@ export const ProDetailScreen = ({ route, navigation }: Props) => {
                       : t('pros.price_on_quote')}
                   </Text>
                   {offering.priceMin && (
-                    <Text style={styles.offeringCurrency}>EGP</Text>
+                    <Text style={styles.offeringCurrency}>{CURRENCY_CONFIG.code}</Text>
                   )}
                   <Icon name="chevron-right" size={18} color={tokens.border} style={{ marginLeft: 4 }} />
                 </View>

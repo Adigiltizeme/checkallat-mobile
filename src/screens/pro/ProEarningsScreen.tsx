@@ -11,11 +11,11 @@ import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { getLocalizedName } from '../../utils/localize';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency, CURRENCY_PRESETS } from '../../config/currency';
+import { formatCurrency, CURRENCY_PRESETS, CURRENCY_CONFIG } from '../../config/currency';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
-import { useGetProStatsQuery, usePayProCommissionMutation } from '../../store/api/prosApi';
+import { useGetProStatsQuery, usePayProCommissionMutation, useConfirmProCommissionPaymentMutation } from '../../store/api/prosApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { RootState } from '../../store';
 
@@ -137,6 +137,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   useRefetchOnFocus(refetch);
   useRefetchOnFocus(refetchStats);
   const [payProCommission, { isLoading: payingCommission }] = usePayProCommissionMutation();
+  const [confirmProCommissionPayment] = useConfirmProCommissionPaymentMutation();
   const [commissionPaid, setCommissionPaid] = useState(false);
 
   const handlePayCommissionOnline = async () => {
@@ -148,13 +149,13 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
         allowsDelayedPaymentMethods: false,
       });
       if (initError) { Alert.alert(t('common.error'), initError.message); return; }
-
       const { error: payError } = await presentPaymentSheet();
       if (payError) {
         if (payError.code !== 'Canceled') Alert.alert(t('common.error'), payError.message);
         return;
       }
-
+      // Confirmation immédiate côté backend (sans attendre le webhook Stripe)
+      await confirmProCommissionPayment({ paymentIntentId: result.paymentIntentId }).unwrap();
       setCommissionPaid(true);
       refetchStats();
       Alert.alert(t('payment.success_title'), t('pro_space.commission_paid_success_msg'), [{ text: t('common.ok') }]);
@@ -169,7 +170,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   const allBookings: any[] = Array.isArray(bookingsData) ? bookingsData : ((bookingsData as any)?.bookings ?? []);
 
   const formatAmount = (amount: number) => {
-    const currencyCode = (stats as any)?.currency || 'EUR';
+    const currencyCode = (stats as any)?.currency || CURRENCY_CONFIG.code;
     const preset = CURRENCY_PRESETS[currencyCode as keyof typeof CURRENCY_PRESETS];
     if (!preset) return formatCurrency(amount);
     const rounded = amount.toFixed(preset.decimals);

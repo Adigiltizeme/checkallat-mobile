@@ -10,6 +10,7 @@ import { useGetPaymentByIdQuery } from '../../store/api/paymentApi';
 import { useGetTransportRequestQuery } from '../../store/api/transportApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import { CURRENCY_CONFIG } from '../../config/currency';
 
 const ESCROW_CONFIG: Record<string, { color: string; icon: string }> = {
   pending:  { color: '#FF9800', icon: 'clock-outline' },
@@ -80,7 +81,7 @@ export const PaymentDetailsScreen = ({ route }: Props) => {
       day: '2-digit', month: 'long', year: 'numeric',
       hour: '2-digit', minute: '2-digit',
     });
-  const formatAmount = (val: number) => `${val?.toFixed(2)} EGP`;
+  const formatAmount = (val: number) => `${val?.toFixed(2)} ${CURRENCY_CONFIG.code}`;
 
   if (isLoading) {
     return (

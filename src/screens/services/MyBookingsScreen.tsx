@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
 import { HomeStackParamList } from '../../navigation/types';
+import { CURRENCY_CONFIG } from '../../config/currency';
 import { useGetMyBookingsQuery } from '../../store/api/bookingsApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
@@ -395,6 +396,24 @@ export const MyBookingsScreen = ({ navigation }: Props) => {
     </View>
   );
 
+  const renderDateRow = (item: any) => {
+    try {
+      const raw = item.scheduledAt ?? item.createdAt ?? item.updatedAt ?? null;
+      if (!raw) return null;
+      const d = raw instanceof Date ? raw : new Date(raw as string);
+      if (isNaN(d.getTime())) return null;
+      const isScheduled = !!item.scheduledAt;
+      const dateStr = d.toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' });
+      const timeStr = d.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' });
+      return (
+        <View style={styles.cardBottom}>
+          <Icon name={isScheduled ? 'calendar-outline' : 'calendar-clock'} size={14} color={tokens.text.secondary} />
+          <Text style={styles.dateText}>{dateStr}  •  {timeStr}</Text>
+        </View>
+      );
+    } catch { return null; }
+  };
+
   const renderBooking = ({ item }: { item: any }) => {
     const status = item.status ?? 'pending';
     const badge = STATUS_BADGE[status] ?? STATUS_BADGE.pending;
@@ -405,7 +424,6 @@ export const MyBookingsScreen = ({ navigation }: Props) => {
     const serviceName = item.category
       ? getLocalizedName(item.category, i18n.language)
       : item.category?.slug ?? '—';
-    const scheduledAt = item.scheduledAt ? new Date(item.scheduledAt) : null;
 
     return (
       <TouchableOpacity
@@ -428,16 +446,18 @@ export const MyBookingsScreen = ({ navigation }: Props) => {
           </View>
         </View>
 
-        {scheduledAt && (
-          <View style={styles.cardBottom}>
-            <Icon name="calendar-outline" size={14} color={tokens.text.secondary} />
-            <Text style={styles.dateText}>
-              {scheduledAt.toLocaleDateString(i18n.language, {
-                day: 'numeric', month: 'long', year: 'numeric',
-              })}
-            </Text>
-          </View>
-        )}
+        {renderDateRow(item)}
+        {(() => {
+          const price = item.finalPrice > 0 ? item.finalPrice : (item.estimatedPrice > 0 ? item.estimatedPrice : null);
+          if (!price) return null;
+          const label = item.finalPrice > 0 ? t('booking.final_price_label') : t('booking.estimated_price_label');
+          return (
+            <View style={styles.cardBottom}>
+              <Icon name="tag-outline" size={14} color={tokens.text.secondary} />
+              <Text style={styles.dateText}>{label} : {price} {CURRENCY_CONFIG.code}</Text>
+            </View>
+          );
+        })()}
       </TouchableOpacity>
     );
   };

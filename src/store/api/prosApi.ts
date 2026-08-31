@@ -84,12 +84,23 @@ export const prosApi = createApi({
      * Pro paye sa commission cash en attente via Stripe in-app
      */
     payProCommission: builder.mutation<
-      { clientSecret: string; paymentIntentId: string; amount: number },
+      { clientSecret: string; paymentIntentId: string; amount: number; currency: string },
       void
     >({
       query: () => ({
         url: '/pay-commission',
         method: 'POST',
+      }),
+    }),
+
+    confirmProCommissionPayment: builder.mutation<
+      { pendingCashCommission: number },
+      { paymentIntentId: string }
+    >({
+      query: (body) => ({
+        url: '/confirm-commission-payment',
+        method: 'POST',
+        body,
       }),
       invalidatesTags: ['ProStats'],
     }),
@@ -117,4 +128,5 @@ export const {
   useGetProStatsQuery,
   useUpdateProAvailabilityMutation,
   usePayProCommissionMutation,
+  useConfirmProCommissionPaymentMutation,
 } = prosApi;

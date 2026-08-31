@@ -132,9 +132,7 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`, {
-      headers: { 'ngrok-skip-browser-warning': 'true' },
-    })
+    fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((data) => { if (data.supportPhone) setSupportPhone(data.supportPhone); })
       .catch(() => {});
@@ -237,6 +235,14 @@ export const ProposalDetailScreen = ({ navigation, route }: any) => {
               <>
                 <Text style={[styles.label, { marginTop: spacing.sm }]}>{t('proposal.category_created')}</Text>
                 <Text style={[styles.value, { color: tokens.primary, fontWeight: '700' }]}>{proposal.createdCategorySlug}</Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('ProApplication')}
+                  style={{ marginTop: spacing.xs, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.value, { color: tokens.primary, flex: 1 }]}>{t('proposal.pro_profile_ready')}</Text>
+                  <Text style={{ color: tokens.primary, fontSize: 16 }}>›</Text>
+                </TouchableOpacity>
               </>
             )}
           </View>

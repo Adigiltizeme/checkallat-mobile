@@ -146,7 +146,16 @@ export const SearchHomeScreen = () => {
                 onPress={() => handleCategory(item.slug)}
               >
                 <View style={[styles.iconWrap, { backgroundColor: color + '20' }]}>
-                  <Icon name={SLUG_TO_ICON[item.slug] ?? 'tools'} size={28} color={color} />
+                  {/* item.icon peut être un emoji (catégories seedées) ou un nom MaterialCommunityIcons (catégories créées via proposition) */}
+                  {SLUG_TO_ICON[item.slug] ? (
+                    <Icon name={SLUG_TO_ICON[item.slug]} size={28} color={color} />
+                  ) : item.icon && /^[a-z]/.test(item.icon) ? (
+                    <Icon name={item.icon} size={28} color={color} />
+                  ) : item.icon ? (
+                    <Text style={{ fontSize: 24 }}>{item.icon}</Text>
+                  ) : (
+                    <Icon name="briefcase" size={28} color={color} />
+                  )}
                 </View>
                 <Text style={styles.label} numberOfLines={2}>
                   {getLocalizedName(item, i18n.language)}

@@ -342,12 +342,23 @@ export const transportApi = createApi({
      * Créer un PaymentIntent pour payer la commission cash en attente
      */
     payCommission: builder.mutation<
-      { clientSecret: string; paymentIntentId: string; amount: number },
+      { clientSecret: string; paymentIntentId: string; amount: number; currency: string },
       void
     >({
       query: () => ({
         url: '/driver/pay-commission',
         method: 'POST',
+      }),
+    }),
+
+    confirmCommissionPayment: builder.mutation<
+      { pendingCashCommission: number },
+      { paymentIntentId: string }
+    >({
+      query: (body) => ({
+        url: '/driver/confirm-commission-payment',
+        method: 'POST',
+        body,
       }),
       invalidatesTags: ['DriverStats'],
     }),
@@ -439,6 +450,7 @@ export const {
   useValidateCashPaymentMutation,
   useUpdateDriverProfileMutation,
   usePayCommissionMutation,
+  useConfirmCommissionPaymentMutation,
   useGetAvailableRequestsQuery,
   useAcceptRequestMutation,
   useRejectRequestMutation,

@@ -68,5 +68,6 @@ export interface CreateBookingPayload {
   clientPhotos?: string[];
   categoryData?: Record<string, any>;
   estimatedPrice?: number;
+  currency?: string;
   paymentMethod: PaymentMethod;
 }

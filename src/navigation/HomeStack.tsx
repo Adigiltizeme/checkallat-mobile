@@ -30,6 +30,7 @@ import { TransportDetailsScreen } from '../screens/transport/TransportDetailsScr
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
 import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
 import { StripePaymentScreen } from '../screens/transport/StripePaymentScreen';
+import { PaymentHistoryScreen } from '../screens/transport/PaymentHistoryScreen';
 import { DisputeScreen } from '../screens/transport/DisputeScreen';
 
 const Stack = createStackNavigator<HomeStackParamList>();
@@ -167,6 +168,11 @@ export const HomeStack = () => {
         name="CashValidation"
         component={CashValidationScreen}
         options={{ title: t('transport.cash_validation_title') }}
+      />
+      <Stack.Screen
+        name="PaymentHistory"
+        component={PaymentHistoryScreen}
+        options={{ title: t('payment.history_title') }}
       />
       <Stack.Screen
         name="Dispute"

@@ -476,6 +476,20 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   const isPassport = idDocumentType === 'passport';
   const kycValid = idFrontPhotos.length > 0 && (isPassport || idBackPhotos.length > 0) && selfiePhotos.length > 0;
 
+  // KYB légal France (obligatoire si le pays actif de l'utilisateur est FR)
+  const isFR = (user?.activeCountryId ?? user?.homeCountryId ?? '').toUpperCase() === 'FR';
+  const [legalStatus, setLegalStatus] = useState('');
+  const [siret, setSiret] = useState('');
+  const [apeNafCode, setApeNafCode] = useState('');
+  const [rcProPhotos, setRcProPhotos] = useState<string[]>([]);
+  const LEGAL_STATUSES = ['auto_entrepreneur', 'eurl', 'sasu', 'sarl', 'sas', 'other'] as const;
+  const frKybValid = !isFR || (
+    legalStatus !== '' &&
+    /^\d{14}$/.test(siret.replace(/\s/g, '')) &&
+    apeNafCode.trim().length >= 4 &&
+    rcProPhotos.length > 0
+  );
+
   const isLocalUri = (uri: string) => uri.startsWith('file://') || uri.startsWith('/') || uri.startsWith('content://');
 
   const pro = user?.pro;
@@ -495,6 +509,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
     selectedCategories.length > 0 &&
     bio.trim().length >= 20 &&
     kycValid &&
+    frKybValid &&
     !isLoading &&
     !uploading;
 
@@ -530,6 +545,15 @@ export const ProApplicationScreen = ({ navigation }: any) => {
 
       setUploading(false);
 
+      // Upload RC Pro (France uniquement)
+      let rcProInsuranceUrl: string | undefined;
+      if (isFR && rcProPhotos.length > 0 && isLocalUri(rcProPhotos[0])) {
+        const [rcUrl] = await uploadMultipleImages(rcProPhotos.filter(isLocalUri), token);
+        rcProInsuranceUrl = rcUrl;
+      } else if (isFR && rcProPhotos.length > 0) {
+        rcProInsuranceUrl = rcProPhotos[0];
+      }
+
       const result = await createProProfile({
         companyName: companyName.trim() || undefined,
         bio: bio.trim(),
@@ -541,6 +565,13 @@ export const ProApplicationScreen = ({ navigation }: any) => {
         idDocumentFront: finalFront,
         idDocumentBack: finalBack,
         selfiePhoto: finalSelfie,
+        // KYB France
+        ...(isFR && {
+          legalStatus,
+          siret: siret.replace(/\s/g, ''),
+          apeNafCode: apeNafCode.trim(),
+          rcProInsuranceUrl,
+        }),
       }).unwrap();
 
       dispatch(updateUser({ pro: { ...result, serviceCategorySlugs: selectedCategories } }));
@@ -701,6 +732,77 @@ export const ProApplicationScreen = ({ navigation }: any) => {
               {t('transport.uploading_photos')}
             </Text>
           </View>
+        )}
+
+        {/* ─── Section KYB France ─── */}
+        {isFR && (
+          <>
+            <View style={[styles.reviewNote, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B', marginBottom: spacing.md }]}>
+              <Icon name="flag" size={16} color="#F59E0B" />
+              <Text style={[styles.reviewNoteText, { color: '#92400E' }]}>{t('kyb.france_notice')}</Text>
+            </View>
+
+            <Text style={[styles.sectionLabel, { marginTop: spacing.sm }]}>{t('kyb.legal_status')} *</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md }}>
+              {LEGAL_STATUSES.map(status => (
+                <TouchableOpacity
+                  key={status}
+                  onPress={() => setLegalStatus(status)}
+                  style={{
+                    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+                    borderWidth: 1.5,
+                    borderColor: legalStatus === status ? tokens.primary : tokens.border,
+                    backgroundColor: legalStatus === status ? tokens.primary + '15' : tokens.backgroundAlt,
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: legalStatus === status ? tokens.primary : tokens.text.secondary }}>
+                    {t(`kyb.status_${status}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {submitted && !legalStatus && (
+              <Text style={styles.errorHint}>{t('kyb.legal_status_required')}</Text>
+            )}
+
+            <TextInput
+              label={t('kyb.siret') + ' *'}
+              value={siret}
+              onChangeText={text => setSiret(text.replace(/[^0-9 ]/g, ''))}
+              keyboardType="number-pad"
+              maxLength={17}
+              error={submitted && !/^\d{14}$/.test(siret.replace(/\s/g, ''))}
+              style={[styles.input, { marginTop: spacing.sm }]}
+              mode="outlined"
+              outlineColor={tokens.border}
+              activeOutlineColor={tokens.primary}
+              placeholder="123 456 789 12345"
+            />
+            {submitted && !/^\d{14}$/.test(siret.replace(/\s/g, '')) && (
+              <Text style={styles.errorHint}>{t('kyb.siret_invalid')}</Text>
+            )}
+
+            <TextInput
+              label={t('kyb.ape_naf_code') + ' *'}
+              value={apeNafCode}
+              onChangeText={setApeNafCode}
+              autoCapitalize="characters"
+              maxLength={6}
+              error={submitted && apeNafCode.trim().length < 4}
+              style={[styles.input, { marginTop: spacing.sm }]}
+              mode="outlined"
+              outlineColor={tokens.border}
+              activeOutlineColor={tokens.primary}
+              placeholder="4321A"
+            />
+
+            <Text style={[styles.sectionLabel, { marginTop: spacing.md }]}>{t('kyb.rc_pro_insurance')} *</Text>
+            <Text style={styles.sectionHint}>{t('kyb.rc_pro_hint')}</Text>
+            <PhotoPickerGrid photos={rcProPhotos} onPhotosChange={setRcProPhotos} maxPhotos={1} />
+            {submitted && rcProPhotos.length === 0 && (
+              <Text style={styles.errorHint}>{t('kyb.rc_pro_required')}</Text>
+            )}
+          </>
         )}
 
         {/* Note légale */}

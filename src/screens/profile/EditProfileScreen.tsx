@@ -353,7 +353,6 @@ export const EditProfileScreen = ({ navigation }: any) => {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        'ngrok-skip-browser-warning': 'true',
       },
       body: formData,
     });

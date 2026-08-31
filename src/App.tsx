@@ -17,6 +17,14 @@ import { ThemeProvider, useAppTheme } from './theme/ThemeProvider';
 import { API_CONFIG } from './config/api';
 import { setCurrencyConfig } from './config/currency';
 import { identifyUser as sentryIdentifyUser } from './config/sentry';
+import { CountryDetectionService } from './services/countryDetection.service';
+import {
+  setDetecting,
+  setDetectedCountry,
+  setUnsupportedCountry,
+  setDetectionDenied,
+  setDetectionError,
+} from './store/slices/locationSlice';
 import { identifyAnalyticsUser } from './hooks/useAnalytics';
 import i18n, { isRTL } from './i18n';
 import { I18nextProvider } from 'react-i18next';
@@ -87,7 +95,6 @@ async function registerDriverPushToken(accessToken: string): Promise<void> {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
       },
       body: JSON.stringify({ pushToken: tokenData.data }),
     });
@@ -109,7 +116,6 @@ async function registerClientPushToken(accessToken: string): Promise<void> {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
       },
       body: JSON.stringify({ pushToken: tokenData.data }),
     });
@@ -178,7 +184,6 @@ function AppContent() {
             const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
               headers: {
                 Authorization: `Bearer ${accessToken}`,
-                'ngrok-skip-browser-warning': 'true',
               },
             });
 
@@ -214,10 +219,32 @@ function AppContent() {
         console.error('Failed to restore auth state:', error);
       }
 
-      // 3. Platform settings (non-blocking)
-      fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`, {
-        headers: { 'ngrok-skip-browser-warning': 'true' },
-      })
+      // 3. Country detection (non-blocking — démarre en parallèle avec les settings)
+      if (store.getState().location.detectionStatus === 'idle') {
+        store.dispatch(setDetecting());
+        CountryDetectionService.detect()
+          .then((result) => {
+            if (result.status === 'supported') {
+              store.dispatch(setDetectedCountry({
+                countryCode: result.countryCode,
+                lat: result.lat,
+                lng: result.lng,
+              }));
+            } else if (result.status === 'unsupported') {
+              store.dispatch(setUnsupportedCountry({
+                lat: result.lat,
+                lng: result.lng,
+                countryCode: result.countryCode ?? null,
+              }));
+            } else {
+              store.dispatch(setDetectionDenied());
+            }
+          })
+          .catch(() => store.dispatch(setDetectionError()));
+      }
+
+      // 4. Platform settings (non-blocking)
+      fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`)
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
         .then((settings) => {
           const locationState = store.getState().location;
@@ -227,7 +254,8 @@ function AppContent() {
           const matchedZone = activeCountryCode
             ? zones.find((z) => z.enabled && z.countryCode?.toLowerCase() === activeCountryCode.toLowerCase())
             : undefined;
-          setCurrencyConfig(matchedZone?.currency ?? settings.currency ?? 'EGP');
+          const resolvedCurrency = matchedZone?.currency ?? settings.currency;
+          if (resolvedCurrency) setCurrencyConfig(resolvedCurrency);
         })
         .catch((error) => console.error('Failed to load platform settings:', error));
     };

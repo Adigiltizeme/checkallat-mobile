@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { CURRENCY_CONFIG } from '../../config/currency';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import {
   useGetTransportRequestQuery,
@@ -457,7 +458,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                 // Fee charged — show specific message
                 Alert.alert(
                   t('transport.cancelled_alert_title'),
-                  t('transport.cancel_fee_charged', { amount: result.feeAmount, currency: (request as any).currency || 'EGP' }),
+                  t('transport.cancel_fee_charged', { amount: result.feeAmount, currency: (request as any).currency || CURRENCY_CONFIG.code }),
                   [{ text: t('common.ok'), onPress: () => navigation.goBack() }],
                 );
               } else if (result?.refundPercentage !== undefined) {
@@ -613,7 +614,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
             <Text variant="bodySmall" style={{ color: '#78350F' }}>
               {t('transport.pending_fee_message', {
                 amount: (request as any).cancellationFeeAmount,
-                currency: (request as any).currency || 'EGP',
+                currency: (request as any).currency || CURRENCY_CONFIG.code,
               })}
             </Text>
           </Card.Content>
@@ -845,14 +846,14 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                   {t('transport.package_label', { vehicle: t('transport.vehicle_' + request.priceBreakdown.vehicleType) })}
                 </Text>
                 <Text variant="bodyMedium">
-                  {`${(request.priceBreakdown.baseFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
+                  {`${(request.priceBreakdown.baseFare || 0).toLocaleString('fr-FR')} ${request.currency || CURRENCY_CONFIG.code}`}
                 </Text>
               </View>
 
               <View style={styles.priceRow}>
                 <Text variant="bodyMedium">{t('transport.distance_label')}</Text>
                 <Text variant="bodyMedium">
-                  {`${(request.priceBreakdown.distanceFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
+                  {`${(request.priceBreakdown.distanceFare || 0).toLocaleString('fr-FR')} ${request.currency || CURRENCY_CONFIG.code}`}
                 </Text>
               </View>
 
@@ -860,7 +861,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.floors_label')}</Text>
                   <Text variant="bodyMedium">
-                    {`${(request.priceBreakdown.floorFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
+                    {`${(request.priceBreakdown.floorFare || 0).toLocaleString('fr-FR')} ${request.currency || CURRENCY_CONFIG.code}`}
                   </Text>
                 </View>
               )}
@@ -869,7 +870,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.helpers_fare_label')}</Text>
                   <Text variant="bodyMedium">
-                    {`${(request.priceBreakdown.helpersFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
+                    {`${(request.priceBreakdown.helpersFare || 0).toLocaleString('fr-FR')} ${request.currency || CURRENCY_CONFIG.code}`}
                   </Text>
                 </View>
               )}
@@ -878,7 +879,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.services_fare')}</Text>
                   <Text variant="bodyMedium">
-                    {`${(request.priceBreakdown.servicesFare || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
+                    {`${(request.priceBreakdown.servicesFare || 0).toLocaleString('fr-FR')} ${request.currency || CURRENCY_CONFIG.code}`}
                   </Text>
                 </View>
               )}
@@ -890,7 +891,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
           <View style={styles.totalRow}>
             <Text variant="titleLarge">{t('transport.total')}</Text>
             <Text variant="titleLarge" style={styles.totalValue}>
-              {`${(request.price || 0).toLocaleString('fr-FR')} ${request.currency || 'EGP'}`}
+              {`${(request.price || 0).toLocaleString('fr-FR')} ${request.currency || CURRENCY_CONFIG.code}`}
             </Text>
           </View>
 

@@ -20,6 +20,7 @@ import { TRANSPORT_STATUS_CONFIG, TransportStatus } from '../../types/transport-
 import { TransportObjectType } from '../../types/transport';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { CURRENCY_CONFIG } from '../../config/currency';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -631,17 +632,17 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
                 <View style={styles.priceRow}>
                   <Text variant="titleLarge" style={styles.priceLabel}>{t('driver.net_amount_label')}</Text>
                   <Text variant="titleLarge" style={[styles.priceValue, { color: colors.success }]}>
-                    {(request as any).payment.proNetAmount.toFixed(2)} EGP
+                    {(request as any).payment.proNetAmount.toFixed(2)} {(request as any).currency || CURRENCY_CONFIG.code}
                   </Text>
                 </View>
                 <View style={styles.priceRow}>
                   <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.gross_amount_label')}</Text>
-                  <Text variant="bodySmall">{request.totalPrice} EGP</Text>
+                  <Text variant="bodySmall">{request.totalPrice} {(request as any).currency || CURRENCY_CONFIG.code}</Text>
                 </View>
                 <View style={styles.priceRow}>
                   <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.commission_label')}</Text>
                   <Text variant="bodySmall" style={{ color: colors.error }}>
-                    -{(request as any).payment.commissionAmount?.toFixed(2)} EGP ({(request as any).payment.commissionRate}%)
+                    -{(request as any).payment.commissionAmount?.toFixed(2)} {(request as any).currency || CURRENCY_CONFIG.code} ({(request as any).payment.commissionRate}%)
                   </Text>
                 </View>
                 <View style={[styles.priceRow, { marginTop: 8 }]}>
@@ -655,7 +656,7 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
               <View style={styles.priceRow}>
                 <Text variant="titleLarge" style={styles.priceLabel}>{t('driver.total_label')}</Text>
                 <Text variant="titleLarge" style={styles.priceValue}>
-                  {request.totalPrice} EGP
+                  {request.totalPrice} {(request as any).currency || CURRENCY_CONFIG.code}
                 </Text>
               </View>
             )}

@@ -98,6 +98,7 @@ export type HomeStackParamList = {
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number };
   StripePayment: { requestId: string; amount: number; type: 'transport' | 'booking' | 'marketplace' };
+  PaymentHistory: undefined;
   Dispute: { requestId: string };
 };
 
@@ -156,6 +157,7 @@ export type DriverStackParamList = {
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number };
   Dispute: { requestId: string };
+  PaymentHistory: undefined;
   PaymentDetails: { paymentId?: string; requestId?: string };
   Support: undefined;
   BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };

@@ -74,8 +74,12 @@ export class GooglePlacesService {
     if (options?.sessionToken) params.sessiontoken = options.sessionToken;
     if (options?.countryCode) params.components = `country:${options.countryCode}`;
     if (options?.proximity) {
+      // location + radius = biais de proximité (pas une restriction dure).
+      // On utilise un rayon couvrant l'ensemble des pays supportés (≈ 2 000 km)
+      // pour ne pas filtrer les adresses distantes dans un même pays.
+      // La restriction dure se fait via `components` (country code) ci-dessus.
       params.location = `${options.proximity.lat},${options.proximity.lng}`;
-      params.radius = '50000';
+      params.radius = '2000000';
       params.strictbounds = 'false';
       params.origin = `${options.proximity.lat},${options.proximity.lng}`;
     }

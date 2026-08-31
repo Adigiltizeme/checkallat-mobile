@@ -31,7 +31,6 @@ export const uploadImageToCloudinary = async (
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        'ngrok-skip-browser-warning': 'true',
       },
       body: formData,
     });

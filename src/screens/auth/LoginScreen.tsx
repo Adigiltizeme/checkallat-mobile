@@ -132,12 +132,15 @@ export const LoginScreen = ({ navigation }: Props) => {
             <TextInput
               label={t('auth.phone_or_email')}
               value={value}
-              onChangeText={onChange}
+              onChangeText={(text) => onChange(text.trim())}
               error={!!errors.identifier}
               style={styles.input}
               mode="outlined"
               outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
             />
           )}
         />

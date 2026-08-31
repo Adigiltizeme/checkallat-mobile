@@ -15,6 +15,9 @@ import { useTranslation } from 'react-i18next';
 import { HomeStackParamList } from '../../navigation/types';
 import { CreateBookingPayload, PaymentMethod } from '../../types/booking';
 import { useCreateBookingMutation } from '../../store/api/bookingsApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { uploadMultipleImages } from '../../services/uploadService';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { getLocalizedName } from '../../utils/localize';
@@ -71,7 +74,9 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
   const { categorySlug, step1Data, step2Data, step3Data, step4Data } = route.params;
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [isUploading, setIsUploading] = useState(false);
   const [createBooking, { isLoading }] = useCreateBookingMutation();
+  const token = useSelector((state: RootState) => state.auth.token);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('booking_request.step_of', { current: 5, total: 5 }) });
@@ -105,6 +110,17 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
 
   const handleSubmit = async () => {
     try {
+      // Uploader les photos locales avant soumission
+      let clientPhotos = step1Data.clientPhotos ?? [];
+      const localPhotos = clientPhotos.filter(uri => uri.startsWith('file://'));
+      if (localPhotos.length > 0 && token) {
+        setIsUploading(true);
+        const uploadedUrls = await uploadMultipleImages(localPhotos, token);
+        const urlMap = new Map(localPhotos.map((uri, i) => [uri, uploadedUrls[i]]));
+        clientPhotos = clientPhotos.map(uri => urlMap.get(uri) ?? uri);
+        setIsUploading(false);
+      }
+
       const payload: CreateBookingPayload = {
         categorySlug: step1Data.categorySlug,
         assignmentType: step4Data.assignmentType,
@@ -120,9 +136,10 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
         addressLat: step2Data.address.lat,
         addressLng: step2Data.address.lng,
         clientDescription: step1Data.clientDescription,
-        clientPhotos: step1Data.clientPhotos,
+        clientPhotos,
         categoryData: step1Data.categoryData,
         estimatedPrice: step4Data.estimatedPrice,
+        currency: step4Data.estimatedCurrency,
         paymentMethod,
       };
 
@@ -162,6 +179,7 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
         ],
       );
     } catch {
+      setIsUploading(false);
       Alert.alert(t('common.error'), t('booking_request.error_submit'));
     }
   };
@@ -300,13 +318,13 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
 
       <View style={styles.buttons}>
         <View style={styles.backWrap}>
-          <ChocolateButton variant="outline" onPress={() => navigation.goBack()} disabled={isLoading}>
+          <ChocolateButton variant="outline" onPress={() => navigation.goBack()} disabled={isLoading || isUploading}>
             {t('booking_request.back')}
           </ChocolateButton>
         </View>
         <View style={styles.nextWrap}>
-          <ChocolateButton onPress={handleSubmit} disabled={isLoading} loading={isLoading}>
-            {t('booking_request.submit')}
+          <ChocolateButton onPress={handleSubmit} disabled={isLoading || isUploading} loading={isLoading || isUploading}>
+            {isUploading ? t('transport.uploading_photos') : t('booking_request.submit')}
           </ChocolateButton>
         </View>
       </View>

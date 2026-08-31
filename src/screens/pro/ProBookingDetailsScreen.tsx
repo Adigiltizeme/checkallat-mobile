@@ -330,6 +330,8 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
     i18n.language,
   );
   const scheduledAt = booking.scheduledAt ? new Date(booking.scheduledAt) : null;
+  const createdAt = (booking as any).createdAt ? new Date((booking as any).createdAt) : null;
+  const estimatedPrice: number = (booking as any).estimatedPrice ?? 0;
   const clientPhotos: string[] = (booking as any).clientPhotos ?? [];
   const payment = (booking as any).payment;
 
@@ -497,8 +499,8 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
             <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>
               {(booking as any).serviceOffering.priceMax
-                ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} EGP`
-                : `${(booking as any).serviceOffering.priceMin}+ EGP`}
+                ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} ${CURRENCY_CONFIG.code}`
+                : `${(booking as any).serviceOffering.priceMin}+ ${CURRENCY_CONFIG.code}`}
             </Text>
           </View>
         )}
@@ -544,6 +546,16 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
           <View style={styles.detailRow}>
             <Icon name={bookingType === 'immediate' ? 'flash' : 'calendar-clock'} size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>{t(`booking_request.${bookingType}`)}</Text>
+          </View>
+        )}
+        {createdAt && (
+          <View style={styles.detailRow}>
+            <Icon name="calendar-plus" size={18} color={tokens.text.secondary} />
+            <Text style={styles.detailText}>
+              {t('booking.booking_date_label')}  {createdAt.toLocaleString(i18n.language, {
+                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+              })}
+            </Text>
           </View>
         )}
         {scheduledAt && (
@@ -592,6 +604,14 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
             <Text style={[styles.detailText, { flex: 1 }]}>{(booking as any).clientDescription}</Text>
           </View>
         )}
+        {(booking as any).finalPrice == null && estimatedPrice > 0 && (
+          <View style={styles.detailRow}>
+            <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
+            <Text style={[styles.detailText, { fontWeight: '600' }]}>
+              {t('booking.estimated_price_label')} : {estimatedPrice} {CURRENCY_CONFIG.code}
+            </Text>
+          </View>
+        )}
         {(booking as any).finalPrice != null && (
           <View style={styles.detailRow}>
             <Icon name="tag-check-outline" size={18} color={tokens.primary} />
@@ -635,7 +655,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                   <View style={[styles.detailRow, { marginTop: spacing.xs }]}>
                     <Icon name="cash" size={18} color={colors.success} />
                     <Text style={[styles.detailText, { color: colors.success, fontWeight: '700' }]}>
-                      {t('driver.net_amount_label')}: {payment.proNetAmount} EGP
+                      {t('driver.net_amount_label')}: {payment.proNetAmount} {CURRENCY_CONFIG.code}
                     </Text>
                   </View>
                 )}
@@ -679,9 +699,9 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                 (booking as any).cashPaymentStatus === 'confirmed' ? colors.success : tokens.text.secondary
               } />
               <Text style={[styles.detailText, { fontSize: 12 }]}>
-                {t('booking.cash_declared_pro')}: {(booking as any).cashAmountDeclaredByPro} EGP
+                {t('booking.cash_declared_pro')}: {(booking as any).cashAmountDeclaredByPro} {CURRENCY_CONFIG.code}
                 {(booking as any).cashAmountDeclaredByClient != null &&
-                  `  •  ${t('booking.cash_declared_client')}: ${(booking as any).cashAmountDeclaredByClient} EGP`}
+                  `  •  ${t('booking.cash_declared_client')}: ${(booking as any).cashAmountDeclaredByClient} ${CURRENCY_CONFIG.code}`}
                 {(booking as any).cashPaymentStatus === 'disputed' && '  ⚠️'}
                 {(booking as any).cashPaymentStatus === 'confirmed' && '  ✓'}
               </Text>

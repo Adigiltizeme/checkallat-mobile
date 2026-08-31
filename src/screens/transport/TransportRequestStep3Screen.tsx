@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { CURRENCY_CONFIG } from '../../config/currency';
 import { Step1Data, Step2Data, Step3Data } from '../../types/transport';
 import { useGetActivePricingQuery } from '../../store/api/transportApi';
 import { useSelector } from 'react-redux';
@@ -109,7 +110,7 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
   );
 
   const { data: pricing } = useGetActivePricingQuery(countryCode);
-  const cur = pricing?.currency || 'EGP';
+  const cur = pricing?.currency || CURRENCY_CONFIG.code;
 
   const [needHelpers, setNeedHelpers] = useState(step3Prefill?.needHelpers ?? false);
   const [helpersCount, setHelpersCount] = useState(step3Prefill?.helpersCount ?? 1);

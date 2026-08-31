@@ -30,11 +30,12 @@ import { spacing } from '../../theme/spacing';
 import { CURRENCY_CONFIG, formatCurrency } from '../../config/currency';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
-import { useGetProStatsQuery, useUpdateProAvailabilityMutation, usePayProCommissionMutation } from '../../store/api/prosApi';
+import { useGetProStatsQuery, useUpdateProAvailabilityMutation, usePayProCommissionMutation, useConfirmProCommissionPaymentMutation } from '../../store/api/prosApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useBeatSound } from '../../hooks/useBeatSound';
 import { useStripe } from '@stripe/stripe-react-native';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
+import { CountrySelectorRow } from '../../components/shared/CountrySelectorRow';
 import { RootState } from '../../store';
 
 type Props = StackScreenProps<ProStackParamList, 'ProHome'>;
@@ -151,6 +152,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
     skip: !proId,
   });
   const [payProCommission, { isLoading: payingCommission }] = usePayProCommissionMutation();
+  const [confirmProCommissionPayment] = useConfirmProCommissionPaymentMutation();
   const [commissionPaid, setCommissionPaid] = useState(false);
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
@@ -170,6 +172,8 @@ export const ProHomeScreen = ({ navigation }: Props) => {
         if (payError.code !== 'Canceled') Alert.alert(t('common.error'), payError.message);
         return;
       }
+      // Confirmation immédiate côté backend (sans attendre le webhook Stripe)
+      await confirmProCommissionPayment({ paymentIntentId: result.paymentIntentId }).unwrap();
       setCommissionPaid(true);
       refetchStats();
       Alert.alert(t('payment.success_title'), t('pro_space.commission_paid_success_msg'), [{ text: t('common.ok') }]);
@@ -369,6 +373,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
 
   const renderHeader = () => (
     <>
+      <CountrySelectorRow variant="row" />
       {pendingCashCommission > 0 && !commissionPaid ? (
         <View style={styles.commissionAlert}>
           <Icon name="alert-circle" size={20} color={colors.warning} style={{ marginTop: 2 }} />

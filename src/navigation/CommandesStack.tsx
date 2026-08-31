@@ -13,6 +13,7 @@ import { TransportDetailsScreen } from '../screens/transport/TransportDetailsScr
 import { TransportTrackingScreen } from '../screens/transport/TransportTrackingScreen';
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
 import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
+import { PaymentHistoryScreen } from '../screens/transport/PaymentHistoryScreen';
 
 import { BookingStep1Data, BookingStep2Data, BookingStep3Data, BookingStep4Data } from '../types/booking';
 
@@ -26,6 +27,7 @@ export type CommandesStackParamList = {
   TransportTracking: { requestId: string };
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number };
+  PaymentHistory: undefined;
 };
 
 const Stack = createStackNavigator<CommandesStackParamList>();
@@ -81,6 +83,11 @@ export const CommandesStack = () => {
         name="CashValidation"
         component={CashValidationScreen}
         options={{ title: t('transport.cash_validation_title') }}
+      />
+      <Stack.Screen
+        name="PaymentHistory"
+        component={PaymentHistoryScreen}
+        options={{ title: t('payment.history_title') }}
       />
     </Stack.Navigator>
   );

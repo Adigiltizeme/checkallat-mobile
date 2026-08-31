@@ -31,6 +31,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { useGetCategoriesQuery } from '../../store/api/servicesApi';
+import { CountrySelectorRow } from '../../components/shared/CountrySelectorRow';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH * 0.72;
@@ -302,6 +303,10 @@ const StatBadge = ({ value, labelKey, t, index }: { value: string; labelKey: str
 
 const KNOWN_SLUGS = new Set(SERVICES.map(s => s.slug));
 
+// Durée pendant laquelle une nouvelle catégorie est affichée dans "Nouveaux Services"
+// avant de passer dans "Nos Services"
+const NEW_CATEGORY_DURATION_DAYS = 30;
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -314,12 +319,15 @@ const styles = StyleSheet.create({
   /* Header */
   headerGreeting: {
     backgroundColor: colors.primary,
+    flexDirection: 'column',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
   },
   greetingSmall: {
     color: '#ffffffAA',
@@ -576,8 +584,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white, borderRadius: 14,
     borderWidth: 1, borderColor: colors.border,
   },
-  newCatIcon: {
-    fontSize: 28, marginBottom: 4,
+  newCatIconWrap: {
+    width: 48, height: 48, borderRadius: 13,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 6,
   },
   newCatLabel: {
     fontSize: 11, color: colors.dark, textAlign: 'center', fontWeight: '500',
@@ -592,10 +601,17 @@ export const HomeScreen = ({ navigation }: any) => {
   const [activeSlide, setActiveSlide] = useState(0);
 
   const { data: dbCategories = [] } = useGetCategoriesQuery({ activeOnly: true });
-  const newCategories = useMemo(
-    () => dbCategories.filter((c: any) => !KNOWN_SLUGS.has(c.slug)),
-    [dbCategories],
-  );
+
+  // Catégories dynamiques (hors statiques connues), réparties selon leur ancienneté
+  const { recentCategories, matureCategories } = useMemo(() => {
+    const threshold = NEW_CATEGORY_DURATION_DAYS * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const dynamic = dbCategories.filter((c: any) => !KNOWN_SLUGS.has(c.slug));
+    return {
+      recentCategories:  dynamic.filter((c: any) => now - new Date(c.createdAt).getTime() < threshold),
+      matureCategories:  dynamic.filter((c: any) => now - new Date(c.createdAt).getTime() >= threshold),
+    };
+  }, [dbCategories]);
   const flatListRef = useRef<FlatList>(null);
   const headerOpacity = useSharedValue(0);
   const headerY = useSharedValue(-20);
@@ -672,15 +688,20 @@ export const HomeScreen = ({ navigation }: any) => {
 
         {/* ── Header greeting ── */}
         <Animated.View style={[styles.headerGreeting, { backgroundColor: tokens.primary }, headerStyle]}>
-          <View>
-            <Text style={styles.greetingSmall}>{t('home.greeting_label')}</Text>
-            <Text style={styles.greetingName}>
-              {user?.firstName ? `${t('home.hi')} ${user.firstName} 👋` : 'CheckAll@t 👋'}
-            </Text>
+          {/* Ligne 1 : salutation + cloche */}
+          <View style={styles.headerTopRow}>
+            <View>
+              <Text style={styles.greetingSmall}>{t('home.greeting_label')}</Text>
+              <Text style={styles.greetingName}>
+                {user?.firstName ? `${t('home.hi')} ${user.firstName} 👋` : 'CheckAll@t 👋'}
+              </Text>
+            </View>
+            <TouchableOpacity style={styles.notifBtn}>
+              <Icon name="bell-outline" size={24} color={colors.white} />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.notifBtn}>
-            <Icon name="bell-outline" size={24} color={colors.white} />
-          </TouchableOpacity>
+          {/* Ligne 2 : sélecteur de pays */}
+          <CountrySelectorRow variant="pill" />
         </Animated.View>
 
         {/* ── Hero carousel ── */}
@@ -733,14 +754,51 @@ export const HomeScreen = ({ navigation }: any) => {
             t={t}
             onPress={handleServicePress}
           />
+
+          {/* Catégories dynamiques graduées (≥ NEW_CATEGORY_DURATION_DAYS jours) */}
+          {matureCategories.length > 0 && (
+            <>
+              <View style={{ height: 10 }} />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.marqueeRow}
+                contentContainerStyle={{ paddingHorizontal: spacing.lg, gap: CHIP_MARGIN * 2 }}
+              >
+                {matureCategories.map((cat: any) => {
+                  const name = i18n.language === 'ar' ? cat.nameAr
+                    : i18n.language === 'en' ? cat.nameEn
+                    : cat.nameFr;
+                  return (
+                    <TouchableOpacity
+                      key={cat.slug}
+                      style={[styles.serviceChip, { backgroundColor: tokens.card }]}
+                      onPress={() => handleServicePress(cat.slug)}
+                      activeOpacity={0.85}
+                    >
+                      <View style={[styles.serviceChipIcon, { backgroundColor: tokens.primary + '20' }]}>
+                        {cat.icon && /^[a-z]/.test(cat.icon)
+                          ? <Icon name={cat.icon} size={26} color={tokens.primary} />
+                          : cat.icon
+                            ? <Text style={{ fontSize: 22 }}>{cat.icon}</Text>
+                            : <Icon name="briefcase" size={26} color={tokens.primary} />
+                        }
+                      </View>
+                      <Text style={[styles.serviceChipLabel, { color: tokens.text.primary }]} numberOfLines={2}>{name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </>
+          )}
         </View>
 
         {/* ── Nouvelles catégories depuis l'admin (dynamique) ── */}
-        {newCategories.length > 0 && (
+        {recentCategories.length > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: tokens.text.primary }]}>{t('home.new_services')}</Text>
             <View style={styles.newCatGrid}>
-              {newCategories.map((cat: any) => {
+              {recentCategories.map((cat: any) => {
                 const name = i18n.language === 'ar' ? cat.nameAr
                   : i18n.language === 'en' ? cat.nameEn
                   : cat.nameFr;
@@ -751,7 +809,9 @@ export const HomeScreen = ({ navigation }: any) => {
                     onPress={() => handleServicePress(cat.slug)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.newCatIcon}>{cat.icon}</Text>
+                    <View style={[styles.newCatIconWrap, { backgroundColor: tokens.primary + '20' }]}>
+                      <Icon name={cat.icon || 'briefcase'} size={26} color={tokens.primary} />
+                    </View>
                     <Text style={[styles.newCatLabel, { color: tokens.text.primary }]} numberOfLines={2}>{name}</Text>
                   </TouchableOpacity>
                 );

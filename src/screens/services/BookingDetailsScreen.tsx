@@ -12,6 +12,7 @@ import {
   Share,
 } from 'react-native';
 import { Text, TextInput, IconButton } from 'react-native-paper';
+import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -354,6 +355,8 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     : (booking as any).category?.slug ?? '—';
 
   const scheduledAt = booking.scheduledAt ? new Date(booking.scheduledAt) : null;
+  const createdAt = (booking as any).createdAt ? new Date((booking as any).createdAt) : null;
+  const estimatedPrice: number = (booking as any).estimatedPrice ?? 0;
   const clientPhotos: string[] = (booking as any).clientPhotos ?? [];
   const photosBeforeWork: string[] = (booking as any).photosBeforeWork ?? [];
   const photosAfterWork: string[] = (booking as any).photosAfterWork ?? [];
@@ -598,8 +601,8 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>
               {(booking as any).serviceOffering.priceMax
-                ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} EGP`
-                : `${t('services.from_price', { price: (booking as any).serviceOffering.priceMin, currency: 'EGP' })}`}
+                ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} ${CURRENCY_CONFIG.code}`
+                : `${t('services.from_price', { price: (booking as any).serviceOffering.priceMin, currency: CURRENCY_CONFIG.code })}`}
             </Text>
           </View>
         )}
@@ -645,6 +648,16 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
           <View style={styles.detailRow}>
             <Icon name={bookingType === 'immediate' ? 'flash' : 'calendar-clock'} size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>{t(`booking_request.${bookingType}`)}</Text>
+          </View>
+        )}
+        {createdAt && (
+          <View style={styles.detailRow}>
+            <Icon name="calendar-plus" size={18} color={tokens.text.secondary} />
+            <Text style={styles.detailText}>
+              {t('booking.booking_date_label')}  {createdAt.toLocaleString(i18n.language, {
+                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+              })}
+            </Text>
           </View>
         )}
         {scheduledAt && (
@@ -693,6 +706,14 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <Text style={[styles.detailText, { flex: 1 }]}>{(booking as any).clientDescription}</Text>
           </View>
         ) : null}
+        {(booking as any).finalPrice == null && estimatedPrice > 0 && (
+          <View style={[styles.detailRow, { marginTop: 2 }]}>
+            <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
+            <Text style={[styles.detailText, { fontWeight: '600' }]}>
+              {t('booking.estimated_price_label')} : {estimatedPrice} {CURRENCY_CONFIG.code}
+            </Text>
+          </View>
+        )}
         {(booking as any).finalPrice != null && (
           <View style={[styles.detailRow, { marginTop: 2 }]}>
             <Icon name="tag-check-outline" size={18} color={tokens.primary} />
@@ -816,9 +837,9 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
                 (booking as any).cashPaymentStatus === 'confirmed' ? colors.success : tokens.text.secondary
               } />
               <Text style={[styles.detailText, { fontSize: 12 }]}>
-                {t('booking.cash_declared_client')}: {(booking as any).cashAmountDeclaredByClient} EGP
+                {t('booking.cash_declared_client')}: {(booking as any).cashAmountDeclaredByClient} {CURRENCY_CONFIG.code}
                 {(booking as any).cashAmountDeclaredByPro != null &&
-                  `  •  ${t('booking.cash_declared_pro')}: ${(booking as any).cashAmountDeclaredByPro} EGP`}
+                  `  •  ${t('booking.cash_declared_pro')}: ${(booking as any).cashAmountDeclaredByPro} ${CURRENCY_CONFIG.code}`}
                 {(booking as any).cashPaymentStatus === 'disputed' && '  ⚠️'}
                 {(booking as any).cashPaymentStatus === 'confirmed' && '  ✓'}
               </Text>
@@ -982,6 +1003,16 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         </View>
       )}
 
+      {/* Lien vers l'historique des paiements — paiement in-app uniquement */}
+      {(booking as any).paymentMethod === 'in_app' && (
+        <ChocolateButton
+          variant="ghost"
+          onPress={() => navigation.navigate('PaymentHistory')}
+        >
+          {t('payment.history_view_btn')}
+        </ChocolateButton>
+      )}
+
       {/* Signaler un problème — visible dès que la réservation est acceptée */}
       {!isPending && (
         <TouchableOpacity
@@ -1026,7 +1057,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
               outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.sm }}
-              right={<TextInput.Affix text="EGP" />}
+              right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
             />
             <View style={styles.cashModalActions}>
               <TouchableOpacity

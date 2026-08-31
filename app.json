@@ -19,6 +19,7 @@
       "**/*"
     ],
     "ios": {
+      "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
       "bundleIdentifier": "com.digiltizeme.checkallat",
       "icon": "./assets/icon.png",

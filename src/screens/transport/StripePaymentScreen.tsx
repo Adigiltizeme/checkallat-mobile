@@ -6,13 +6,13 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { TransportStackParamList } from '../../navigation/types';
+import { HomeStackParamList } from '../../navigation/types';
 import { useCreatePaymentIntentMutation } from '../../store/api/paymentsApi';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { formatCurrency } from '../../config/currency';
+import { formatCurrency, CURRENCY_CONFIG } from '../../config/currency';
 
-type Props = StackScreenProps<TransportStackParamList, 'StripePayment'>;
+type Props = StackScreenProps<HomeStackParamList, 'StripePayment'>;
 
 type PaymentState = 'loading' | 'ready' | 'processing' | 'success' | 'error';
 
@@ -119,7 +119,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
 
       const result = await createPaymentIntent({
         amount: Math.round(amount * 100), // Convert to cents
-        currency: 'egp',
+        currency: CURRENCY_CONFIG.code.toLowerCase(),
         metadata,
         type,
       }).unwrap();
@@ -169,9 +169,9 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
           text: t('transport.view_request'),
           onPress: () =>
             navigation.reset({
-              index: 0,
+              index: 1,
               routes: [
-                { name: 'TransportList' },
+                { name: 'HomeScreen' },
                 { name: 'TransportDetails', params: { requestId } },
               ],
             }),

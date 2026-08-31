@@ -9,9 +9,9 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency, CURRENCY_PRESETS } from '../../config/currency';
+import { formatCurrency, CURRENCY_PRESETS, CURRENCY_CONFIG } from '../../config/currency';
 import { DriverStackParamList } from '../../navigation/types';
-import { useGetDriverStatsQuery, useGetMyDeliveriesQuery, usePayCommissionMutation } from '../../store/api/transportApi';
+import { useGetDriverStatsQuery, useGetMyDeliveriesQuery, usePayCommissionMutation, useConfirmCommissionPaymentMutation } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -199,48 +199,30 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
   useRefetchOnFocus(refetch);
   useRefetchOnFocus(refetchStats);
   const [payCommission, { isLoading: payingCommission }] = usePayCommissionMutation();
+  const [confirmCommissionPayment] = useConfirmCommissionPaymentMutation();
   const [commissionPaid, setCommissionPaid] = useState(false);
 
   const handlePayCommissionOnline = async () => {
     try {
-      // 1. Créer le PaymentIntent côté backend
       const result = await payCommission().unwrap();
-
-      // 2. Initialiser le Payment Sheet Stripe
       const { error: initError } = await initPaymentSheet({
         merchantDisplayName: 'CheckAll@t',
         paymentIntentClientSecret: result.clientSecret,
         allowsDelayedPaymentMethods: false,
       });
-
-      if (initError) {
-        Alert.alert(t('common.error'), initError.message);
-        return;
-      }
-
-      // 3. Présenter le Payment Sheet à l'utilisateur
+      if (initError) { Alert.alert(t('common.error'), initError.message); return; }
       const { error: payError } = await presentPaymentSheet();
-
       if (payError) {
-        if (payError.code !== 'Canceled') {
-          Alert.alert(t('common.error'), payError.message);
-        }
+        if (payError.code !== 'Canceled') Alert.alert(t('common.error'), payError.message);
         return;
       }
-
-      // 4. Succès — masquage optimiste immédiat + refetch en arrière-plan
+      // Confirmation immédiate côté backend (sans attendre le webhook Stripe)
+      await confirmCommissionPayment({ paymentIntentId: result.paymentIntentId }).unwrap();
       setCommissionPaid(true);
       refetchStats();
-      Alert.alert(
-        t('payment.success_title'),
-        t('driver.commission_paid_success_msg'),
-        [{ text: t('common.ok') }],
-      );
+      Alert.alert(t('payment.success_title'), t('driver.commission_paid_success_msg'), [{ text: t('common.ok') }]);
     } catch (error: any) {
-      Alert.alert(
-        t('common.error'),
-        error?.data?.message || t('driver.commission_payment_error'),
-      );
+      Alert.alert(t('common.error'), error?.data?.message || t('driver.commission_payment_error'));
     }
   };
 
@@ -248,7 +230,7 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
   const [periodOffset, setPeriodOffset] = useState(0);
 
   const formatAmount = (amount: number) => {
-    const currencyCode = stats?.currency || 'EUR';
+    const currencyCode = stats?.currency || CURRENCY_CONFIG.code;
     const preset = CURRENCY_PRESETS[currencyCode as keyof typeof CURRENCY_PRESETS];
     if (!preset) return formatCurrency(amount);
     const rounded = amount.toFixed(preset.decimals);

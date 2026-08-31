@@ -34,9 +34,7 @@ const STORE_URL = Platform.select({
 
 function useForceUpdateCheck() {
   useEffect(() => {
-    fetch(`${API_CONFIG.BASE_URL.replace('/api/v1', '')}/api/v1`, {
-      headers: { 'ngrok-skip-browser-warning': 'true' },
-    })
+    fetch(`${API_CONFIG.BASE_URL.replace('/api/v1', '')}/api/v1`)
       .then((r) => r.json())
       .then((data: { minAppVersion?: string }) => {
         const min = data.minAppVersion;

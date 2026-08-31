@@ -28,6 +28,7 @@ import {
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { WEB_URL } from '../../config/api';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { CURRENCY_CONFIG } from '../../config/currency';
 
 import RNMapView, { Marker } from 'react-native-maps';
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -668,7 +669,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
               outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.sm }}
-              right={<TextInput.Affix text="EGP" />}
+              right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
             />
             <View style={styles.cashModalActions}>
               <TouchableOpacity style={styles.cashModalCancel} onPress={() => setShowCashModal(false)}>

@@ -95,9 +95,7 @@ export const MyProposalsScreen = ({ navigation }: any) => {
   useRefetchOnFocus(refetch);
 
   useEffect(() => {
-    fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`, {
-      headers: { 'ngrok-skip-browser-warning': 'true' },
-    })
+    fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((data) => { if (data.supportPhone) setSupportPhone(data.supportPhone); })
       .catch(() => {});

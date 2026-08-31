@@ -223,12 +223,12 @@ export const MyOrdersScreen = () => {
             </Text>
           </View>
         )}
-        {item.scheduledAt && (
+        {(item.scheduledAt || item.createdAt) && (
           <View style={styles.cardRow}>
             <Icon name="calendar" size={14} color={tokens.text.secondary} />
             <Text style={styles.cardMeta}>
-              {new Date(item.scheduledAt).toLocaleDateString(i18n.language, {
-                day: '2-digit', month: 'short',
+              {new Date(item.scheduledAt ?? item.createdAt).toLocaleDateString(i18n.language, {
+                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
               })}
             </Text>
           </View>

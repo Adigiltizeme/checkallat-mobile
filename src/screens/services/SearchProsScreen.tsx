@@ -19,6 +19,7 @@ import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { CURRENCY_CONFIG } from '../../config/currency';
 
 type Props = StackScreenProps<HomeStackParamList, 'SearchPros'>;
 
@@ -230,7 +231,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
               return minPrice !== null ? (
                 <View style={styles.stat}>
                   <Icon name="tag-outline" size={13} color={tokens.text.secondary} />
-                  <Text style={styles.statText}>{t('services.from_price', { price: minPrice, currency: 'EGP' })}</Text>
+                  <Text style={styles.statText}>{t('services.from_price', { price: minPrice, currency: CURRENCY_CONFIG.code })}</Text>
                 </View>
               ) : null;
             })()}

@@ -22,6 +22,9 @@ import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { CURRENCY_CONFIG } from '../../config/currency';
+import { CountrySelectionModal } from '../../components/shared/CountrySelectionModal';
+import { SUPPORTED_COUNTRIES } from '../../config/countries';
 
 type Props = StackScreenProps<HomeStackParamList, 'CreateBooking'>;
 
@@ -132,6 +135,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
   const { t, i18n } = useTranslation();
   const { proId, offeringId: preSelectedOffering } = route.params;
   const { userLat, userLng } = useSelector((state: RootState) => state.location);
+  const user = useSelector((state: RootState) => state.auth.user);
 
   const { data: pro } = useGetProByIdQuery(proId);
   const { data: offerings = [] } = useGetProOfferingsQuery(proId, {
@@ -151,6 +155,18 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
     return d;
   });
   const [paymentMethod, setPaymentMethod] = useState<'in_app' | 'cash'>('cash');
+
+  // Pays de la prestation : par défaut le pays du Pro, modifiable pour commande à distance
+  const proCountryCode = (pro?.countryId ?? '').toLowerCase();
+  const userActiveCode = (user?.activeCountryId ?? user?.homeCountryId ?? '').toLowerCase();
+  const [serviceCountryCode, setServiceCountryCode] = useState<string>(proCountryCode || userActiveCode || '');
+  const [countryModalVisible, setCountryModalVisible] = useState(false);
+  const serviceCountry = useMemo(
+    () => SUPPORTED_COUNTRIES.find(c => c.code === serviceCountryCode) ?? null,
+    [serviceCountryCode],
+  );
+  // Commande à distance : l'utilisateur est dans un pays différent du service
+  const isRemoteOrder = !!userActiveCode && !!serviceCountryCode && userActiveCode !== serviceCountryCode;
 
   const selectedOffering = availableOfferings.find((o: any) => o.id === selectedOfferingId);
 
@@ -174,6 +190,7 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
         addressLng: userLng ?? 0,
         clientDescription: description.trim(),
         paymentMethod,
+        ...(serviceCountryCode && { countryId: serviceCountryCode.toUpperCase() }),
       }).unwrap();
 
       navigation.replace('BookingDetails', { bookingId: booking.id });
@@ -208,6 +225,37 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
           </View>
         )}
 
+        {/* ─── Pays de la prestation / commande à distance ─── */}
+        <TouchableOpacity
+          onPress={() => setCountryModalVisible(true)}
+          style={{
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+            backgroundColor: isRemoteOrder ? tokens.primary + '12' : tokens.card,
+            borderRadius: 10, padding: spacing.md, marginBottom: spacing.md,
+            borderWidth: 1, borderColor: isRemoteOrder ? tokens.primary : tokens.border,
+          }}
+          activeOpacity={0.75}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Icon name={isRemoteOrder ? 'earth' : 'map-marker'} size={18} color={isRemoteOrder ? tokens.primary : tokens.text.secondary} />
+            <View>
+              <Text style={{ fontSize: 11, color: tokens.text.secondary }}>{t('booking.service_country')}</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: isRemoteOrder ? tokens.primary : tokens.text.primary }}>
+                {serviceCountry ? `${serviceCountry.flag} ${t(`country.${serviceCountry.nameKey}`)}` : t('country.select_country')}
+              </Text>
+            </View>
+          </View>
+          <Icon name="chevron-down" size={18} color={tokens.text.secondary} />
+        </TouchableOpacity>
+        {isRemoteOrder && (
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: tokens.primary + '10', borderRadius: 8, padding: spacing.sm, marginBottom: spacing.md, borderLeftWidth: 3, borderLeftColor: tokens.primary }}>
+            <Icon name="information-outline" size={16} color={tokens.primary} style={{ marginTop: 1 }} />
+            <Text style={{ flex: 1, fontSize: 12, color: tokens.text.primary, lineHeight: 18 }}>
+              {t('booking.remote_order_notice')}
+            </Text>
+          </View>
+        )}
+
         {/* Service selection */}
         <Text style={styles.label}>{t('booking.select_service')} *</Text>
         <Text style={styles.hint}>{t('booking.select_service_hint')}</Text>
@@ -231,8 +279,8 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
                 {offering.priceMin ? (
                   <Text style={styles.offeringPrice}>
                     {offering.priceMax
-                      ? `${offering.priceMin} – ${offering.priceMax} EGP`
-                      : `${t('services.from_price', { price: offering.priceMin, currency: 'EGP' })}`}
+                      ? `${offering.priceMin} – ${offering.priceMax} ${CURRENCY_CONFIG.code}`
+                      : `${t('services.from_price', { price: offering.priceMin, currency: CURRENCY_CONFIG.code })}`}
                   </Text>
                 ) : (
                   <Text style={styles.offeringPrice}>{t('pros.price_on_quote')}</Text>
@@ -344,8 +392,8 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
                 <Text style={styles.summaryLabel}>{t('booking.price_estimate')}</Text>
                 <Text style={[styles.summaryValue, { color: tokens.primary, fontWeight: '700' }]}>
                   {selectedOffering.priceMax
-                    ? `${selectedOffering.priceMin} – ${selectedOffering.priceMax} EGP`
-                    : `${t('services.from_price', { price: selectedOffering.priceMin, currency: 'EGP' })}`}
+                    ? `${selectedOffering.priceMin} – ${selectedOffering.priceMax} ${CURRENCY_CONFIG.code}`
+                    : `${t('services.from_price', { price: selectedOffering.priceMin, currency: CURRENCY_CONFIG.code })}`}
                 </Text>
               </View>
             )}
@@ -369,6 +417,14 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
           )}
         </TouchableOpacity>
       </ScrollView>
+
+      <CountrySelectionModal
+        visible={countryModalVisible}
+        selectedCode={serviceCountryCode}
+        onSelect={setServiceCountryCode}
+        onClose={() => setCountryModalVisible(false)}
+        title={t('booking.service_country')}
+      />
     </KeyboardAvoidingView>
   );
 };

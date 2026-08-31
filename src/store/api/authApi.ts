@@ -52,6 +52,7 @@ export const authApi = createApi({
         email?: string;
         profilePicture?: string;
         preferredLanguage?: string;
+        activeCountryId?: string | null;
       }) => ({
         url: '/auth/me',
         method: 'PATCH',
