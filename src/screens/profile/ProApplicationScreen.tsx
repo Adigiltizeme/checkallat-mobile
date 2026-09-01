@@ -10,6 +10,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
+import { KycSection, useKycState, isKycValid } from '../../components/shared/KycSection';
+import { KybFranceSection, useKybFranceState, isKybFranceValid } from '../../components/shared/KybFranceSection';
 import { uploadMultipleImages } from '../../services/uploadService';
 import { Text, TextInput } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
@@ -469,26 +471,13 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const [idDocumentType, setIdDocumentType] = useState<'national_id' | 'passport' | 'residence_permit'>('national_id');
-  const [idFrontPhotos, setIdFrontPhotos] = useState<string[]>([]);
-  const [idBackPhotos, setIdBackPhotos] = useState<string[]>([]);
-  const [selfiePhotos, setSelfiePhotos] = useState<string[]>([]);
-  const isPassport = idDocumentType === 'passport';
-  const kycValid = idFrontPhotos.length > 0 && (isPassport || idBackPhotos.length > 0) && selfiePhotos.length > 0;
+  const kyc = useKycState();
+  const kybFr = useKybFranceState();
 
   // KYB légal France (obligatoire si le pays actif de l'utilisateur est FR)
   const isFR = (user?.activeCountryId ?? user?.homeCountryId ?? '').toUpperCase() === 'FR';
-  const [legalStatus, setLegalStatus] = useState('');
-  const [siret, setSiret] = useState('');
-  const [apeNafCode, setApeNafCode] = useState('');
-  const [rcProPhotos, setRcProPhotos] = useState<string[]>([]);
-  const LEGAL_STATUSES = ['auto_entrepreneur', 'eurl', 'sasu', 'sarl', 'sas', 'other'] as const;
-  const frKybValid = !isFR || (
-    legalStatus !== '' &&
-    /^\d{14}$/.test(siret.replace(/\s/g, '')) &&
-    apeNafCode.trim().length >= 4 &&
-    rcProPhotos.length > 0
-  );
+  const kycValid = isKycValid(kyc.state);
+  const frKybValid = !isFR || isKybFranceValid(kybFr.state);
 
   const isLocalUri = (uri: string) => uri.startsWith('file://') || uri.startsWith('/') || uri.startsWith('content://');
 
@@ -518,13 +507,14 @@ export const ProApplicationScreen = ({ navigation }: any) => {
     if (!canSubmit) return;
     if (!token) return;
 
+    const { idDocumentType, idFrontPhotos, idBackPhotos, selfiePhotos } = kyc.state;
+    const { legalStatus, siret, apeNafCode, rcPhotos } = kybFr.state;
+    const isPassport = idDocumentType === 'passport';
+
     try {
       setUploading(true);
 
-      const [frontUrl] = await uploadMultipleImages(
-        idFrontPhotos.filter(isLocalUri),
-        token,
-      );
+      const [frontUrl] = await uploadMultipleImages(idFrontPhotos.filter(isLocalUri), token);
       const finalFront = isLocalUri(idFrontPhotos[0]) ? frontUrl : idFrontPhotos[0];
 
       let finalBack: string | undefined;
@@ -537,22 +527,17 @@ export const ProApplicationScreen = ({ navigation }: any) => {
         }
       }
 
-      const [selfieUrl] = await uploadMultipleImages(
-        selfiePhotos.filter(isLocalUri),
-        token,
-      );
+      const [selfieUrl] = await uploadMultipleImages(selfiePhotos.filter(isLocalUri), token);
       const finalSelfie = isLocalUri(selfiePhotos[0]) ? selfieUrl : selfiePhotos[0];
-
-      setUploading(false);
 
       // Upload RC Pro (France uniquement)
       let rcProInsuranceUrl: string | undefined;
-      if (isFR && rcProPhotos.length > 0 && isLocalUri(rcProPhotos[0])) {
-        const [rcUrl] = await uploadMultipleImages(rcProPhotos.filter(isLocalUri), token);
-        rcProInsuranceUrl = rcUrl;
-      } else if (isFR && rcProPhotos.length > 0) {
-        rcProInsuranceUrl = rcProPhotos[0];
+      if (isFR && rcPhotos.length > 0) {
+        const [rcUrl] = await uploadMultipleImages(rcPhotos.filter(isLocalUri), token);
+        rcProInsuranceUrl = isLocalUri(rcPhotos[0]) ? rcUrl : rcPhotos[0];
       }
+
+      setUploading(false);
 
       const result = await createProProfile({
         companyName: companyName.trim() || undefined,
@@ -565,7 +550,6 @@ export const ProApplicationScreen = ({ navigation }: any) => {
         idDocumentFront: finalFront,
         idDocumentBack: finalBack,
         selfiePhoto: finalSelfie,
-        // KYB France
         ...(isFR && {
           legalStatus,
           siret: siret.replace(/\s/g, ''),
@@ -682,48 +666,10 @@ export const ProApplicationScreen = ({ navigation }: any) => {
         </View>
 
         {/* Section KYC */}
-        <Text style={[styles.sectionLabel, { marginTop: spacing.xl }]}>{t('kyc.section_title')} *</Text>
-        <Text style={styles.sectionHint}>{t('kyc.section_hint')}</Text>
+        <KycSection {...kyc.props} showErrors={submitted} />
 
-        <Text style={[styles.sectionLabel, { marginTop: spacing.sm }]}>{t('kyc.document_type')}</Text>
-        <View style={styles.docTypeRow}>
-          {(['national_id', 'passport', 'residence_permit'] as const).map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[styles.docTypeChip, idDocumentType === type && styles.docTypeChipActive]}
-              onPress={() => setIdDocumentType(type)}
-            >
-              <Text style={[styles.docTypeChipText, idDocumentType === type && styles.docTypeChipTextActive]}>
-                {t(`kyc.doc_${type}`)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.sectionLabel}>{t('kyc.id_front')} *</Text>
-        <Text style={styles.sectionHint}>{t('kyc.id_front_hint')}</Text>
-        <PhotoPickerGrid photos={idFrontPhotos} onPhotosChange={setIdFrontPhotos} maxPhotos={1} />
-        {submitted && idFrontPhotos.length === 0 && (
-          <Text style={styles.errorHint}>{t('kyc.id_front_required')}</Text>
-        )}
-
-        {!isPassport && (
-          <>
-            <Text style={[styles.sectionLabel, { marginTop: spacing.md }]}>{t('kyc.id_back')} *</Text>
-            <Text style={styles.sectionHint}>{t('kyc.id_back_hint')}</Text>
-            <PhotoPickerGrid photos={idBackPhotos} onPhotosChange={setIdBackPhotos} maxPhotos={1} />
-            {submitted && idBackPhotos.length === 0 && (
-              <Text style={styles.errorHint}>{t('kyc.id_back_required')}</Text>
-            )}
-          </>
-        )}
-
-        <Text style={[styles.sectionLabel, { marginTop: spacing.md }]}>{t('kyc.selfie')} *</Text>
-        <Text style={styles.sectionHint}>{t('kyc.selfie_hint')}</Text>
-        <PhotoPickerGrid photos={selfiePhotos} onPhotosChange={setSelfiePhotos} maxPhotos={1} />
-        {submitted && selfiePhotos.length === 0 && (
-          <Text style={styles.errorHint}>{t('kyc.selfie_required')}</Text>
-        )}
+        {/* Section KYB France */}
+        {isFR && <KybFranceSection {...kybFr.props} showErrors={submitted} />}
 
         {uploading && (
           <View style={{ alignItems: 'center', padding: spacing.md }}>
@@ -732,77 +678,6 @@ export const ProApplicationScreen = ({ navigation }: any) => {
               {t('transport.uploading_photos')}
             </Text>
           </View>
-        )}
-
-        {/* ─── Section KYB France ─── */}
-        {isFR && (
-          <>
-            <View style={[styles.reviewNote, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B', marginBottom: spacing.md }]}>
-              <Icon name="flag" size={16} color="#F59E0B" />
-              <Text style={[styles.reviewNoteText, { color: '#92400E' }]}>{t('kyb.france_notice')}</Text>
-            </View>
-
-            <Text style={[styles.sectionLabel, { marginTop: spacing.sm }]}>{t('kyb.legal_status')} *</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: spacing.md }}>
-              {LEGAL_STATUSES.map(status => (
-                <TouchableOpacity
-                  key={status}
-                  onPress={() => setLegalStatus(status)}
-                  style={{
-                    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
-                    borderWidth: 1.5,
-                    borderColor: legalStatus === status ? tokens.primary : tokens.border,
-                    backgroundColor: legalStatus === status ? tokens.primary + '15' : tokens.backgroundAlt,
-                  }}
-                >
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: legalStatus === status ? tokens.primary : tokens.text.secondary }}>
-                    {t(`kyb.status_${status}`)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {submitted && !legalStatus && (
-              <Text style={styles.errorHint}>{t('kyb.legal_status_required')}</Text>
-            )}
-
-            <TextInput
-              label={t('kyb.siret') + ' *'}
-              value={siret}
-              onChangeText={text => setSiret(text.replace(/[^0-9 ]/g, ''))}
-              keyboardType="number-pad"
-              maxLength={17}
-              error={submitted && !/^\d{14}$/.test(siret.replace(/\s/g, ''))}
-              style={[styles.input, { marginTop: spacing.sm }]}
-              mode="outlined"
-              outlineColor={tokens.border}
-              activeOutlineColor={tokens.primary}
-              placeholder="123 456 789 12345"
-            />
-            {submitted && !/^\d{14}$/.test(siret.replace(/\s/g, '')) && (
-              <Text style={styles.errorHint}>{t('kyb.siret_invalid')}</Text>
-            )}
-
-            <TextInput
-              label={t('kyb.ape_naf_code') + ' *'}
-              value={apeNafCode}
-              onChangeText={setApeNafCode}
-              autoCapitalize="characters"
-              maxLength={6}
-              error={submitted && apeNafCode.trim().length < 4}
-              style={[styles.input, { marginTop: spacing.sm }]}
-              mode="outlined"
-              outlineColor={tokens.border}
-              activeOutlineColor={tokens.primary}
-              placeholder="4321A"
-            />
-
-            <Text style={[styles.sectionLabel, { marginTop: spacing.md }]}>{t('kyb.rc_pro_insurance')} *</Text>
-            <Text style={styles.sectionHint}>{t('kyb.rc_pro_hint')}</Text>
-            <PhotoPickerGrid photos={rcProPhotos} onPhotosChange={setRcProPhotos} maxPhotos={1} />
-            {submitted && rcProPhotos.length === 0 && (
-              <Text style={styles.errorHint}>{t('kyb.rc_pro_required')}</Text>
-            )}
-          </>
         )}
 
         {/* Note légale */}

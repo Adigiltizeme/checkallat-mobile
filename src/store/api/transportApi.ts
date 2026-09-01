@@ -322,7 +322,22 @@ export const transportApi = createApi({
      */
     applyAsDriver: builder.mutation<
       any,
-      { vehicleType: string; vehicleCapacity: number; vehiclePlate: string; vehiclePhotos: string[]; drivingLicense: string; vehicleInsurance: string; idDocumentType: string; idDocumentFront: string; idDocumentBack?: string; selfiePhoto: string }
+      {
+        vehicleType: string;
+        vehicleCapacity: number;
+        vehiclePlate: string;
+        vehiclePhotos: string[];
+        drivingLicense: string;
+        vehicleInsurance: string;
+        idDocumentType: string;
+        idDocumentFront: string;
+        idDocumentBack?: string;
+        selfiePhoto: string;
+        legalStatus?: string;
+        siret?: string;
+        apeNafCode?: string;
+        rcProInsuranceUrl?: string;
+      }
     >({
       query: (body) => ({
         url: '/driver/apply',

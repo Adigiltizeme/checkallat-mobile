@@ -24,6 +24,7 @@ import {
   setUnsupportedCountry,
   setDetectionDenied,
   setDetectionError,
+  selectCountry,
 } from './store/slices/locationSlice';
 import { identifyAnalyticsUser } from './hooks/useAnalytics';
 import i18n, { isRTL } from './i18n';
@@ -190,6 +191,11 @@ function AppContent() {
             if (response.ok) {
               const user = await response.json();
               store.dispatch(setCredentials({ user, accessToken, refreshToken }));
+
+              // Restaurer le pays actif sauvegardé en base → synchronise le sélecteur de pays
+              if (user.activeCountryId) {
+                store.dispatch(selectCountry(user.activeCountryId.toLowerCase()));
+              }
 
               // Identifier dans Sentry et Analytics
               sentryIdentifyUser(user.id, user.email);

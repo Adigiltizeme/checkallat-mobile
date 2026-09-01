@@ -6,6 +6,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../store';
 import { selectCountry } from '../../store/slices/locationSlice';
+import { updateUser } from '../../store/slices/authSlice';
+import { useUpdateProfileMutation } from '../../store/api/authApi';
 import { getCountryInfo } from '../../config/countries';
 import { CountrySelectionModal } from './CountrySelectionModal';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -26,9 +28,23 @@ export const CountrySelectorRow = ({ variant = 'row' }: Props) => {
 
   const selectedCountryCode = useSelector((s: RootState) => s.location.selectedCountryCode);
   const detectedCountryCode = useSelector((s: RootState) => s.location.detectedCountryCode);
-  const detectionStatus    = useSelector((s: RootState) => s.location.detectionStatus);
+  const detectionStatus     = useSelector((s: RootState) => s.location.detectionStatus);
+  const isLoggedIn          = useSelector((s: RootState) => !!s.auth.token);
 
   const [showModal, setShowModal] = useState(false);
+  const [updateProfile] = useUpdateProfileMutation();
+
+  const handleSelectCountry = async (code: string) => {
+    dispatch(selectCountry(code));
+    if (isLoggedIn) {
+      try {
+        await updateProfile({ activeCountryId: code.toUpperCase() }).unwrap();
+        dispatch(updateUser({ activeCountryId: code.toUpperCase() }));
+      } catch {
+        // Non-bloquant : le pays est déjà mis à jour localement
+      }
+    }
+  };
 
   const activeCountry = getCountryInfo(selectedCountryCode || detectedCountryCode || '');
   const isDetecting   = detectionStatus === 'detecting';
@@ -76,7 +92,7 @@ export const CountrySelectorRow = ({ variant = 'row' }: Props) => {
       <CountrySelectionModal
         visible={showModal}
         selectedCode={selectedCountryCode}
-        onSelect={(code) => dispatch(selectCountry(code))}
+        onSelect={handleSelectCountry}
         onClose={() => setShowModal(false)}
       />
     </>

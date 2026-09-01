@@ -18,6 +18,8 @@ import { clearDriverRecord, updateUser } from '../../store/slices/authSlice';
 import { useApplyAsDriverMutation, useCancelDriverApplicationMutation } from '../../store/api/transportApi';
 import { uploadMultipleImages } from '../../services/uploadService';
 import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
+import { KycSection, useKycState, isKycValid } from '../../components/shared/KycSection';
+import { KybFranceSection, useKybFranceState, isKybFranceValid } from '../../components/shared/KybFranceSection';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -92,6 +94,7 @@ function useDriverStyles() {
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { color: colors.white, fontSize: 16, fontWeight: '600' },
   footerNote: { textAlign: 'center', color: tokens.text.secondary, marginTop: spacing.md, fontStyle: 'italic', lineHeight: 18 },
+
   }), [tokens]);
 }
 
@@ -256,14 +259,14 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
   const [vehiclePhotos, setVehiclePhotos] = useState<string[]>([]);
   const [licensePhotos, setLicensePhotos] = useState<string[]>([]);
   const [insurancePhotos, setInsurancePhotos] = useState<string[]>([]);
-  const [idDocumentType, setIdDocumentType] = useState<'national_id' | 'passport' | 'residence_permit'>('national_id');
-  const [idFrontPhotos, setIdFrontPhotos] = useState<string[]>([]);
-  const [idBackPhotos, setIdBackPhotos] = useState<string[]>([]);
-  const [selfiePhotos, setSelfiePhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [applyAsDriver, { isLoading }] = useApplyAsDriverMutation();
 
-  const isPassport = idDocumentType === 'passport';
+  const kyc = useKycState();
+  const kybFr = useKybFranceState();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isFR = (user?.activeCountryId ?? user?.homeCountryId ?? '').toUpperCase() === 'FR';
+
   const capacity = parseFloat(vehicleCapacity);
   const canSubmit =
     vehiclePlate.trim().length >= 3 &&
@@ -271,35 +274,37 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
     vehiclePhotos.length >= 2 &&
     licensePhotos.length === 1 &&
     insurancePhotos.length === 1 &&
-    idFrontPhotos.length === 1 &&
-    (isPassport || idBackPhotos.length === 1) &&
-    selfiePhotos.length === 1 &&
+    isKycValid(kyc.state) &&
+    (!isFR || isKybFranceValid(kybFr.state)) &&
     !uploading && !isLoading;
 
   const handleSubmit = async () => {
     if (!token) return;
+    const { idDocumentType, idFrontPhotos, idBackPhotos, selfiePhotos } = kyc.state;
+    const { legalStatus, siret, apeNafCode, rcPhotos } = kybFr.state;
+    const isPassport = idDocumentType === 'passport';
+
     let uploadedVehiclePhotos = vehiclePhotos;
     let uploadedLicense = licensePhotos[0];
     let uploadedInsurance = insurancePhotos[0];
     let uploadedIdFront = idFrontPhotos[0];
     let uploadedIdBack = idBackPhotos[0] ?? undefined;
     let uploadedSelfie = selfiePhotos[0];
+    let uploadedRcTransport: string | undefined;
 
     try {
       setUploading(true);
       uploadedVehiclePhotos = await uploadMultipleImages(vehiclePhotos, token);
-      const uploadedLicenseArr = await uploadMultipleImages(licensePhotos, token);
-      uploadedLicense = uploadedLicenseArr[0];
-      const uploadedInsuranceArr = await uploadMultipleImages(insurancePhotos, token);
-      uploadedInsurance = uploadedInsuranceArr[0];
-      const uploadedIdFrontArr = await uploadMultipleImages(idFrontPhotos, token);
-      uploadedIdFront = uploadedIdFrontArr[0];
+      uploadedLicense = (await uploadMultipleImages(licensePhotos, token))[0];
+      uploadedInsurance = (await uploadMultipleImages(insurancePhotos, token))[0];
+      uploadedIdFront = (await uploadMultipleImages(idFrontPhotos, token))[0];
       if (!isPassport && idBackPhotos.length > 0) {
-        const uploadedIdBackArr = await uploadMultipleImages(idBackPhotos, token);
-        uploadedIdBack = uploadedIdBackArr[0];
+        uploadedIdBack = (await uploadMultipleImages(idBackPhotos, token))[0];
       }
-      const uploadedSelfieArr = await uploadMultipleImages(selfiePhotos, token);
-      uploadedSelfie = uploadedSelfieArr[0];
+      uploadedSelfie = (await uploadMultipleImages(selfiePhotos, token))[0];
+      if (isFR && rcPhotos.length > 0) {
+        uploadedRcTransport = (await uploadMultipleImages(rcPhotos, token))[0];
+      }
     } catch (err: any) {
       setUploading(false);
       Alert.alert(t('common.error'), t('transport.upload_error_msg', { error: err.message }));
@@ -320,10 +325,15 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
         idDocumentFront: uploadedIdFront,
         idDocumentBack: uploadedIdBack,
         selfiePhoto: uploadedSelfie,
+        ...(isFR && {
+          legalStatus,
+          siret: siret.replace(/\s/g, ''),
+          apeNafCode: apeNafCode.trim(),
+          rcProInsuranceUrl: uploadedRcTransport,
+        }),
       }).unwrap();
 
       dispatch(updateUser({ driver: result }));
-
       Alert.alert(t('driver_apply.success_title'), t('driver_apply.success_msg'));
     } catch {
       Alert.alert(t('common.error'), t('driver_apply.error_msg'));
@@ -393,44 +403,11 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
           <Text variant="bodySmall" style={styles.errorHint}>{t('driver_apply.insurance_required')}</Text>
         )}
 
-        {/* ── Pièce d'identité ── */}
-        <Text variant="titleSmall" style={[styles.label, { marginTop: spacing.xl, color: tokens.primary }]}>{t('kyc.section_title')}</Text>
-        <Text variant="bodySmall" style={styles.hint}>{t('kyc.section_hint')}</Text>
+        {/* Section KYC */}
+        <KycSection {...kyc.props} showErrors />
 
-        <Text variant="labelLarge" style={styles.label}>{t('kyc.document_type')} *</Text>
-        <View style={styles.radioGroup}>
-          {(['national_id', 'passport', 'residence_permit'] as const).map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[styles.radioBtn, idDocumentType === type && { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' }]}
-              onPress={() => setIdDocumentType(type)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.radioBtnText, idDocumentType === type && { color: tokens.primary, fontWeight: '600' }]}>
-                {t(`kyc.doc_${type}`)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text variant="labelLarge" style={[styles.label, { marginTop: spacing.md }]}>{t('kyc.id_front')} *</Text>
-        <Text variant="bodySmall" style={styles.hint}>{t('kyc.id_front_hint')}</Text>
-        <PhotoPickerGrid photos={idFrontPhotos} onPhotosChange={setIdFrontPhotos} maxPhotos={1} />
-        {idFrontPhotos.length === 0 && <Text variant="bodySmall" style={styles.errorHint}>{t('kyc.id_front_required')}</Text>}
-
-        {!isPassport && (
-          <>
-            <Text variant="labelLarge" style={[styles.label, { marginTop: spacing.md }]}>{t('kyc.id_back')} *</Text>
-            <Text variant="bodySmall" style={styles.hint}>{t('kyc.id_back_hint')}</Text>
-            <PhotoPickerGrid photos={idBackPhotos} onPhotosChange={setIdBackPhotos} maxPhotos={1} />
-            {idBackPhotos.length === 0 && <Text variant="bodySmall" style={styles.errorHint}>{t('kyc.id_back_required')}</Text>}
-          </>
-        )}
-
-        <Text variant="labelLarge" style={[styles.label, { marginTop: spacing.md }]}>{t('kyc.selfie')} *</Text>
-        <Text variant="bodySmall" style={styles.hint}>{t('kyc.selfie_hint')}</Text>
-        <PhotoPickerGrid photos={selfiePhotos} onPhotosChange={setSelfiePhotos} maxPhotos={1} />
-        {selfiePhotos.length === 0 && <Text variant="bodySmall" style={styles.errorHint}>{t('kyc.selfie_required')}</Text>}
+        {/* Section KYB France */}
+        {isFR && <KybFranceSection {...kybFr.props} showErrors />}
 
         {uploading && (
           <View style={styles.uploadingContainer}>
