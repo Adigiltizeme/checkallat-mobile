@@ -50,10 +50,13 @@ export const servicesApi = createApi({
     // ========== OFFERINGS ==========
 
     /**
-     * Récupérer les offres d'un professionnel
+     * Récupérer les offres d'un professionnel filtrées par pays actif
      */
-    getProOfferings: builder.query<any[], string>({
-      query: (proId) => `/offerings/pro/${proId}`,
+    getProOfferings: builder.query<any[], { proId: string; countryCode?: string }>({
+      query: ({ proId, countryCode }) => ({
+        url: `/offerings/pro/${proId}`,
+        params: countryCode ? { countryCode } : undefined,
+      }),
       providesTags: ['Offering'],
     }),
 
@@ -70,6 +73,7 @@ export const servicesApi = createApi({
         priceMin: number;
         priceMax?: number;
         description?: string;
+        countryCode?: string;
       }) => ({
         url: `/offerings/${proId}`,
         method: 'POST',
@@ -113,7 +117,7 @@ export const servicesApi = createApi({
     /**
      * Créer ou récupérer l'offre d'un pro pour une catégorie (par slug)
      */
-    ensureOffering: builder.mutation<any, { proId: string; categorySlug: string }>({
+    ensureOffering: builder.mutation<any, { proId: string; categorySlug: string; countryCode?: string }>({
       query: (body) => ({
         url: '/offerings/ensure',
         method: 'POST',

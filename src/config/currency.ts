@@ -24,6 +24,14 @@ export let CURRENCY_CONFIG = {
 };
 
 /**
+ * Retourne le code devise d'une entité existante (booking, transport, payment, bid…)
+ * en priorité sur le code global — pour que les montants historiques ne changent
+ * pas quand le pays actif change.
+ */
+export const entityCurrencyCode = (entity: any, field = 'currency'): string =>
+  (entity?.[field] ?? CURRENCY_CONFIG.code).toUpperCase();
+
+/**
  * Met à jour la configuration de devise depuis le backend
  */
 export const setCurrencyConfig = (currencyCode: string) => {

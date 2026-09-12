@@ -74,11 +74,15 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
           notes,
         }).unwrap();
 
-        Alert.alert(
-          t('transport.completion_saved_title'),
-          t('transport.completion_saved_driver_msg'),
-          [{ text: t('common.ok'), onPress: () => navigation.goBack() }]
-        );
+        if (request.paymentMethod === 'cash') {
+          navigation.replace('CashValidation', { requestId, totalPrice: (request as any).price ?? 0 });
+        } else {
+          Alert.alert(
+            t('transport.completion_saved_title'),
+            t('transport.completion_saved_driver_msg'),
+            [{ text: t('common.ok'), onPress: () => navigation.goBack() }]
+          );
+        }
       } else {
         await clientConfirm({
           requestId,
@@ -86,14 +90,18 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
           notes,
         }).unwrap();
 
-        Alert.alert(
-          t('transport.completion_saved_title'),
-          t('transport.completion_saved_client_msg'),
-          [
-            { text: t('transport.completion_review_later'), onPress: () => navigation.goBack() },
-            { text: t('transport.completion_leave_review'), onPress: () => setShowReviewForm(true) },
-          ]
-        );
+        if (request.paymentMethod === 'cash') {
+          navigation.replace('CashValidation', { requestId, totalPrice: (request as any).price ?? 0 });
+        } else {
+          Alert.alert(
+            t('transport.completion_saved_title'),
+            t('transport.completion_saved_client_msg'),
+            [
+              { text: t('transport.completion_review_later'), onPress: () => navigation.goBack() },
+              { text: t('transport.completion_leave_review'), onPress: () => setShowReviewForm(true) },
+            ]
+          );
+        }
       }
     } catch (error: any) {
       Alert.alert(t('common.error'), error?.data?.message || t('transport.completion_error_msg'));

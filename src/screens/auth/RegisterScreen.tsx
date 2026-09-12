@@ -7,9 +7,6 @@ import {
   Platform,
   Image,
   Dimensions,
-  TouchableOpacity,
-  Modal,
-  FlatList,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { TextInput, Text } from 'react-native-paper';
@@ -52,8 +49,6 @@ export const RegisterScreen = ({ navigation }: Props) => {
   // Pays — détection silencieuse via géolocalisation
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
   const [detectedIso, setDetectedIso] = useState<string | null>(null);
-  const [countryModalVisible, setCountryModalVisible] = useState(false);
-
   const selectedCountry = useMemo(
     () => SUPPORTED_COUNTRIES.find(c => c.code === selectedCountryCode) ?? null,
     [selectedCountryCode],
@@ -111,7 +106,6 @@ export const RegisterScreen = ({ navigation }: Props) => {
     countryChipFlag: { fontSize: 20 },
     countryChipName: { flex: 1, fontSize: 14, fontWeight: '600', color: tokens.text.primary },
     countryChipHint: { fontSize: 11, color: tokens.text.secondary },
-    countryChipChange: { fontSize: 13, color: tokens.primary, fontWeight: '600' },
     // Bannière pays non supporté
     unsupportedBanner: {
       flexDirection: 'row', gap: 10, alignItems: 'flex-start',
@@ -120,24 +114,6 @@ export const RegisterScreen = ({ navigation }: Props) => {
       borderRadius: 10, padding: 14, marginBottom: 16,
     },
     unsupportedText: { flex: 1, fontSize: 13, color: tokens.text.primary, lineHeight: 18 },
-    unsupportedLink: { fontSize: 13, color: tokens.primary, fontWeight: '600', marginTop: 6 },
-    // Modal
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    modalContainer: { backgroundColor: tokens.card, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' },
-    modalHeader: {
-      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-      padding: 20, borderBottomWidth: 1, borderColor: tokens.border,
-    },
-    modalTitle: { fontSize: 17, fontWeight: '700', color: tokens.text.primary },
-    modalClose: { padding: 4 },
-    countryItem: {
-      flexDirection: 'row', alignItems: 'center', gap: 14,
-      paddingHorizontal: 20, paddingVertical: 16,
-      borderBottomWidth: 1, borderColor: tokens.border,
-    },
-    countryFlag: { fontSize: 22 },
-    countryItemName: { flex: 1, fontSize: 15, color: tokens.text.primary, fontWeight: '500' },
-    countryItemCurrency: { fontSize: 13, color: tokens.text.secondary },
   }), [tokens]);
 
   const registerSchema = useMemo(() => z.object({
@@ -336,34 +312,24 @@ export const RegisterScreen = ({ navigation }: Props) => {
 
         {/* ─── Pays détecté (non bloquant) ─── */}
         {selectedCountry && (
-          <TouchableOpacity
-            style={styles.countryChip}
-            onPress={() => setCountryModalVisible(true)}
-            activeOpacity={0.7}
-          >
+          <View style={styles.countryChip}>
             <Text style={styles.countryChipFlag}>{selectedCountry.flag}</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.countryChipName}>{t(`country.${selectedCountry.nameKey}`)}</Text>
               <Text style={styles.countryChipHint}>{t('auth.country_detected_hint')}</Text>
             </View>
-            <Text style={styles.countryChipChange}>{t('location.change_country')}</Text>
-          </TouchableOpacity>
+          </View>
         )}
 
         {/* ─── Pays non supporté ─── */}
         {isUnsupportedCountry && (
           <View style={styles.unsupportedBanner}>
             <Icon name="information-outline" size={18} color={colors.warning} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.unsupportedText}>
-                {t('location.unsupported_msg_with_country', {
-                  country: detectedIso?.toUpperCase() ?? '',
-                })}
-              </Text>
-              <TouchableOpacity onPress={() => setCountryModalVisible(true)}>
-                <Text style={styles.unsupportedLink}>{t('country.select_country')}</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.unsupportedText}>
+              {t('location.unsupported_msg_with_country', {
+                country: detectedIso?.toUpperCase() ?? '',
+              })}
+            </Text>
           </View>
         )}
 
@@ -382,51 +348,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
         </ChocolateButton>
       </ScrollView>
 
-      {/* ─── Modal correction pays ─── */}
-      <Modal
-        visible={countryModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setCountryModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setCountryModalVisible(false)}
-        >
-          <TouchableOpacity activeOpacity={1} style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t('country.select_country')}</Text>
-              <TouchableOpacity style={styles.modalClose} onPress={() => setCountryModalVisible(false)}>
-                <Icon name="close" size={22} color={tokens.text.primary} />
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={SUPPORTED_COUNTRIES}
-              keyExtractor={item => item.code}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.countryItem,
-                    selectedCountryCode === item.code && { backgroundColor: tokens.primary + '15' },
-                  ]}
-                  onPress={() => {
-                    setSelectedCountryCode(item.code);
-                    setCountryModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.countryFlag}>{item.flag}</Text>
-                  <Text style={styles.countryItemName}>{t(`country.${item.nameKey}`)}</Text>
-                  <Text style={styles.countryItemCurrency}>{item.currency}</Text>
-                  {selectedCountryCode === item.code && (
-                    <Icon name="check" size={18} color={tokens.primary} />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
+
     </KeyboardAvoidingView>
   );
 };

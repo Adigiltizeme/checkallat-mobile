@@ -7,6 +7,8 @@ interface LocationState {
   detectedCountryCode: string | null;
   /** Override manuel : pays choisi par l'utilisateur dans la liste des pays supportés */
   selectedCountryCode: string | null;
+  /** Code ISO de la devise active (EUR, EGP, XOF…) — mis à jour à chaque changement de pays */
+  activeCurrencyCode: string | null;
   /** Coordonnées GPS actuelles de l'utilisateur (pour le biais de proximité Mapbox) */
   userLat: number | null;
   userLng: number | null;
@@ -17,6 +19,7 @@ interface LocationState {
 const initialState: LocationState = {
   detectedCountryCode: null,
   selectedCountryCode: null,
+  activeCurrencyCode: null,
   userLat: null,
   userLng: null,
   detectionStatus: 'idle',
@@ -67,10 +70,15 @@ const locationSlice = createSlice({
         state.detectionStatus = 'done';
       }
     },
+    /** Mise à jour explicite du code devise (depuis platform settings ou pays sélectionné) */
+    setActiveCurrency(state, action: PayloadAction<string>) {
+      state.activeCurrencyCode = action.payload;
+    },
     resetDetection(state) {
       state.detectionStatus = 'idle';
       state.detectedCountryCode = null;
       state.selectedCountryCode = null;
+      state.activeCurrencyCode = null;
     },
   },
 });
@@ -83,6 +91,7 @@ export const {
   setDetectionDenied,
   setDetectionError,
   selectCountry,
+  setActiveCurrency,
   resetDetection,
 } = locationSlice.actions;
 

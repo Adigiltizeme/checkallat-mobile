@@ -8,12 +8,14 @@ import {
 import { Text } from 'react-native-paper';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
 import { HomeStackParamList } from '../../navigation/types';
 import { useGetProByIdQuery } from '../../store/api/prosApi';
 import { useGetProOfferingsQuery } from '../../store/api/servicesApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -126,14 +128,16 @@ export const ProDetailScreen = ({ route, navigation }: Props) => {
 
   const { t, i18n } = useTranslation();
   const { proId } = route.params;
+  const selectedCountryCode = useSelector((s: RootState) => s.location.selectedCountryCode);
 
   const { data: pro, isLoading, refetch } = useGetProByIdQuery(proId, {
     pollingInterval: 8000,
     refetchOnMountOrArgChange: true,
   });
-  const { data: offerings = [] } = useGetProOfferingsQuery(proId, {
-    refetchOnMountOrArgChange: true,
-  });
+  const { data: offerings = [] } = useGetProOfferingsQuery(
+    { proId, countryCode: selectedCountryCode ?? undefined },
+    { refetchOnMountOrArgChange: true },
+  );
   useRefetchOnFocus(refetch);
 
   if (isLoading || !pro) {

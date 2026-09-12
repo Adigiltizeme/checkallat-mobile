@@ -11,7 +11,7 @@ import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { getLocalizedName } from '../../utils/localize';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency, CURRENCY_PRESETS, CURRENCY_CONFIG } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
@@ -120,6 +120,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
 }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const { format: formatCurrencyDefault, formatWithCurrency } = useCurrencyFormatter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const pro = useSelector((state: RootState) => (state.auth.user as any)?.pro);
   const proId: string = pro?.id ?? '';
@@ -169,15 +170,12 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
 
   const allBookings: any[] = Array.isArray(bookingsData) ? bookingsData : ((bookingsData as any)?.bookings ?? []);
 
-  const formatAmount = (amount: number) => {
-    const currencyCode = (stats as any)?.currency || CURRENCY_CONFIG.code;
-    const preset = CURRENCY_PRESETS[currencyCode as keyof typeof CURRENCY_PRESETS];
-    if (!preset) return formatCurrency(amount);
-    const rounded = amount.toFixed(preset.decimals);
-    const [int, dec] = rounded.split('.');
-    const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, preset.thousandsSeparator);
-    const full = dec ? `${formatted}${preset.decimalSeparator}${dec}` : formatted;
-    return preset.position === 'before' ? `${preset.symbol}${full}` : `${full} ${preset.symbol}`;
+  const statsCurrency: string | undefined = (stats as any)?.currency;
+
+  const formatAmount = (amount: number, bookingCurrency?: string) => {
+    const currencyCode = bookingCurrency ?? statsCurrency;
+    if (!currencyCode) return formatCurrencyDefault(amount);
+    return formatWithCurrency(amount, currencyCode);
   };
 
   const formatDate = (iso: string) =>
@@ -378,7 +376,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
                         <Text variant="bodySmall" style={styles.earningDate}>{formatDate(booking.completedAt ?? booking.updatedAt)}</Text>
                       </View>
                       <View style={{ alignItems: 'flex-end' }}>
-                        <Text variant="titleMedium" style={styles.earningAmount}>{formatAmount(amount)}</Text>
+                        <Text variant="titleMedium" style={styles.earningAmount}>{formatAmount(amount, booking.currency ?? undefined)}</Text>
                         {booking.finalPrice && <Text variant="bodySmall" style={{ color: tokens.text.secondary, fontSize: 10 }}>{t('pro_space.final')}</Text>}
                       </View>
                     </View>

@@ -191,11 +191,11 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
     },
     navigationButton: {
       marginHorizontal: 16,
-      marginBottom: 0,
+      marginBottom: 8,
     },
     cancelButton: {
       marginHorizontal: 16,
-      marginBottom: 0,
+      marginBottom: 8,
     },
     confirmButton: {
       marginHorizontal: 16,
@@ -273,6 +273,7 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
   const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
   const [fullScreenPhoto, setFullScreenPhoto] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showSecondaryActions, setShowSecondaryActions] = useState(false);
 
   const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
   const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && request.client);
@@ -704,6 +705,7 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
 
       {/* Boutons d'action (bas fixe) */}
       <View style={styles.bottomContainer}>
+        {/* Action principale — toujours visible */}
         {request.status === 'completed' && !request.driverConfirmedCompletion && (
           <ChocolateButton
             onPress={() => navigation.navigate('TransportCompletion', { requestId })}
@@ -713,35 +715,17 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
           </ChocolateButton>
         )}
         {request.status === 'completed' &&
-         request.clientConfirmedCompletion &&
-         request.driverConfirmedCompletion &&
-         request.paymentMethod === 'cash' &&
-         !(request as any).cashAmountDeclaredByDriver && (
-          <ChocolateButton
-            onPress={() => navigation.navigate('CashValidation', { requestId, totalPrice: request.totalPrice })}
-            style={styles.confirmButton}
-          >
-            {t('driver.validate_cash_btn')}
-          </ChocolateButton>
-        )}
-        {request.status !== 'completed' && request.status !== 'cancelled' && (
-          <ChocolateButton
-            variant="outline"
-            onPress={handleStartNavigation}
-            style={styles.navigationButton}
-          >
-            {t('driver.gps_navigation')}
-          </ChocolateButton>
-        )}
-        {CANCELLABLE_STATUSES.includes(request.status as TransportStatus) && (
-          <ChocolateButton
-            variant="outline"
-            onPress={() => setShowCancelModal(true)}
-            style={styles.cancelButton}
-          >
-            {t('driver.cancel_delivery_btn')}
-          </ChocolateButton>
-        )}
+          request.clientConfirmedCompletion &&
+          request.driverConfirmedCompletion &&
+          request.paymentMethod === 'cash' &&
+          !(request as any).cashAmountDeclaredByDriver && (
+            <ChocolateButton
+              onPress={() => navigation.navigate('CashValidation', { requestId, totalPrice: request.totalPrice })}
+              style={styles.confirmButton}
+            >
+              {t('driver.validate_cash_btn')}
+            </ChocolateButton>
+          )}
         {request.status !== 'completed' && (
           <DriverActionButton
             currentStatus={request.status as TransportStatus}
@@ -749,6 +733,58 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
             onStatusChange={handleStatusChange}
           />
         )}
+
+        {/* Toggle actions secondaires */}
+        {request.status !== 'pending' && request.status !== 'completed' && (
+          <TouchableOpacity
+            onPress={() => setShowSecondaryActions(prev => !prev)}
+            style={{ alignItems: 'center', paddingVertical: 6 }}
+          >
+            <Icon
+              name={showSecondaryActions ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color={tokens.text.secondary}
+            />
+            <Text style={{ fontSize: 11, color: tokens.text.secondary }}>
+              {showSecondaryActions ? t('common.less') : t('common.more_actions')}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Actions secondaires (GPS, annulation, litige) */}
+        {showSecondaryActions && (
+          <>
+            {(request.status === 'in_transit' || request.status === 'heading_to_pickup') && (
+              <ChocolateButton
+                variant="outline"
+                onPress={handleStartNavigation}
+                style={styles.navigationButton}
+              >
+                {t('driver.gps_navigation')}
+              </ChocolateButton>
+            )}
+            {CANCELLABLE_STATUSES.includes(request.status as TransportStatus) && (
+              <ChocolateButton
+                variant="outline"
+                onPress={() => setShowCancelModal(true)}
+                style={styles.cancelButton}
+              >
+                {t('driver.cancel_delivery_btn')}
+              </ChocolateButton>
+            )}
+            {request.status !== 'pending' && (
+              <TouchableOpacity
+                style={styles.disputeBtn}
+                onPress={() => navigation.navigate('Dispute', { requestId })}
+              >
+                <Icon name="flag" size={18} color={colors.error} />
+                <Text style={styles.disputeBtnText}>{t('dispute.open_btn')}</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+
+        {/* Litige toujours accessible pour les statuts terminés/annulés */}
         {(request.status === 'completed' || request.status === 'cancelled') && (
           <TouchableOpacity
             style={styles.disputeBtn}

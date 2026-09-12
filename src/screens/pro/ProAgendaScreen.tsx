@@ -18,6 +18,7 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const STATUS_BADGE: Record<string, { color: string; bg: string; icon: string }> = {
+  pending:     { color: '#92400E', bg: '#FEF3C7', icon: 'clock-outline' },
   accepted:    { color: '#1E40AF', bg: '#DBEAFE', icon: 'check-circle-outline' },
   en_route:    { color: '#3730A3', bg: '#E0E7FF', icon: 'navigation' },
   arrived:     { color: '#6B21A8', bg: '#F3E8FF', icon: 'map-marker-check' },

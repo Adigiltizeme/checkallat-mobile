@@ -27,7 +27,7 @@ import Animated, {
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { CURRENCY_CONFIG, formatCurrency } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
 import { useGetProStatsQuery, useUpdateProAvailabilityMutation, usePayProCommissionMutation, useConfirmProCommissionPaymentMutation } from '../../store/api/prosApi';
@@ -36,6 +36,7 @@ import { useBeatSound } from '../../hooks/useBeatSound';
 import { useStripe } from '@stripe/stripe-react-native';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { CountrySelectorRow } from '../../components/shared/CountrySelectorRow';
+import { AvailableGlowCard } from '../../components/shared/AvailableGlowCard';
 import { RootState } from '../../store';
 
 type Props = StackScreenProps<ProStackParamList, 'ProHome'>;
@@ -136,6 +137,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
 }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const { format: formatCurrency, currencyCode: activeCurrencyCode } = useCurrencyFormatter();
   const pro = useSelector((state: RootState) => (state.auth.user as any)?.pro);
   const proId: string = pro?.id ?? '';
 
@@ -345,7 +347,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
               <View style={[styles.infoItem, { marginTop: 2 }]}>
                 <Icon name="cash" size={13} color={tokens.text.secondary} />
                 <Text variant="bodySmall" style={styles.infoText}>
-                  {item.finalPrice ? `${item.finalPrice} ${CURRENCY_CONFIG.code}` : `~${item.estimatedPrice} ${CURRENCY_CONFIG.code}`}
+                  {item.finalPrice ? `${item.finalPrice} ${activeCurrencyCode}` : `~${item.estimatedPrice} ${activeCurrencyCode}`}
                 </Text>
               </View>
             )}
@@ -394,7 +396,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
           </View>
         </View>
       ) : (
-        <View style={styles.availabilityCard}>
+        <AvailableGlowCard isAvailable={isAvailable} color={tokens.primary} style={styles.availabilityCard}>
           <View style={styles.availabilityContent}>
             <View>
               <Text variant="titleMedium" style={styles.availabilityTitle}>
@@ -406,14 +408,14 @@ export const ProHomeScreen = ({ navigation }: Props) => {
             </View>
             <Switch value={isAvailable} onValueChange={toggleAvailability} disabled={isUpdatingAvailability} trackColor={{ false: tokens.border, true: tokens.primary }} thumbColor={colors.white} />
           </View>
-        </View>
+        </AvailableGlowCard>
       )}
 
       {pendingBookings.length > 0 && (() => {
         const first = pendingBookings[0];
         const catName = getLocalizedName(first.serviceOffering?.category ?? first.category, i18n.language);
         const clientName = first.client ? `${first.client.firstName} ${first.client.lastName}` : null;
-        const price = first.estimatedPrice > 0 ? `~${first.estimatedPrice} ${CURRENCY_CONFIG.code}` : null;
+        const price = first.estimatedPrice > 0 ? `~${first.estimatedPrice} ${activeCurrencyCode}` : null;
         const subParts = [catName, clientName, price].filter(Boolean);
         return (
           <Animated.View style={bannerAnimStyle}>

@@ -18,8 +18,11 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const STATUS_BADGE: Record<string, { color: string; bg: string; icon: string }> = {
-  pending:  { color: '#92400E', bg: '#FEF3C7', icon: 'clock-outline' },
-  accepted: { color: '#1E40AF', bg: '#DBEAFE', icon: 'check-circle-outline' },
+  pending:     { color: '#92400E', bg: '#FEF3C7', icon: 'clock-outline' },
+  accepted:    { color: '#1E40AF', bg: '#DBEAFE', icon: 'check-circle-outline' },
+  en_route:    { color: '#3730A3', bg: '#E0E7FF', icon: 'navigation' },
+  arrived:     { color: '#6B21A8', bg: '#F3E8FF', icon: 'map-marker-check' },
+  in_progress: { color: '#065F46', bg: '#D1FAE5', icon: 'progress-wrench' },
 };
 
 export const ProDemandesScreen = () => {
@@ -68,6 +71,7 @@ export const ProDemandesScreen = () => {
   const items: any[] = Array.isArray(data) ? data : [];
   const pending  = items.filter(b => b.status === 'pending');
   const accepted = items.filter(b => b.status === 'accepted');
+  const others   = items.filter(b => b.status !== 'pending' && b.status !== 'accepted');
 
   const renderItem = ({ item }: { item: any }) => {
     const badge = STATUS_BADGE[item.status] ?? STATUS_BADGE.pending;
@@ -143,6 +147,7 @@ export const ProDemandesScreen = () => {
       data={[
         ...(pending.length > 0 ? [{ _section: t('pro_space.demandes_pending'), _key: 's1' }, ...pending] : []),
         ...(accepted.length > 0 ? [{ _section: t('pro_space.demandes_accepted'), _key: 's2' }, ...accepted] : []),
+        ...(others.length > 0 ? [{ _section: t('pro_space.demandes_other'), _key: 's3' }, ...others] : []),
       ]}
       keyExtractor={(item: any) => item._key ?? item.id}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[tokens.primary]} />}

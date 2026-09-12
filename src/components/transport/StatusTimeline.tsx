@@ -4,6 +4,7 @@ import { Text, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import { TRANSPORT_STATUS_CONFIG, TransportStatus } from '../../types/transport-status';
+import { PulsingStatusDot } from '../shared/PulsingStatusDot';
 
 interface StatusTimelineProps {
   currentStatus: TransportStatus;
@@ -52,7 +53,6 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ currentStatus, t
         const config = TRANSPORT_STATUS_CONFIG[item.status];
         const isPast = index < currentIndex;
         const isCurrent = index === currentIndex;
-        const isFuture = index > currentIndex;
 
         return (
           <View key={item.status} style={styles.timelineItem}>
@@ -71,22 +71,26 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ currentStatus, t
             )}
 
             {/* Point/Icône */}
-            <View
-              style={[
-                styles.iconContainer,
-                {
-                  backgroundColor: isPast || isCurrent
-                    ? config.color
-                    : colors.surfaceDisabled,
-                },
-              ]}
-            >
-              <Icon
-                name={config.icon}
-                size={20}
-                color="#FFFFFF"
-              />
-            </View>
+            {isCurrent ? (
+              <PulsingStatusDot color={config.color} icon={config.icon} />
+            ) : (
+              <View
+                style={[
+                  styles.iconContainer,
+                  {
+                    backgroundColor: isPast
+                      ? config.color
+                      : colors.surfaceDisabled,
+                  },
+                ]}
+              >
+                <Icon
+                  name={config.icon}
+                  size={20}
+                  color="#FFFFFF"
+                />
+              </View>
+            )}
 
             {/* Texte */}
             <View style={styles.textContainer}>
@@ -113,12 +117,6 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ currentStatus, t
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
-                </Text>
-              )}
-
-              {isCurrent && (
-                <Text variant="bodySmall" style={{ color: config.color, fontWeight: 'bold' }}>
-                  {t('driver_action.in_progress')}
                 </Text>
               )}
             </View>

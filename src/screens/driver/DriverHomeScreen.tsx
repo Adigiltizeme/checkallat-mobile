@@ -11,13 +11,14 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { AvailableGlowCard } from '../../components/shared/AvailableGlowCard';
 import { Text, Card, Chip, ActivityIndicator, FAB } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { StackScreenProps } from '@react-navigation/stack';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { DriverStackParamList } from '../../navigation/types';
 import {
   useGetMyDeliveriesQuery,
@@ -176,6 +177,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const { format: formatCurrency } = useCurrencyFormatter();
   const { data: deliveries, isLoading, isFetching, refetch } = useGetMyDeliveriesQuery(undefined, {
     pollingInterval: 8000,
     refetchOnMountOrArgChange: true,
@@ -459,7 +461,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
           </View>
         </View>
       ) : (
-        <View style={styles.availabilityCard}>
+        <AvailableGlowCard isAvailable={isAvailable} color={tokens.primary} style={styles.availabilityCard}>
           <View style={styles.availabilityContent}>
             <View>
               <Text variant="titleMedium" style={styles.availabilityTitle}>
@@ -477,7 +479,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
               thumbColor={colors.white}
             />
           </View>
-        </View>
+        </AvailableGlowCard>
       )}
 
       {/* Bannière demandes disponibles */}

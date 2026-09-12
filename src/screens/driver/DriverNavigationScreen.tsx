@@ -149,7 +149,7 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
   const openExternalNavigation = () => {
     if (!request) return;
     const destination =
-      request.status === 'driver_en_route_pickup' || request.status === 'arrived_pickup'
+      request.status === 'heading_to_pickup' || request.status === 'arrived_at_pickup' || request.status === 'loading'
         ? request.pickup
         : request.delivery;
     Linking.openURL(
@@ -189,8 +189,8 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
   }
 
   const isGoingToPickup =
-    request.status === 'driver_en_route_pickup' ||
-    request.status === 'arrived_pickup' ||
+    request.status === 'heading_to_pickup' ||
+    request.status === 'arrived_at_pickup' ||
     request.status === 'loading';
 
   const destination = isGoingToPickup ? request.pickup : request.delivery;

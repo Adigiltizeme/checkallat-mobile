@@ -4,7 +4,6 @@ import { I18nManager } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
 import { Provider as PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StripeProvider } from '@stripe/stripe-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { secureStorage } from './utils/secureStorage';
 import Constants from 'expo-constants';
@@ -25,12 +24,16 @@ import {
   setDetectionDenied,
   setDetectionError,
   selectCountry,
+  setActiveCurrency,
 } from './store/slices/locationSlice';
 import { identifyAnalyticsUser } from './hooks/useAnalytics';
 import i18n, { isRTL } from './i18n';
 import { I18nextProvider } from 'react-i18next';
 
-// ── Sentry init (DSN injecté par le plugin @sentry/react-native/expo au build) ──
+// ── Expo Go guard — défini en premier car utilisé dans Sentry.init ──
+const isExpoGo = Constants.appOwnership === 'expo';
+
+// ── Sentry init — mobileReplayIntegration et feedbackIntegration nécessitent des modules natifs ──
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? '',
   environment: __DEV__ ? 'development' : 'production',
@@ -38,7 +41,7 @@ Sentry.init({
   tracesSampleRate: 0.2,
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
-  integrations: [
+  integrations: isExpoGo ? [] : [
     Sentry.mobileReplayIntegration(),
     Sentry.feedbackIntegration(),
   ],
@@ -47,8 +50,11 @@ Sentry.init({
   },
 });
 
-// ── Expo Go guard — native modules unavailable in Expo Go ──
-const isExpoGo = Constants.appOwnership === 'expo';
+// Stripe est un module natif absent d'Expo Go — chargement conditionnel pour éviter le crash
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const StripeProvider: React.ComponentType<any> = isExpoGo
+  ? ({ children }: { children: React.ReactNode }) => <>{children}</>
+  : require('@stripe/stripe-react-native').StripeProvider;
 
 if (!isExpoGo) {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -213,7 +219,14 @@ function AppContent() {
                 AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, user.preferredLanguage);
               }
             } else {
-              // Token expiré ou invalide (401, 403…) → déconnexion propre
+              // Token expiré ou invalide (401, 403…) → notifier le backend avant de vider le store
+              // afin que isAvailable soit remis à false pour driver/pro
+              try {
+                await fetch(`${API_CONFIG.BASE_URL}/auth/logout-expired`, {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${accessToken}` },
+                });
+              } catch {}
               store.dispatch(logout());
             }
           } catch (error) {
@@ -261,7 +274,10 @@ function AppContent() {
             ? zones.find((z) => z.enabled && z.countryCode?.toLowerCase() === activeCountryCode.toLowerCase())
             : undefined;
           const resolvedCurrency = matchedZone?.currency ?? settings.currency;
-          if (resolvedCurrency) setCurrencyConfig(resolvedCurrency);
+          if (resolvedCurrency) {
+            setCurrencyConfig(resolvedCurrency);
+            store.dispatch(setActiveCurrency(resolvedCurrency));
+          }
         })
         .catch((error) => console.error('Failed to load platform settings:', error));
     };

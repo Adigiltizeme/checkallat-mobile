@@ -9,7 +9,7 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency, CURRENCY_PRESETS, CURRENCY_CONFIG } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { DriverStackParamList } from '../../navigation/types';
 import { useGetDriverStatsQuery, useGetMyDeliveriesQuery, usePayCommissionMutation, useConfirmCommissionPaymentMutation } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
@@ -187,6 +187,7 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const { formatWithCurrency, format: formatCurrencyDefault } = useCurrencyFormatter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useGetDriverStatsQuery(undefined, {
     pollingInterval: 30_000,
@@ -229,19 +230,12 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
   const [periodMode, setPeriodMode] = useState<PeriodMode>('monthly');
   const [periodOffset, setPeriodOffset] = useState(0);
 
-  const formatAmount = (amount: number) => {
-    const currencyCode = stats?.currency || CURRENCY_CONFIG.code;
-    const preset = CURRENCY_PRESETS[currencyCode as keyof typeof CURRENCY_PRESETS];
-    if (!preset) return formatCurrency(amount);
-    const rounded = amount.toFixed(preset.decimals);
-    const [integerPart, decimalPart] = rounded.split('.');
-    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, preset.thousandsSeparator);
-    const formattedAmount = decimalPart
-      ? `${formattedInteger}${preset.decimalSeparator}${decimalPart}`
-      : formattedInteger;
-    return preset.position === 'before'
-      ? `${preset.symbol}${formattedAmount}`
-      : `${formattedAmount} ${preset.symbol}`;
+  const statsCurrency: string | undefined = stats?.currency;
+
+  const formatAmount = (amount: number, deliveryCurrency?: string) => {
+    const currencyCode = deliveryCurrency ?? statsCurrency;
+    if (!currencyCode) return formatCurrencyDefault(amount);
+    return formatWithCurrency(amount, currencyCode);
   };
 
   const formatDate = (isoDate: string) =>
@@ -479,8 +473,8 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
                     <View style={{ alignItems: 'flex-end' }}>
                       <Text variant="titleMedium" style={styles.earningAmount}>
                         {(delivery as any).payment?.proNetAmount
-                          ? formatAmount((delivery as any).payment.proNetAmount)
-                          : formatAmount(delivery.price || delivery.totalPrice || 0)}
+                          ? formatAmount((delivery as any).payment.proNetAmount, (delivery as any).currency ?? (delivery as any).payment?.currency)
+                          : formatAmount(delivery.price || delivery.totalPrice || 0, (delivery as any).currency)}
                       </Text>
                       {(delivery as any).payment?.proNetAmount && (
                         <Text variant="bodySmall" style={{ color: tokens.text.secondary, fontSize: 10 }}>

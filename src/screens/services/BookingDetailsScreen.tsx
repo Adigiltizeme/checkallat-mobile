@@ -19,15 +19,17 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
 import { CATEGORY_FIELDS, HAS_URGENCY, getCategoryOptionLabel } from '../../config/categoryFields';
 import { HomeStackParamList } from '../../navigation/types';
-import { CURRENCY_CONFIG } from '../../config/currency';
+import { entityCurrencyCode } from '../../config/currency';
 import {
   useGetBookingByIdQuery,
   useCancelBookingMutation,
   useConfirmBookingCompletionMutation,
   useGetBookingBidsQuery,
   useAcceptBidMutation,
+  useRejectBidMutation,
+  usePrepareBookingPaymentByIdMutation,
 } from '../../store/api/bookingsApi';
-import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
+import { useGetCallRelayNumberQuery, useGetUnreadCountQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { WEB_URL } from '../../config/api';
 import { colors } from '../../theme/colors';
@@ -227,6 +229,20 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     alignItems: 'center', justifyContent: 'center',
   },
   bidAcceptBtnText: { fontSize: 13, fontWeight: '700', color: colors.white },
+  bidRejectBtn: {
+    paddingHorizontal: spacing.md, paddingVertical: 8,
+    backgroundColor: `${colors.error}15`, borderRadius: 10,
+    borderWidth: 1, borderColor: `${colors.error}60`,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  bidRejectBtnText: { fontSize: 13, fontWeight: '700', color: colors.error },
+  payNowBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: spacing.sm, borderRadius: 14, paddingVertical: 16,
+    backgroundColor: tokens.primary, marginBottom: spacing.md,
+    borderWidth: 2, borderColor: tokens.primary + 'AA',
+  },
+  payNowBtnText: { fontSize: 16, fontWeight: '800', color: colors.white },
   noBidsText: { fontSize: 13, color: tokens.text.secondary, textAlign: 'center', paddingVertical: spacing.sm, lineHeight: 18 },
 
   cashModalOverlay: {
@@ -280,6 +296,8 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   const [cancelBooking, { isLoading: isCancelling }] = useCancelBookingMutation();
   const [confirmCompletion, { isLoading: isConfirming }] = useConfirmBookingCompletionMutation();
   const [acceptBid, { isLoading: isAcceptingBid }] = useAcceptBidMutation();
+  const [rejectBid, { isLoading: isRejectingBid }] = useRejectBidMutation();
+  const [preparePaymentById, { isLoading: isPreparingPayment }] = usePrepareBookingPaymentByIdMutation();
 
   const isAutoBidBooking = (booking as any)?.status === 'pending' && (
     ((booking as any)?.assignmentType === 'auto' && !(booking as any)?.proId) ||
@@ -295,6 +313,8 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   const bookingStatus = (booking as any)?.status ?? '';
   const canContact = CALL_ACTIVE_STATUSES.includes(bookingStatus) && !!(booking as any)?.proId;
   const { data: callRelay } = useGetCallRelayNumberQuery({ entityType: 'booking', entityId: bookingId }, { skip: !canContact });
+  const { data: chatUnread } = useGetUnreadCountQuery({ entityType: 'booking', entityId: bookingId }, { skip: !canContact, pollingInterval: 8000 });
+  const chatUnreadCount = (chatUnread as any)?.unreadCount ?? 0;
 
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -338,6 +358,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
 
   const status = booking.status ?? 'pending';
   const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+  const bookingCurrency = entityCurrencyCode(booking);
   const isPending    = status === 'pending';
   const isInProgress = status === 'in_progress';
   const isCash       = (booking as any).paymentMethod === 'cash';
@@ -385,7 +406,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
       const refundPct = (res as any)?.refundPct;
       const feeAmount = (res as any)?.feeAmount;
       if (feeAmount > 0) {
-        Alert.alert(t('common.success'), t('booking.cancel_result_fee', { amount: feeAmount, currency: CURRENCY_CONFIG.code }));
+        Alert.alert(t('common.success'), t('booking.cancel_result_fee', { amount: feeAmount, currency: bookingCurrency }));
       } else if (refundPct != null) {
         Alert.alert(t('common.success'), t('booking.cancel_result_refund', { pct: refundPct }));
       }
@@ -489,6 +510,39 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     }
   };
 
+  const handlePayNow = async () => {
+    try {
+      const { clientSecret, amount, currency } = await preparePaymentById(bookingId).unwrap();
+      navigation.navigate('StripePayment', { clientSecret, amount, type: 'booking' });
+    } catch {
+      Alert.alert(t('common.error'), t('booking.error_prepare_payment'));
+    }
+  };
+
+  const handleRejectBid = (bid: any) => {
+    Alert.alert(
+      t('booking.confirm_reject_bid_title'),
+      t('booking.confirm_reject_bid_msg'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('booking.reject_bid'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await rejectBid({ bookingId, bidId: bid.id }).unwrap();
+              if ((booking as any).paymentMethod === 'in_app') {
+                navigation.goBack();
+              }
+            } catch {
+              Alert.alert(t('common.error'), t('booking.error_reject_bid'));
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const handleAcceptBid = (bid: any) => {
     const proName = bid.pro?.user
       ? `${bid.pro.user.firstName} ${bid.pro.user.lastName}`
@@ -497,7 +551,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
       t('booking.confirm_accept_bid_title'),
       t('booking.confirm_accept_bid_msg', {
         proName,
-        price: `${bid.proposedPrice} ${CURRENCY_CONFIG.code}`,
+        price: `${bid.proposedPrice} ${bookingCurrency}`,
       }),
       [
         { text: t('common.cancel'), style: 'cancel' },
@@ -574,18 +628,25 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <Icon name="phone" size={18} color={colors.white} />
             <Text style={styles.contactBtnText}>{t('booking.call_pro')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.contactBtn, styles.contactBtnMessage]}
-            onPress={() => navigation.navigate('BookingChat', {
-              entityType: 'booking',
-              entityId: bookingId,
-              otherPartyName: proName,
-            })}
-            activeOpacity={0.8}
-          >
-            <Icon name="message-text" size={18} color={tokens.primary} />
-            <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('booking.message_pro')}</Text>
-          </TouchableOpacity>
+          <View style={{ position: 'relative' }}>
+            <TouchableOpacity
+              style={[styles.contactBtn, styles.contactBtnMessage]}
+              onPress={() => navigation.navigate('BookingChat', {
+                entityType: 'booking',
+                entityId: bookingId,
+                otherPartyName: proName,
+              })}
+              activeOpacity={0.8}
+            >
+              <Icon name="message-text" size={18} color={tokens.primary} />
+              <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('booking.message_pro')}</Text>
+            </TouchableOpacity>
+            {chatUnreadCount > 0 && (
+              <View style={{ position: 'absolute', top: -6, right: -6, backgroundColor: colors.error, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3 }}>
+                <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{chatUnreadCount > 9 ? '9+' : chatUnreadCount}</Text>
+              </View>
+            )}
+          </View>
         </View>
       )}
 
@@ -601,8 +662,8 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>
               {(booking as any).serviceOffering.priceMax
-                ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} ${CURRENCY_CONFIG.code}`
-                : `${t('services.from_price', { price: (booking as any).serviceOffering.priceMin, currency: CURRENCY_CONFIG.code })}`}
+                ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} ${bookingCurrency}`
+                : `${t('services.from_price', { price: (booking as any).serviceOffering.priceMin, currency: bookingCurrency })}`}
             </Text>
           </View>
         )}
@@ -710,7 +771,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
           <View style={[styles.detailRow, { marginTop: 2 }]}>
             <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
             <Text style={[styles.detailText, { fontWeight: '600' }]}>
-              {t('booking.estimated_price_label')} : {estimatedPrice} {CURRENCY_CONFIG.code}
+              {t('booking.estimated_price_label')} : {estimatedPrice} {bookingCurrency}
             </Text>
           </View>
         )}
@@ -718,7 +779,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
           <View style={[styles.detailRow, { marginTop: 2 }]}>
             <Icon name="tag-check-outline" size={18} color={tokens.primary} />
             <Text style={[styles.detailText, { color: tokens.primary, fontWeight: '700' }]}>
-              {t('booking.final_price_label')} : {(booking as any).finalPrice} {CURRENCY_CONFIG.code}
+              {t('booking.final_price_label')} : {(booking as any).finalPrice} {bookingCurrency}
             </Text>
           </View>
         )}
@@ -805,6 +866,21 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         </View>
       )}
 
+      {/* Bouton Payer maintenant — visible quand le pro est assigné et le prix validé */}
+      {(booking as any).paymentMethod === 'in_app' && !payment && status === 'accepted' && (
+        <TouchableOpacity
+          style={[styles.payNowBtn, isPreparingPayment && { opacity: 0.6 }]}
+          onPress={handlePayNow}
+          disabled={isPreparingPayment}
+          activeOpacity={0.85}
+        >
+          <Icon name="credit-card" size={22} color={colors.white} />
+          <Text style={styles.payNowBtnText}>
+            {isPreparingPayment ? t('common.loading') : t('booking.pay_now_btn')}
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {/* Completion confirmations — visible dès in_progress */}
       {(isInProgress || status === 'completed') && (
         <View style={styles.card}>
@@ -837,9 +913,9 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
                 (booking as any).cashPaymentStatus === 'confirmed' ? colors.success : tokens.text.secondary
               } />
               <Text style={[styles.detailText, { fontSize: 12 }]}>
-                {t('booking.cash_declared_client')}: {(booking as any).cashAmountDeclaredByClient} {CURRENCY_CONFIG.code}
+                {t('booking.cash_declared_client')}: {(booking as any).cashAmountDeclaredByClient} {bookingCurrency}
                 {(booking as any).cashAmountDeclaredByPro != null &&
-                  `  •  ${t('booking.cash_declared_pro')}: ${(booking as any).cashAmountDeclaredByPro} ${CURRENCY_CONFIG.code}`}
+                  `  •  ${t('booking.cash_declared_pro')}: ${(booking as any).cashAmountDeclaredByPro} ${bookingCurrency}`}
                 {(booking as any).cashPaymentStatus === 'disputed' && '  ⚠️'}
                 {(booking as any).cashPaymentStatus === 'confirmed' && '  ✓'}
               </Text>
@@ -932,13 +1008,20 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
                   </View>
                   <View style={{ alignItems: 'flex-end', gap: 6 }}>
                     <Text style={styles.bidPrice}>{bid.proposedPrice}</Text>
-                    <Text style={styles.bidCurrency}>{CURRENCY_CONFIG.code}</Text>
+                    <Text style={styles.bidCurrency}>{bookingCurrency}</Text>
                     <TouchableOpacity
                       style={[styles.bidAcceptBtn, isAcceptingBid && { opacity: 0.5 }]}
                       onPress={() => handleAcceptBid(bid)}
                       disabled={isAcceptingBid}
                     >
                       <Text style={styles.bidAcceptBtnText}>{t('booking.accept_bid')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.bidRejectBtn, (isRejectingBid) && { opacity: 0.5 }]}
+                      onPress={() => handleRejectBid(bid)}
+                      disabled={isRejectingBid}
+                    >
+                      <Text style={styles.bidRejectBtnText}>{t('booking.reject_bid')}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -952,7 +1035,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
       {hasPendingFee && (
         <View style={[styles.card, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B60' }]}>
           <Text style={{ fontSize: 13, color: '#92400E', lineHeight: 18 }}>
-            ⚠️ {t('booking.cancel_fee_pending', { amount: `${(booking as any).cancellationFeeAmount} ${CURRENCY_CONFIG.code}` })}
+            ⚠️ {t('booking.cancel_fee_pending', { amount: `${(booking as any).cancellationFeeAmount} ${bookingCurrency}` })}
           </Text>
         </View>
       )}
@@ -1057,7 +1140,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
               outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.sm }}
-              right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
+              right={<TextInput.Affix text={bookingCurrency} />}
             />
             <View style={styles.cashModalActions}>
               <TouchableOpacity

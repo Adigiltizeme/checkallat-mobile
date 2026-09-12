@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { useGetMyTransportRequestsQuery, useGetMyDeliveriesQuery } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { STATUS_COLORS, TransportStatus } from '../../types/transport';
@@ -33,7 +33,8 @@ const toDay = (d: string) => d?.split('T')[0] ?? '';
 
 export const HistoryScreen = () => {
   const { t, i18n } = useTranslation();
-    const { tokens } = useAppTheme();
+  const { tokens } = useAppTheme();
+  const { format: formatCurrency, formatWithCurrency } = useCurrencyFormatter();
 
   const styles = useMemo(() => StyleSheet.create({
   container: {
@@ -434,7 +435,7 @@ const isDriver = useSelector((state: RootState) => state.auth.isDriver);
           </View>
           <View style={styles.rightContainer}>
             <Text variant="titleSmall" style={styles.amount}>
-              {formatCurrency(item.totalPrice || 0)}
+              {item.currency ? formatWithCurrency(item.totalPrice || 0, item.currency) : formatCurrency(item.totalPrice || 0)}
             </Text>
             <Chip
               mode="flat"

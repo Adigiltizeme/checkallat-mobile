@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
-import { TouchableOpacity, View, StyleSheet, ActivityIndicator } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Text } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { RootState } from '../../store';
-import { selectCountry } from '../../store/slices/locationSlice';
-import { updateUser } from '../../store/slices/authSlice';
-import { useUpdateProfileMutation } from '../../store/api/authApi';
 import { getCountryInfo } from '../../config/countries';
-import { CountrySelectionModal } from './CountrySelectionModal';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
@@ -24,27 +20,10 @@ interface Props {
 export const CountrySelectorRow = ({ variant = 'row' }: Props) => {
   const { tokens } = useAppTheme();
   const { t } = useTranslation();
-  const dispatch = useDispatch();
 
   const selectedCountryCode = useSelector((s: RootState) => s.location.selectedCountryCode);
   const detectedCountryCode = useSelector((s: RootState) => s.location.detectedCountryCode);
   const detectionStatus     = useSelector((s: RootState) => s.location.detectionStatus);
-  const isLoggedIn          = useSelector((s: RootState) => !!s.auth.token);
-
-  const [showModal, setShowModal] = useState(false);
-  const [updateProfile] = useUpdateProfileMutation();
-
-  const handleSelectCountry = async (code: string) => {
-    dispatch(selectCountry(code));
-    if (isLoggedIn) {
-      try {
-        await updateProfile({ activeCountryId: code.toUpperCase() }).unwrap();
-        dispatch(updateUser({ activeCountryId: code.toUpperCase() }));
-      } catch {
-        // Non-bloquant : le pays est déjà mis à jour localement
-      }
-    }
-  };
 
   const activeCountry = getCountryInfo(selectedCountryCode || detectedCountryCode || '');
   const isDetecting   = detectionStatus === 'detecting';
@@ -54,53 +33,37 @@ export const CountrySelectorRow = ({ variant = 'row' }: Props) => {
     ? styles.pill
     : [styles.row, { backgroundColor: tokens.card, borderBottomColor: tokens.border }];
 
-  const textColor    = isPill ? '#fff'                   : tokens.text.primary;
-  const subColor     = isPill ? 'rgba(255,255,255,0.75)' : tokens.text.secondary;
-  const iconColor    = isPill ? 'rgba(255,255,255,0.80)' : tokens.text.secondary;
+  const textColor = isPill ? '#fff'                   : tokens.text.primary;
+  const subColor  = isPill ? 'rgba(255,255,255,0.75)' : tokens.text.secondary;
+  const iconColor = isPill ? 'rgba(255,255,255,0.80)' : tokens.text.secondary;
 
   const label = activeCountry
     ? `${activeCountry.flag}  ${t(`country.${activeCountry.nameKey}`)}`
     : t('country.select_country');
 
   return (
-    <>
-      <TouchableOpacity
-        style={containerStyle}
-        onPress={() => setShowModal(true)}
-        activeOpacity={0.72}
-      >
-        {isDetecting ? (
-          <ActivityIndicator size={14} color={iconColor} style={{ marginRight: 4 }} />
-        ) : (
-          <Icon name="earth" size={15} color={iconColor} />
-        )}
+    <View style={containerStyle}>
+      {isDetecting ? (
+        <ActivityIndicator size={14} color={iconColor} style={{ marginRight: 4 }} />
+      ) : (
+        <Icon name="earth" size={15} color={iconColor} />
+      )}
 
-        <View style={styles.labelWrap}>
-          {!isPill && (
-            <Text style={[styles.sublabel, { color: subColor }]}>
-              {t('country.active_country')}
-            </Text>
-          )}
-          <Text style={[styles.label, { color: textColor }, isPill && styles.labelPill]}>
-            {label}
+      <View style={styles.labelWrap}>
+        {!isPill && (
+          <Text style={[styles.sublabel, { color: subColor }]}>
+            {t('country.active_country')}
           </Text>
-        </View>
-
-        <Icon name="chevron-down" size={14} color={iconColor} />
-      </TouchableOpacity>
-
-      <CountrySelectionModal
-        visible={showModal}
-        selectedCode={selectedCountryCode}
-        onSelect={handleSelectCountry}
-        onClose={() => setShowModal(false)}
-      />
-    </>
+        )}
+        <Text style={[styles.label, { color: textColor }, isPill && styles.labelPill]}>
+          {label}
+        </Text>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  /* variant pill — badge dans un header coloré */
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -113,7 +76,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm + 2,
   },
 
-  /* variant row — barre plein écran sur fond clair */
   row: {
     flexDirection: 'row',
     alignItems: 'center',

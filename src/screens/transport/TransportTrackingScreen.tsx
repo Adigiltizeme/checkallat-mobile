@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { View, StyleSheet, Dimensions, Linking, Share, TouchableOpacity, Animated } from 'react-native';
+import { View, ScrollView, StyleSheet, Dimensions, Linking, Share, TouchableOpacity, Animated } from 'react-native';
 import { Text, Avatar, ActivityIndicator, IconButton } from 'react-native-paper';
 import Constants from 'expo-constants';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -7,7 +7,9 @@ import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useGetTrackingInfoQuery, useGetTransportRequestQuery } from '../../store/api/transportApi';
+import { StatusTimeline } from '../../components/transport/StatusTimeline';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useTranslation } from 'react-i18next';
 import { WEB_URL } from '../../config/api';
 import { STATUS_COLORS, TransportStatus } from '../../types/transport';
@@ -21,7 +23,7 @@ const Mapbox = isExpoGo ? null : require('@rnmapbox/maps').default;
 type Props = StackScreenProps<any, 'TransportTracking'>;
 
 const { width, height } = Dimensions.get('window');
-const PANEL_FULL   = height * 0.52;
+const PANEL_FULL   = height * 0.70;
 const PANEL_MINI   = 72; // hauteur réduite : handle + statut uniquement
 
 export const TransportTrackingScreen = ({ route, navigation }: Props) => {
@@ -155,13 +157,16 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   const panelAnim = useRef(new Animated.Value(PANEL_FULL)).current;
   const [collapsed, setCollapsed] = useState(false);
 
-  const { data: request, isLoading: requestLoading } = useGetTransportRequestQuery(requestId, {
+  const { data: request, isLoading: requestLoading, refetch: refetchRequest } = useGetTransportRequestQuery(requestId, {
     pollingInterval: 5000,
     refetchOnMountOrArgChange: true,
   });
-  const { data: trackingInfo } = useGetTrackingInfoQuery(requestId, {
-    pollingInterval: 10000,
+  const { data: trackingInfo, refetch: refetchTracking } = useGetTrackingInfoQuery(requestId, {
+    pollingInterval: 5000,
+    refetchOnMountOrArgChange: true,
   });
+  useRefetchOnFocus(refetchRequest);
+  useRefetchOnFocus(refetchTracking);
 
   // Rediriger vers TransportCompletion quand livraison terminée
   useEffect(() => {
@@ -190,7 +195,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
     setCollapsed(!collapsed);
   };
 
-  const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
+  const CONTACT_STATUSES = ['accepted', 'heading_to_pickup', 'arrived_at_pickup', 'loading', 'in_transit', 'arrived_at_delivery', 'unloading'];
   const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && request.driverId);
   const driverName = trackingInfo?.driverName || '';
   const { data: callRelay } = useGetCallRelayNumberQuery(
@@ -362,7 +367,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
 
         {/* Contenu étendu */}
         {!collapsed && (
-          <View style={styles.panelContent}>
+          <ScrollView style={styles.panelContent} showsVerticalScrollIndicator={false}>
             {trackingInfo?.driverName && (
               <View style={styles.driverHeader}>
                 <Avatar.Icon size={48} icon="account" style={styles.driverAvatar} />
@@ -432,7 +437,21 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
                 </View>
               </View>
             </View>
-          </View>
+
+            {/* Suivi détaillé des étapes — pour le client */}
+            <StatusTimeline
+              currentStatus={request.status as TransportStatus}
+              timestamps={{
+                driverAcceptedAt: (request as any).driverAcceptedAt,
+                arrivedAtPickupAt: (request as any).arrivedAtPickupAt,
+                loadingStartedAt: (request as any).loadingStartedAt,
+                departedPickupAt: (request as any).departedPickupAt,
+                arrivedAtDeliveryAt: (request as any).arrivedAtDeliveryAt,
+                unloadingStartedAt: (request as any).unloadingStartedAt,
+                completedAt: (request as any).completedAt,
+              }}
+            />
+          </ScrollView>
         )}
       </Animated.View>
     </View>

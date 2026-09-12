@@ -134,13 +134,14 @@ export const CreateBookingScreen = ({ route, navigation }: Props) => {
 
   const { t, i18n } = useTranslation();
   const { proId, offeringId: preSelectedOffering } = route.params;
-  const { userLat, userLng } = useSelector((state: RootState) => state.location);
+  const { userLat, userLng, selectedCountryCode } = useSelector((state: RootState) => state.location);
   const user = useSelector((state: RootState) => state.auth.user);
 
   const { data: pro } = useGetProByIdQuery(proId);
-  const { data: offerings = [] } = useGetProOfferingsQuery(proId, {
-    refetchOnMountOrArgChange: true,
-  });
+  const { data: offerings = [] } = useGetProOfferingsQuery(
+    { proId, countryCode: selectedCountryCode ?? undefined },
+    { refetchOnMountOrArgChange: true },
+  );
   const [createBooking, { isLoading }] = useCreateBookingMutation();
 
   const availableOfferings = offerings.filter((o: any) => o.isAvailable !== false);

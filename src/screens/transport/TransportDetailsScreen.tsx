@@ -13,7 +13,7 @@ import {
   useGetTransportRequestQuery,
   useCancelTransportMutation,
 } from '../../store/api/transportApi';
-import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
+import { useGetCallRelayNumberQuery, useGetUnreadCountQuery } from '../../store/api/communicationApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -386,7 +386,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   const [cancelRequest, { isLoading: isCancelling }] = useCancelTransportMutation();
   const isDriver = useSelector((state: RootState) => state.auth.isDriver);
 
-  const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
+  const CONTACT_STATUSES = ['accepted', 'heading_to_pickup', 'arrived_at_pickup', 'loading', 'in_transit', 'arrived_at_delivery', 'unloading'];
   const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && (request as any).driver);
   const driverName = (request as any)?.driver?.user
     ? `${(request as any).driver.user.firstName} ${(request as any).driver.user.lastName}`
@@ -395,6 +395,11 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     { entityType: 'transport', entityId: requestId },
     { skip: !canContact },
   );
+  const { data: chatUnread } = useGetUnreadCountQuery(
+    { entityType: 'transport', entityId: requestId },
+    { skip: !canContact, pollingInterval: 8000 },
+  );
+  const chatUnreadCount = (chatUnread as any)?.unreadCount ?? 0;
 
   // État pour la modal de visualisation des photos
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
@@ -647,13 +652,20 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                       <Icon name="phone" size={16} color={colors.white} />
                       <Text style={styles.contactBtnText}>{t('transport.call_driver')}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.contactBtn, styles.contactBtnMessage]}
-                      onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: driverName })}
-                    >
-                      <Icon name="message-text" size={16} color={tokens.primary} />
-                      <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('transport.message_driver')}</Text>
-                    </TouchableOpacity>
+                    <View style={{ position: 'relative' }}>
+                      <TouchableOpacity
+                        style={[styles.contactBtn, styles.contactBtnMessage]}
+                        onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: driverName })}
+                      >
+                        <Icon name="message-text" size={16} color={tokens.primary} />
+                        <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('transport.message_driver')}</Text>
+                      </TouchableOpacity>
+                      {chatUnreadCount > 0 && (
+                        <View style={{ position: 'absolute', top: -6, right: -6, backgroundColor: colors.error, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3 }}>
+                          <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{chatUnreadCount > 9 ? '9+' : chatUnreadCount}</Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 )}
                 <Text variant="bodySmall" style={styles.driverDetail}>

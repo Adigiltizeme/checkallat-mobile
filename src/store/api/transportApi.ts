@@ -69,6 +69,14 @@ export const transportApi = createApi({
       invalidatesTags: ['TransportRequest'],
     }),
 
+    prepareTransportPayment: builder.mutation<{ clientSecret: string; totalPrice: number; currency: string }, any>({
+      query: (body) => ({
+        url: '/prepare-payment',
+        method: 'POST',
+        body,
+      }),
+    }),
+
     /**
      * Calculer le prix estimé d'un transport
      */
@@ -443,6 +451,7 @@ export const transportApi = createApi({
 
 export const {
   useCreateTransportRequestMutation,
+  usePrepareTransportPaymentMutation,
   useCalculatePriceMutation,
   useGetTransportRequestQuery,
   useGetMyTransportRequestsQuery,

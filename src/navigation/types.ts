@@ -97,7 +97,7 @@ export type HomeStackParamList = {
   TransportDetails: { requestId: string };
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number };
-  StripePayment: { requestId: string; amount: number; type: 'transport' | 'booking' | 'marketplace' };
+  StripePayment: { requestId?: string; clientSecret?: string; amount: number; type: 'transport' | 'booking' | 'marketplace'; pendingRequestData?: Record<string, any> };
   PaymentHistory: undefined;
   Dispute: { requestId: string };
 };
@@ -127,9 +127,11 @@ export type TransportStackParamList = {
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number };
   StripePayment: {
-    requestId: string;
+    requestId?: string;
+    clientSecret?: string;
     amount: number;
     type: 'transport' | 'booking' | 'marketplace';
+    pendingRequestData?: Record<string, any>;
   };
   PaymentHistory: undefined;
   PaymentDetails: { paymentId?: string; requestId?: string };

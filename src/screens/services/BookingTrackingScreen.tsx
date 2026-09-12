@@ -28,7 +28,8 @@ import {
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { WEB_URL } from '../../config/api';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { CURRENCY_CONFIG } from '../../config/currency';
+import { entityCurrencyCode } from '../../config/currency';
+import { PulsingStatusDot } from '../../components/shared/PulsingStatusDot';
 
 import RNMapView, { Marker } from 'react-native-maps';
 const isExpoGo = Constants.appOwnership === 'expo';
@@ -362,6 +363,13 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
     return currentIdx >= triggerIdx ? 'done' : 'pending';
   };
 
+  const isActiveMilestone = (milestone: typeof MILESTONES[number]) => {
+    if (!booking || booking.status === 'completed' || booking.status === 'cancelled') return false;
+    if ('statusTrigger' in milestone) return booking.status === milestone.statusTrigger;
+    // Timestamp-based milestones (en_route, arrived): active when status matches key
+    return booking.status === (milestone as any).key;
+  };
+
   const statusBannerKey =
     booking?.status === 'en_route'    ? 'pro_en_route' :
     booking?.status === 'arrived'     ? 'pro_arrived'  :
@@ -461,6 +469,8 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
   const contactPhone = role === 'client' ? proLocation?.phone : booking.client?.phone;
   const contactLabel = role === 'client' ? t('booking_tracking.contact_pro') : t('booking_tracking.contact_client');
   const proName = proLocation?.proName || undefined;
+  const CONTACT_ACTIVE_STATUSES = ['accepted', 'en_route', 'arrived', 'in_progress'];
+  const canContact = CONTACT_ACTIVE_STATUSES.includes(booking.status);
 
   const clientConfirmed = !!(booking as any).clientConfirmedCompletion;
   const proConfirmed = !!(booking as any).proConfirmedCompletion;
@@ -531,7 +541,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
                     <Text variant="bodySmall" style={styles.proDetails}>📞 {contactPhone}</Text>
                   )}
                 </View>
-                {contactPhone && (
+                {contactPhone && canContact && (
                   <IconButton
                     icon="phone"
                     size={22}
@@ -557,16 +567,21 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
             <View style={styles.milestoneSection}>
               {MILESTONES.map((m, idx) => {
                 const state = getMilestoneState(m);
+                const active = isActiveMilestone(m);
                 return (
                   <View key={m.key} style={styles.milestone}>
                     <View style={styles.milestoneLeft}>
-                      <View style={[styles.milestoneCircle, state === 'done' && styles.milestoneDone]} />
+                      {active ? (
+                        <PulsingStatusDot color={tokens.primary} size={14} />
+                      ) : (
+                        <View style={[styles.milestoneCircle, state === 'done' && styles.milestoneDone]} />
+                      )}
                       {idx < MILESTONES.length - 1 && (
                         <View style={[styles.milestoneLine, state === 'done' && styles.milestoneLineDone]} />
                       )}
                     </View>
                     <View style={styles.milestoneRight}>
-                      <Text style={[styles.milestoneLabel, state === 'done' && styles.milestoneLabelDone]}>
+                      <Text style={[styles.milestoneLabel, (state === 'done' || active) && styles.milestoneLabelDone]}>
                         {t(`booking_tracking.${m.labelKey}`)}
                       </Text>
                       {'timestampField' in m && (booking as any)[m.timestampField] && (
@@ -669,7 +684,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
               outlineColor={tokens.border}
               activeOutlineColor={tokens.primary}
               style={{ backgroundColor: tokens.backgroundAlt, marginTop: spacing.sm }}
-              right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
+              right={<TextInput.Affix text={entityCurrencyCode(booking)} />}
             />
             <View style={styles.cashModalActions}>
               <TouchableOpacity style={styles.cashModalCancel} onPress={() => setShowCashModal(false)}>

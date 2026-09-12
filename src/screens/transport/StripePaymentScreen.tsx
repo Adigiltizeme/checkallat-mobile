@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { HomeStackParamList } from '../../navigation/types';
 import { useCreatePaymentIntentMutation } from '../../store/api/paymentsApi';
+import { useCreateTransportRequestMutation, useCancelTransportMutation } from '../../store/api/transportApi';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { formatCurrency, CURRENCY_CONFIG } from '../../config/currency';
@@ -96,13 +97,16 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
   },
   }), [tokens]);
 
-  const { requestId, amount, type } = route.params;
+  const { requestId: initialRequestId, clientSecret: prebuiltClientSecret, amount, type, pendingRequestData } = route.params;
   const { t } = useTranslation();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
+  const [createTransportRequest] = useCreateTransportRequestMutation();
+  const [cancelTransport] = useCancelTransportMutation();
   const [paymentState, setPaymentState] = useState<PaymentState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const [resolvedRequestId, setResolvedRequestId] = useState<string | undefined>(initialRequestId);
 
   useEffect(() => {
     initializePayment();
@@ -112,21 +116,37 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
     try {
       setPaymentState('loading');
 
-      const metadata: Record<string, string> = {};
-      if (type === 'transport') metadata.transportRequestId = requestId;
-      if (type === 'booking') metadata.bookingId = requestId;
-      if (type === 'marketplace') metadata.marketplaceOrderId = requestId;
+      let secret: string;
 
-      const result = await createPaymentIntent({
-        amount: Math.round(amount * 100), // Convert to cents
-        currency: CURRENCY_CONFIG.code.toLowerCase(),
-        metadata,
-        type,
-      }).unwrap();
+      if (prebuiltClientSecret) {
+        // Nouveau flux : clientSecret déjà créé côté backend via prepare-payment
+        secret = prebuiltClientSecret;
+      } else {
+        // Flux legacy : on crée d'abord la commande, puis le PaymentIntent
+        let activeRequestId = resolvedRequestId;
+        if (!activeRequestId && pendingRequestData && type === 'transport') {
+          const created = await createTransportRequest(pendingRequestData).unwrap();
+          activeRequestId = created.id;
+          setResolvedRequestId(activeRequestId);
+        }
+
+        const metadata: Record<string, string> = {};
+        if (type === 'transport' && activeRequestId) metadata.transportRequestId = activeRequestId;
+        if (type === 'booking' && activeRequestId) metadata.bookingId = activeRequestId;
+        if (type === 'marketplace' && activeRequestId) metadata.marketplaceOrderId = activeRequestId;
+
+        const result = await createPaymentIntent({
+          amount: Math.round(amount * 100),
+          currency: CURRENCY_CONFIG.code.toLowerCase(),
+          metadata,
+          type,
+        }).unwrap();
+        secret = result.clientSecret;
+      }
 
       const { error } = await initPaymentSheet({
         merchantDisplayName: 'CheckAll@t',
-        paymentIntentClientSecret: result.clientSecret,
+        paymentIntentClientSecret: secret,
         defaultBillingDetails: {},
         allowsDelayedPaymentMethods: false,
       });
@@ -161,22 +181,34 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
 
     setPaymentState('success');
 
+    const onViewPress = () => {
+      // Nouveau flux : pas de requestId avant confirmation webhook, on retourne à l'accueil
+      if (prebuiltClientSecret) {
+        navigation.reset({ index: 0, routes: [{ name: 'HomeScreen' }] });
+        return;
+      }
+      if (type === 'booking') {
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: 'HomeScreen' },
+            { name: 'BookingDetails', params: { bookingId: resolvedRequestId } },
+          ],
+        });
+      } else {
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: 'HomeScreen' },
+            { name: 'TransportDetails', params: { requestId: resolvedRequestId } },
+          ],
+        });
+      }
+    };
     Alert.alert(
       t('payment.success_title'),
       t('payment.success_msg'),
-      [
-        {
-          text: t('transport.view_request'),
-          onPress: () =>
-            navigation.reset({
-              index: 1,
-              routes: [
-                { name: 'HomeScreen' },
-                { name: 'TransportDetails', params: { requestId } },
-              ],
-            }),
-        },
-      ],
+      [{ text: t('transport.view_request'), onPress: onViewPress }],
       { cancelable: false }
     );
   };
@@ -190,7 +222,15 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
         {
           text: t('common.yes'),
           style: 'destructive',
-          onPress: () => navigation.goBack(),
+          onPress: async () => {
+            // Nouveau flux (clientSecret pré-construit) : aucune commande en DB à annuler
+            if (!prebuiltClientSecret && pendingRequestData && resolvedRequestId && type === 'transport') {
+              try {
+                await cancelTransport({ id: resolvedRequestId, reason: 'payment_cancelled' }).unwrap();
+              } catch {}
+            }
+            navigation.goBack();
+          },
         },
       ]
     );

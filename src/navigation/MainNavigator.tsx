@@ -41,6 +41,10 @@ export const MainNavigator = () => {
     refetchOnMountOrArgChange: true,
   });
   const totalUnread = conversations?.reduce((sum: number, c: any) => sum + (c.unreadCount ?? 0), 0) ?? 0;
+  const ORDER_ENTITY_TYPES = ['booking', 'transport', 'order', 'marketplace'];
+  const supportUnread = conversations
+    ?.filter((c: any) => !ORDER_ENTITY_TYPES.includes(c.entityType))
+    .reduce((sum: number, c: any) => sum + (c.unreadCount ?? 0), 0) ?? 0;
 
   const { data: proDemandes } = useGetProDemandesQuery(undefined, {
     skip: !isPro,
@@ -107,7 +111,7 @@ export const MainNavigator = () => {
             options={{
               title: t('nav.messages'),
               tabBarIcon: ({ color, size }) => <Icon name="message-outline" size={size} color={color} />,
-              tabBarBadge: totalUnread > 0 ? totalUnread : undefined,
+              tabBarBadge: supportUnread > 0 ? supportUnread : undefined,
             }}
           />
           <Tab.Screen
@@ -152,7 +156,7 @@ export const MainNavigator = () => {
             options={{
               title: t('nav.messages'),
               tabBarIcon: ({ color, size }) => <Icon name="message-outline" size={size} color={color} />,
-              tabBarBadge: totalUnread > 0 ? totalUnread : undefined,
+              tabBarBadge: supportUnread > 0 ? supportUnread : undefined,
             }}
           />
           <Tab.Screen
@@ -196,7 +200,7 @@ export const MainNavigator = () => {
             options={{
               title: t('nav.messages'),
               tabBarIcon: ({ color, size }) => <Icon name="message-outline" size={size} color={color} />,
-              tabBarBadge: totalUnread > 0 ? totalUnread : undefined,
+              tabBarBadge: supportUnread > 0 ? supportUnread : undefined,
             }}
           />
           <Tab.Screen

@@ -48,6 +48,7 @@ const CategoryCard = ({
   proId,
   adminBasePrice,
   adminCurrency,
+  countryCode,
   tokens,
   styles,
   t,
@@ -57,6 +58,7 @@ const CategoryCard = ({
   proId: string;
   adminBasePrice: number | null;
   adminCurrency: string;
+  countryCode: string | undefined;
   tokens: any;
   styles: any;
   t: any;
@@ -73,11 +75,10 @@ const CategoryCard = ({
   const [deleteExtra] = useDeleteOfferingExtraMutation();
 
   // Polling pour recevoir les mises à jour de statut (approuvé/rejeté) en temps réel
-  const { data: allOfferings = [] } = useGetProOfferingsQuery(proId, {
-    pollingInterval: 8000,
-    refetchOnMountOrArgChange: true,
-    skip: !proId,
-  });
+  const { data: allOfferings = [] } = useGetProOfferingsQuery(
+    { proId, countryCode },
+    { pollingInterval: 8000, refetchOnMountOrArgChange: true, skip: !proId },
+  );
 
   const polledOffering = (allOfferings as any[]).find((o: any) => o.category?.slug === categorySlug);
   const effectiveOfferingId = offeringId ?? polledOffering?.id ?? null;
@@ -88,7 +89,7 @@ const CategoryCard = ({
   // Créer l'offering s'il n'existe pas encore (une seule fois au montage)
   useEffect(() => {
     if (!proId || !categorySlug) return;
-    ensureOffering({ proId, categorySlug })
+    ensureOffering({ proId, categorySlug, ...(countryCode ? { countryCode } : {}) })
       .unwrap()
       .then((result) => setOfferingId(result.id))
       .catch(() => {})
@@ -411,14 +412,16 @@ export const ProOfferingsScreen = ({ navigation: _nav }: Props) => {
   const proId: string = pro?.id ?? '';
   const serviceCategories: string[] = pro?.serviceCategories ?? [];
 
-  // Refetch au focus pour récupérer les changements de statut admin lors du retour sur l'écran
-  const { refetch: refetchOfferings } = useGetProOfferingsQuery(proId, { skip: !proId });
-  useRefetchOnFocus(refetchOfferings);
-
-  // Prix admin par slug — même source que BookingRequestStep4 : GET /services/categories
   const countryCode = useSelector((s: RootState) =>
     (s as any).location?.selectedCountryCode ?? (s as any).location?.detectedCountryCode ?? undefined
   );
+
+  // Refetch au focus pour récupérer les changements de statut admin lors du retour sur l'écran
+  const { refetch: refetchOfferings } = useGetProOfferingsQuery(
+    { proId, countryCode },
+    { skip: !proId },
+  );
+  useRefetchOnFocus(refetchOfferings);
   const { data: allCategories = [] } = useGetCategoriesQuery(
     { activeOnly: true, countryCode },
     { skip: serviceCategories.length === 0 }
@@ -457,12 +460,13 @@ export const ProOfferingsScreen = ({ navigation: _nav }: Props) => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {serviceCategories.map((slug) => (
         <CategoryCard
-          key={slug}
+          key={`${slug}-${countryCode ?? 'all'}`}
           categorySlug={slug}
           categoryLabel={categoryLabels[slug] ?? slug}
           proId={proId}
           adminBasePrice={categoryPricing[slug]?.basePrice ?? null}
           adminCurrency={categoryPricing[slug]?.currency ?? CURRENCY_CONFIG.code}
+          countryCode={countryCode}
           tokens={tokens}
           styles={styles}
           t={t}

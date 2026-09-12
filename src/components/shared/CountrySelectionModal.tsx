@@ -27,7 +27,7 @@ export const CountrySelectionModal = ({ visible, selectedCode, onSelect, onClose
 
   const styles = StyleSheet.create({
     overlay:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    sheet:    { backgroundColor: tokens.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' },
+    sheet:    { backgroundColor: tokens.modal, borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '60%' },
     header:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderColor: tokens.border },
     headerTitle: { fontSize: 17, fontWeight: '700', color: tokens.text.primary },
     item:     { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderColor: tokens.border },

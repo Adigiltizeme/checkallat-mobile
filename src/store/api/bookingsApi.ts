@@ -18,6 +18,14 @@ export const bookingsApi = createApi({
       invalidatesTags: ['Booking'],
     }),
 
+    prepareBookingPayment: builder.mutation<{ clientSecret: string }, any>({
+      query: (body) => ({
+        url: '/prepare-payment',
+        method: 'POST',
+        body,
+      }),
+    }),
+
     /**
      * Récupérer mes réservations (client)
      */
@@ -199,11 +207,27 @@ export const bookingsApi = createApi({
       }),
       invalidatesTags: ['Booking'],
     }),
+
+    rejectBid: builder.mutation<void, { bookingId: string; bidId: string }>({
+      query: ({ bookingId, bidId }) => ({
+        url: `/${bookingId}/bids/${bidId}/reject`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Booking'],
+    }),
+
+    prepareBookingPaymentById: builder.mutation<{ clientSecret: string; amount: number; currency: string }, string>({
+      query: (bookingId: string) => ({
+        url: `/${bookingId}/prepare-payment`,
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
 export const {
   useCreateBookingMutation,
+  usePrepareBookingPaymentMutation,
   useGetMyBookingsQuery,
   useGetProBookingsQuery,
   useGetBookingByIdQuery,
@@ -223,4 +247,6 @@ export const {
   useSubmitBidMutation,
   useGetBookingBidsQuery,
   useAcceptBidMutation,
+  useRejectBidMutation,
+  usePrepareBookingPaymentByIdMutation,
 } = bookingsApi;

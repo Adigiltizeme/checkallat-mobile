@@ -88,7 +88,12 @@ export const MessagesScreen = () => {
     setRefreshing(false);
   };
 
-  const items: ConversationSummary[] = Array.isArray(data) ? data : [];
+  // Le tab Messages ne montre QUE les conversations client ↔ CheckAll@t (support).
+  // Les conversations client ↔ pro/chauffeur sont accessibles depuis les détails de réservation/transport.
+  const ENTITY_TYPES_IN_DETAILS = ['booking', 'transport', 'order'];
+  const items: ConversationSummary[] = Array.isArray(data)
+    ? data.filter(c => !ENTITY_TYPES_IN_DETAILS.includes(c.entityType))
+    : [];
 
   const renderItem = ({ item }: { item: ConversationSummary }) => {
     const icon = ENTITY_ICON[item.entityType] ?? 'message';
@@ -148,8 +153,16 @@ export const MessagesScreen = () => {
   if (items.length === 0) {
     return (
       <View style={styles.centered}>
-        <Icon name="message-off-outline" size={48} color={tokens.border} />
-        <Text style={styles.emptyText}>{t('messages.empty')}</Text>
+        <Icon name="headset" size={56} color={tokens.primary} />
+        <Text style={[styles.emptyText, { color: tokens.text.primary, fontWeight: '600', marginTop: 12 }]}>
+          {t('messages.empty')}
+        </Text>
+        <Text style={[styles.emptyText, { marginTop: 8, paddingHorizontal: 32 }]}>
+          {t('messages.support_tab_info')}
+        </Text>
+        <Text style={[styles.emptyText, { marginTop: 16, paddingHorizontal: 32, fontSize: 12 }]}>
+          💬 {t('messages.booking_chat_hint')}
+        </Text>
       </View>
     );
   }

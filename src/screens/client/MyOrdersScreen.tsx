@@ -15,7 +15,7 @@ import { useGetMyTransportRequestsQuery } from '../../store/api/transportApi';
 import { useGetMyBookingsQuery } from '../../store/api/bookingsApi';
 import { useGetMyOrdersQuery } from '../../store/api/marketplaceApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
-import { formatCurrency } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { getLocalizedName } from '../../utils/localize';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -49,6 +49,9 @@ export const MyOrdersScreen = () => {
   const { t, i18n } = useTranslation();
   const { tokens } = useAppTheme();
   const navigation = useNavigation<any>();
+  const { format: formatCurrencyDefault, formatWithCurrency } = useCurrencyFormatter();
+  const formatCurrency = (amount: number, currency?: string) =>
+    currency ? formatWithCurrency(amount, currency) : formatCurrencyDefault(amount);
   const [activeTab, setActiveTab] = useState<Tab>('transport');
   const [refreshing, setRefreshing] = useState(false);
 
@@ -173,7 +176,7 @@ export const MyOrdersScreen = () => {
           <View style={styles.cardRow}>
             <Icon name="cash" size={14} color={colors.primary} />
             <Text style={[styles.cardMeta, { color: colors.primary, fontWeight: '700' }]}>
-              {formatCurrency(item.totalPrice)}
+              {formatCurrency(item.totalPrice, item.currency)}
             </Text>
           </View>
         )}
@@ -219,7 +222,7 @@ export const MyOrdersScreen = () => {
           <View style={styles.cardRow}>
             <Icon name="cash" size={14} color={colors.primary} />
             <Text style={[styles.cardMeta, { color: colors.primary, fontWeight: '700' }]}>
-              {formatCurrency(item.finalPrice ?? item.estimatedPrice)}
+              {formatCurrency(item.finalPrice ?? item.estimatedPrice, item.currency)}
             </Text>
           </View>
         )}
@@ -256,7 +259,7 @@ export const MyOrdersScreen = () => {
           <View style={styles.cardRow}>
             <Icon name="cash" size={14} color={colors.primary} />
             <Text style={[styles.cardMeta, { color: colors.primary, fontWeight: '700' }]}>
-              {formatCurrency(item.totalPrice)}
+              {formatCurrency(item.totalPrice, item.currency)}
             </Text>
           </View>
         )}

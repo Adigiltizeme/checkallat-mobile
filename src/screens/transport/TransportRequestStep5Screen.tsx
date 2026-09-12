@@ -14,7 +14,7 @@ import {
   Step3Data,
   Step4Data,
 } from '../../types/transport';
-import { useCreateTransportRequestMutation, useCalculatePriceMutation } from '../../store/api/transportApi';
+import { useCreateTransportRequestMutation, useCalculatePriceMutation, usePrepareTransportPaymentMutation } from '../../store/api/transportApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 
@@ -222,6 +222,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
   const { t, i18n } = useTranslation();
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cash'>('cash');
   const [createRequest, { isLoading }] = useCreateTransportRequestMutation();
+  const [preparePayment, { isLoading: prepareLoading }] = usePrepareTransportPaymentMutation();
   const [calculatePrice, { isLoading: priceLoading }] = useCalculatePriceMutation();
   const countryCode = useSelector((state: RootState) =>
     state.location.selectedCountryCode ?? state.location.detectedCountryCode ?? undefined
@@ -257,14 +258,6 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
       setPriceBreakdown(result);
     } catch (err) {
       setPriceError(true);
-      Alert.alert(
-        t('common.error'),
-        t('transport.price_fetch_error'),
-        [
-          { text: t('common.retry'), onPress: fetchPrice },
-          { text: t('common.continue_anyway'), style: 'destructive' },
-        ]
-      );
     }
   }, [calculatePrice, step1Data, step2Data, step3Data, countryCode, t]);
 
@@ -302,90 +295,80 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
   };
 
   const handleSubmit = async () => {
-    try {
-      // Formater les données selon le DTO backend
-      const requestData = {
-        // Type et description
-        transportType: step1Data.objectType, // Type principal (premier sélectionné)
-        transportTypes: step1Data.objectTypes || [step1Data.objectType], // Tableau des types sélectionnés
-        itemDescription: step1Data.description,
-        itemPhotos: step1Data.photos,
-        estimatedVolume: step1Data.estimatedVolume,
-        estimatedWeight: (() => {
-          // Densités réalistes par type d'objet (kg/m³)
-          const densityByType: Record<string, number> = {
-            furniture: 55,   // Meubles (lit, canapé, armoire) : creux, léger relatif
-            appliances: 100, // Électroménager (frigo, lave-linge) : dense
-            boxes: 80,       // Cartons : variable, estimation médiane
-            vehicle: 140,    // Véhicule (moto, vélo) : dense
-            other: 65,       // Divers : estimation basse
-          };
-          const density = densityByType[step1Data.objectType] ?? 65;
-          return Math.round(step1Data.estimatedVolume * density);
-        })(),
+    if (!countryCode) {
+      Alert.alert(t('common.error'), t('transport.pricing_unavailable_country'));
+      return;
+    }
 
-        // Pickup (décomposé)
-        pickupAddress: step2Data.pickup.address,
-        pickupLat: step2Data.pickup.lat!,
-        pickupLng: step2Data.pickup.lng!,
-        pickupFloor: step2Data.pickup.floor || 0,
-        hasElevator: step2Data.pickup.hasElevator || false,
-        pickupInstructions: step2Data.pickup.instructions || '',
+    // Formater les données selon le DTO backend
+    const densityByType: Record<string, number> = {
+      furniture: 55,
+      appliances: 100,
+      boxes: 80,
+      vehicle: 140,
+      other: 65,
+    };
+    const density = densityByType[step1Data.objectType] ?? 65;
+    const requestData = {
+      transportType: step1Data.objectType,
+      transportTypes: step1Data.objectTypes || [step1Data.objectType],
+      itemDescription: step1Data.description,
+      itemPhotos: step1Data.photos,
+      estimatedVolume: step1Data.estimatedVolume,
+      estimatedWeight: Math.round(step1Data.estimatedVolume * density),
+      pickupAddress: step2Data.pickup.address,
+      pickupLat: step2Data.pickup.lat!,
+      pickupLng: step2Data.pickup.lng!,
+      pickupFloor: step2Data.pickup.floor || 0,
+      hasElevator: step2Data.pickup.hasElevator || false,
+      pickupInstructions: step2Data.pickup.instructions || '',
+      deliveryAddress: step2Data.delivery.address,
+      deliveryLat: step2Data.delivery.lat!,
+      deliveryLng: step2Data.delivery.lng!,
+      deliveryFloor: step2Data.delivery.floor || 0,
+      hasElevatorDelivery: step2Data.delivery.hasElevator || false,
+      deliveryInstructions: step2Data.delivery.instructions || '',
+      distance: step2Data.distance,
+      scheduledDate: step4Data.scheduledDate,
+      timeWindow: step4Data.timeSlot,
+      needHelpers: step3Data.needHelpers,
+      helpersCount: step3Data.helpersCount,
+      needDisassembly: step3Data.needDisassembly,
+      needReassembly: step3Data.needReassembly,
+      needPacking: step3Data.needPacking,
+      paymentMethod: paymentMethod === 'stripe' ? 'in_app' : 'cash',
+      isImmediate: step4Data.isImmediate ?? false,
+      countryCode,
+    };
 
-        // Delivery (décomposé)
-        deliveryAddress: step2Data.delivery.address,
-        deliveryLat: step2Data.delivery.lat!,
-        deliveryLng: step2Data.delivery.lng!,
-        deliveryFloor: step2Data.delivery.floor || 0,
-        hasElevatorDelivery: step2Data.delivery.hasElevator || false,
-        deliveryInstructions: step2Data.delivery.instructions || '',
-
-        // Distance (calculée par Mapbox)
-        distance: step2Data.distance,
-
-        // Timing
-        scheduledDate: step4Data.scheduledDate,
-        timeWindow: step4Data.timeSlot, // morning, afternoon, evening, flexible
-
-        // Services additionnels
-        needHelpers: step3Data.needHelpers,
-        helpersCount: step3Data.helpersCount,
-        needDisassembly: step3Data.needDisassembly,
-        needReassembly: step3Data.needReassembly,
-        needPacking: step3Data.needPacking,
-
-        // Paiement
-        paymentMethod: paymentMethod === 'stripe' ? 'in_app' : 'cash',
-
-        // Mode immédiat
-        isImmediate: step4Data.isImmediate ?? false,
-
-        // Zone tarifaire (pays sélectionné ou détecté)
-        countryCode,
-      };
-
-      const result = await createRequest(requestData).unwrap();
-
-      if (paymentMethod === 'stripe') {
+    if (paymentMethod === 'stripe') {
+      try {
+        const { clientSecret, totalPrice } = await preparePayment(requestData).unwrap();
         navigation.navigate('StripePayment', {
-          requestId: result.id,
-          amount: priceBreakdown?.total ?? result.totalPrice,
+          clientSecret,
+          amount: totalPrice ?? priceBreakdown?.total ?? 0,
           type: 'transport',
         });
-      } else {
-        Alert.alert(
-          t('transport.request_created'),
-          t('transport.request_created_msg'),
-          [
-            {
-              text: t('transport.view_request'),
-              onPress: () => {
-                navigation.getParent()?.navigate('Commandes');
-              },
-            },
-          ]
-        );
+      } catch (err: any) {
+        Alert.alert(t('common.error'), err?.data?.message || t('payment.init_error'));
       }
+      return;
+    }
+
+    try {
+      await createRequest(requestData).unwrap();
+      Alert.alert(
+        t('transport.request_created'),
+        t('transport.request_created_msg'),
+        [
+          {
+            text: t('transport.view_request'),
+            onPress: () => {
+              navigation.getParent()?.navigate('Commandes');
+            },
+          },
+        ]
+      );
     } catch (error: any) {
       console.error('Failed to create transport request:', error);
       Alert.alert(
@@ -575,12 +558,27 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
             💰 {t('transport.pricing')}
           </Text>
 
-          {priceLoading || !priceBreakdown ? (
+          {priceLoading ? (
             <View style={styles.priceLoading}>
               <ActivityIndicator size="small" color={tokens.primary} />
               <Text variant="bodyMedium" style={styles.priceLoadingText}>
                 {t('transport.calculating_price')}
               </Text>
+            </View>
+          ) : priceError ? (
+            <View style={styles.priceLoading}>
+              <Text variant="bodyMedium" style={{ color: colors.warning, textAlign: 'center' }}>
+                ⚠️ {t('transport.pricing_unavailable_country')}
+              </Text>
+              <TouchableOpacity onPress={fetchPrice} style={{ marginTop: 8 }}>
+                <Text style={{ color: tokens.primary, fontWeight: '600', textAlign: 'center' }}>
+                  {t('common.retry')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : !priceBreakdown ? (
+            <View style={styles.priceLoading}>
+              <ActivityIndicator size="small" color={tokens.primary} />
             </View>
           ) : (
             <>
@@ -667,7 +665,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
         onNext={handleSubmit}
         backLabel={t('common.back')}
         nextLabel={t('transport.confirm_request')}
-        nextDisabled={isLoading}
+        nextDisabled={isLoading || priceError || !priceBreakdown}
         nextLoading={isLoading}
       />
 

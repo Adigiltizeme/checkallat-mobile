@@ -135,7 +135,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
 
   const { t } = useTranslation();
   const { category } = route.params;
-  const { userLat, userLng } = useSelector((state: RootState) => state.location);
+  const { userLat, userLng, selectedCountryCode } = useSelector((state: RootState) => state.location);
 
   const [showFilters, setShowFilters] = useState(false);
   const [minRating, setMinRating] = useState(0);
@@ -152,6 +152,7 @@ export const SearchProsScreen = ({ route, navigation }: Props) => {
       maxDistance,
       segment: segment === 'all' ? undefined : segment,
       studyltizemeOnly: studyltizemeOnly || undefined,
+      countryCode: selectedCountryCode ?? undefined,
     },
     { pollingInterval: 8000, refetchOnMountOrArgChange: true },
   );

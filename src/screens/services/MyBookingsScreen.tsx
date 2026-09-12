@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getLocalizedName } from '../../utils/localize';
 import { HomeStackParamList } from '../../navigation/types';
-import { CURRENCY_CONFIG } from '../../config/currency';
+import { entityCurrencyCode } from '../../config/currency';
 import { useGetMyBookingsQuery } from '../../store/api/bookingsApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
@@ -454,7 +454,7 @@ export const MyBookingsScreen = ({ navigation }: Props) => {
           return (
             <View style={styles.cardBottom}>
               <Icon name="tag-outline" size={14} color={tokens.text.secondary} />
-              <Text style={styles.dateText}>{label} : {price} {CURRENCY_CONFIG.code}</Text>
+              <Text style={styles.dateText}>{label} : {price} {entityCurrencyCode(item)}</Text>
             </View>
           );
         })()}

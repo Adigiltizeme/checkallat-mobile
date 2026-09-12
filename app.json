@@ -7,11 +7,6 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
-    },
     "updates": {
       "enabled": false
     },
@@ -72,6 +67,15 @@
         }
       ],
       "expo-localization",
+      "expo-asset",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
+        }
+      ],
       [
         "@sentry/react-native/expo",
         {

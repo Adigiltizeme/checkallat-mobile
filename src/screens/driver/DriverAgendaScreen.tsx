@@ -18,10 +18,14 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
 const STATUS_BADGE: Record<string, { color: string; bg: string; icon: string }> = {
-  accepted:          { color: '#1E40AF', bg: '#DBEAFE', icon: 'check-circle-outline' },
-  heading_to_pickup: { color: '#3730A3', bg: '#E0E7FF', icon: 'navigation' },
-  arrived_at_pickup: { color: '#6B21A8', bg: '#F3E8FF', icon: 'map-marker-check' },
-  in_transit:        { color: '#065F46', bg: '#D1FAE5', icon: 'truck-fast' },
+  pending:              { color: '#92400E', bg: '#FEF3C7', icon: 'clock-outline' },
+  accepted:             { color: '#1E40AF', bg: '#DBEAFE', icon: 'check-circle-outline' },
+  heading_to_pickup:    { color: '#3730A3', bg: '#E0E7FF', icon: 'navigation' },
+  arrived_at_pickup:    { color: '#6B21A8', bg: '#F3E8FF', icon: 'map-marker-check' },
+  loading:              { color: '#0F766E', bg: '#CCFBF1', icon: 'package-up' },
+  in_transit:           { color: '#065F46', bg: '#D1FAE5', icon: 'truck-fast' },
+  arrived_at_delivery:  { color: '#7C3AED', bg: '#EDE9FE', icon: 'map-marker-radius' },
+  unloading:            { color: '#B45309', bg: '#FEF3C7', icon: 'package-down' },
 };
 
 const isToday = (d: Date) => {

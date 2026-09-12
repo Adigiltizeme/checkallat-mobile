@@ -18,6 +18,7 @@ export const prosApi = createApi({
         studyltizemeOnly?: boolean;
         page?: number;
         limit?: number;
+        countryCode?: string;
       }) => ({
         url: '/search',
         params,

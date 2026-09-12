@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Text, ActivityIndicator, FAB } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 import {
   useGetAddressesQuery,
   useCreateAddressMutation,
@@ -21,6 +22,9 @@ import {
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { MapboxService } from '../../services/mapbox.service';
+import { GooglePlacesService } from '../../services/googlePlaces.service';
+import { RootState } from '../../store';
 
 // LABEL_OPTIONS built inside component
 
@@ -47,7 +51,7 @@ const emptyForm = (): AddressForm => ({
 });
 
 export const AddressesScreen = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
     const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
@@ -290,8 +294,101 @@ export const AddressesScreen = () => {
     fontSize: 15,
     fontWeight: '600',
   },
+  suggestionsBox: {
+    borderWidth: 1,
+    borderColor: tokens.border,
+    borderRadius: 8,
+    backgroundColor: tokens.card,
+    marginTop: 2,
+    overflow: 'hidden',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: tokens.border,
+  },
+  suggestionText: {
+    fontSize: 13,
+    color: tokens.text.primary,
+    flex: 1,
+  },
   }), [tokens]);
 const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.other')];
+
+  const activeCountryCode = useSelector((s: RootState) =>
+    s.location.selectedCountryCode ?? s.location.detectedCountryCode ?? undefined,
+  );
+
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const placesSessionRef = useRef<string>(GooglePlacesService.generateSessionToken?.() ?? '');
+
+  const geocodeAddress = async (query: string) => {
+    if (!query.trim() || query.trim().length < 3) { setSuggestions([]); return; }
+    setIsGeocoding(true);
+    const mapboxFallback = async () => {
+      const results = await MapboxService.geocodeAddress(query.trim(), {
+        country: activeCountryCode,
+        language: i18n.language,
+      });
+      setSuggestions(results.slice(0, 5));
+    };
+    try {
+      if (GooglePlacesService.isConfigured()) {
+        const results = await GooglePlacesService.suggest(query.trim(), {
+          countryCode: activeCountryCode,
+          language: i18n.language,
+          sessionToken: placesSessionRef.current,
+        });
+        setSuggestions(results);
+      } else {
+        await mapboxFallback();
+      }
+    } catch {
+      try { await mapboxFallback(); } catch { setSuggestions([]); }
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  const handleAddressChange = (text: string) => {
+    setForm(f => ({ ...f, address: text, lat: '0', lng: '0' }));
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (text.length >= 3) {
+      debounceRef.current = setTimeout(() => geocodeAddress(text), 300);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const selectSuggestion = async (suggestion: any) => {
+    setSuggestions([]);
+    if (suggestion.placeId) {
+      setIsGeocoding(true);
+      try {
+        const details = await GooglePlacesService.getDetails(suggestion.placeId, placesSessionRef.current, i18n.language);
+        placesSessionRef.current = GooglePlacesService.generateSessionToken?.() ?? '';
+        if (details) {
+          const readableAddress = suggestion.name
+            ? [suggestion.name, suggestion.subtitle].filter(Boolean).join(', ')
+            : details.fullAddress;
+          setForm(f => ({ ...f, address: readableAddress || details.fullAddress, lat: String(details.lat), lng: String(details.lng) }));
+        }
+      } catch { /* ignore */ } finally { setIsGeocoding(false); }
+    } else {
+      setForm(f => ({
+        ...f,
+        address: suggestion.placeName ?? suggestion.name ?? f.address,
+        lat: String(suggestion.lat ?? 0),
+        lng: String(suggestion.lng ?? 0),
+      }));
+    }
+  };
+
   const { data: addresses = [], isLoading, refetch } = useGetAddressesQuery(undefined);
   const [createAddress, { isLoading: creating }] = useCreateAddressMutation();
   const [updateAddress, { isLoading: updating }] = useUpdateAddressMutation();
@@ -305,6 +402,7 @@ const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.
   const openCreate = () => {
     setForm(emptyForm());
     setEditingId(null);
+    setSuggestions([]);
     setModalVisible(true);
   };
 
@@ -320,6 +418,7 @@ const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.
       isDefault: item.isDefault ?? false,
     });
     setEditingId(item.id);
+    setSuggestions([]);
     setModalVisible(true);
   };
 
@@ -493,11 +592,29 @@ const LABEL_OPTIONS = [t('addresses.home'), t('addresses.office'), t('addresses.
               <RNTextInput
                 style={styles.input}
                 value={form.address}
-                onChangeText={(v) => setForm((f) => ({ ...f, address: v }))}
+                onChangeText={handleAddressChange}
                 placeholder={t('addresses.address_placeholder')}
                 placeholderTextColor={tokens.text.secondary}
-                multiline
               />
+              {isGeocoding && (
+                <ActivityIndicator size="small" color={tokens.primary} style={{ marginTop: 4 }} />
+              )}
+              {suggestions.length > 0 && (
+                <View style={styles.suggestionsBox}>
+                  {suggestions.map((s, i) => (
+                    <TouchableOpacity
+                      key={i}
+                      style={styles.suggestionItem}
+                      onPress={() => selectSuggestion(s)}
+                    >
+                      <Text style={styles.suggestionText} numberOfLines={2}>
+                        {s.name ?? s.placeName ?? s.fullAddress ?? ''}
+                        {s.subtitle ? `\n${s.subtitle}` : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
 
               {/* Étage */}
               <Text variant="labelMedium" style={styles.label}>{t('addresses.floor')}</Text>

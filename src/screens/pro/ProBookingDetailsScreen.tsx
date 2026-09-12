@@ -28,12 +28,12 @@ import {
   useGetBookingBidsQuery,
 } from '../../store/api/bookingsApi';
 import { useGetCategoriesQuery, useGetProOfferingsQuery } from '../../store/api/servicesApi';
-import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
+import { useGetCallRelayNumberQuery, useGetUnreadCountQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { CURRENCY_CONFIG } from '../../config/currency';
+import { entityCurrencyCode } from '../../config/currency';
 import { RootState } from '../../store';
 
 type Props = StackScreenProps<ProStackParamList, 'ProBookingDetails'>;
@@ -226,6 +226,11 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
     { entityType: 'booking', entityId: bookingId },
     { skip: !canContact },
   );
+  const { data: chatUnread } = useGetUnreadCountQuery(
+    { entityType: 'booking', entityId: bookingId },
+    { skip: !canContact, pollingInterval: 8000 },
+  );
+  const chatUnreadCount = (chatUnread as any)?.unreadCount ?? 0;
 
   const isAutoBid = (booking as any)?.assignmentType === 'auto';
   const { data: myBids } = useGetBookingBidsQuery(bookingId, {
@@ -245,11 +250,10 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
     { activeOnly: true, countryCode },
     { skip: !bookingCategorySlug }
   );
-  const { data: proOfferings = [], refetch: refetchOfferings } = useGetProOfferingsQuery(proId, {
-    skip: !proId || !bookingCategorySlug,
-    pollingInterval: 8000,
-    refetchOnMountOrArgChange: true,
-  });
+  const { data: proOfferings = [], refetch: refetchOfferings } = useGetProOfferingsQuery(
+    { proId, countryCode },
+    { skip: !proId || !bookingCategorySlug, pollingInterval: 8000, refetchOnMountOrArgChange: true },
+  );
   useRefetchOnFocus(refetchOfferings);
 
   const configuredPrice = useMemo(() => {
@@ -321,6 +325,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   const isInProgress = status === 'in_progress';
   const isCash       = (booking as any).paymentMethod === 'cash';
   const isTerminal   = status === 'completed' || status === 'cancelled' || status === 'rejected';
+  const bookingCurrency = entityCurrencyCode(booking);
 
   const clientName = (booking as any).client?.firstName
     ? `${(booking as any).client.firstName} ${(booking as any).client.lastName ?? ''}`
@@ -422,7 +427,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
       const refundPct = (res as any)?.refundPct;
       const feeAmount = (res as any)?.feeAmount;
       if (feeAmount > 0) {
-        Alert.alert(t('common.success'), t('booking.cancel_result_fee', { amount: feeAmount, currency: CURRENCY_CONFIG.code }));
+        Alert.alert(t('common.success'), t('booking.cancel_result_fee', { amount: feeAmount, currency: bookingCurrency }));
       } else if (refundPct != null) {
         Alert.alert(t('common.success'), t('booking.cancel_result_refund', { pct: refundPct }));
       }
@@ -471,18 +476,25 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
               <Icon name="phone" size={16} color={colors.white} />
               <Text style={styles.contactBtnText}>{t('booking.call_pro')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.contactBtn, styles.contactBtnMessage]}
-              onPress={() => navigation.navigate('BookingChat', {
-                entityType: 'booking',
-                entityId: bookingId,
-                otherPartyName: clientName,
-              })}
-              activeOpacity={0.8}
-            >
-              <Icon name="message-text" size={16} color={tokens.primary} />
-              <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('booking.message_pro')}</Text>
-            </TouchableOpacity>
+            <View style={{ position: 'relative' }}>
+              <TouchableOpacity
+                style={[styles.contactBtn, styles.contactBtnMessage]}
+                onPress={() => navigation.navigate('BookingChat', {
+                  entityType: 'booking',
+                  entityId: bookingId,
+                  otherPartyName: clientName,
+                })}
+                activeOpacity={0.8}
+              >
+                <Icon name="message-text" size={16} color={tokens.primary} />
+                <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('booking.message_pro')}</Text>
+              </TouchableOpacity>
+              {chatUnreadCount > 0 && (
+                <View style={{ position: 'absolute', top: -6, right: -6, backgroundColor: colors.error, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3 }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>{chatUnreadCount > 9 ? '9+' : chatUnreadCount}</Text>
+                </View>
+              )}
+            </View>
           </View>
         )}
       </View>
@@ -499,8 +511,8 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
             <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
             <Text style={styles.detailText}>
               {(booking as any).serviceOffering.priceMax
-                ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} ${CURRENCY_CONFIG.code}`
-                : `${(booking as any).serviceOffering.priceMin}+ ${CURRENCY_CONFIG.code}`}
+                ? `${(booking as any).serviceOffering.priceMin} – ${(booking as any).serviceOffering.priceMax} ${bookingCurrency}`
+                : `${(booking as any).serviceOffering.priceMin}+ ${bookingCurrency}`}
             </Text>
           </View>
         )}
@@ -608,7 +620,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
           <View style={styles.detailRow}>
             <Icon name="tag-outline" size={18} color={tokens.text.secondary} />
             <Text style={[styles.detailText, { fontWeight: '600' }]}>
-              {t('booking.estimated_price_label')} : {estimatedPrice} {CURRENCY_CONFIG.code}
+              {t('booking.estimated_price_label')} : {estimatedPrice} {bookingCurrency}
             </Text>
           </View>
         )}
@@ -616,7 +628,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
           <View style={styles.detailRow}>
             <Icon name="tag-check-outline" size={18} color={tokens.primary} />
             <Text style={[styles.detailText, { color: tokens.primary, fontWeight: '700' }]}>
-              {t('booking.final_price_label')} : {(booking as any).finalPrice} {CURRENCY_CONFIG.code}
+              {t('booking.final_price_label')} : {(booking as any).finalPrice} {bookingCurrency}
             </Text>
           </View>
         )}
@@ -655,7 +667,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                   <View style={[styles.detailRow, { marginTop: spacing.xs }]}>
                     <Icon name="cash" size={18} color={colors.success} />
                     <Text style={[styles.detailText, { color: colors.success, fontWeight: '700' }]}>
-                      {t('driver.net_amount_label')}: {payment.proNetAmount} {CURRENCY_CONFIG.code}
+                      {t('driver.net_amount_label')}: {payment.proNetAmount} {bookingCurrency}
                     </Text>
                   </View>
                 )}
@@ -699,9 +711,9 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                 (booking as any).cashPaymentStatus === 'confirmed' ? colors.success : tokens.text.secondary
               } />
               <Text style={[styles.detailText, { fontSize: 12 }]}>
-                {t('booking.cash_declared_pro')}: {(booking as any).cashAmountDeclaredByPro} {CURRENCY_CONFIG.code}
+                {t('booking.cash_declared_pro')}: {(booking as any).cashAmountDeclaredByPro} {bookingCurrency}
                 {(booking as any).cashAmountDeclaredByClient != null &&
-                  `  •  ${t('booking.cash_declared_client')}: ${(booking as any).cashAmountDeclaredByClient} ${CURRENCY_CONFIG.code}`}
+                  `  •  ${t('booking.cash_declared_client')}: ${(booking as any).cashAmountDeclaredByClient} ${bookingCurrency}`}
                 {(booking as any).cashPaymentStatus === 'disputed' && '  ⚠️'}
                 {(booking as any).cashPaymentStatus === 'confirmed' && '  ✓'}
               </Text>
@@ -814,7 +826,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
               ) : (
                 <Text style={{ color: tokens.text.secondary, fontSize: 13 }}>
                   {t('pro_space.bid_submitted_waiting', {
-                    price: `${myExistingBid.proposedPrice} ${CURRENCY_CONFIG.code}`,
+                    price: `${myExistingBid.proposedPrice} ${bookingCurrency}`,
                   })}
                 </Text>
               )}
@@ -830,7 +842,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 13, color: tokens.text.secondary }}>{t('pro_space.price_from_offerings')}</Text>
                     <Text style={{ fontSize: 16, fontWeight: '700', color: tokens.primary }}>
-                      {configuredPrice} {CURRENCY_CONFIG.code}
+                      {configuredPrice} {bookingCurrency}
                     </Text>
                   </View>
                   <TouchableOpacity onPress={() => navigation.navigate('ProOfferings')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -851,7 +863,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                     outlineColor={tokens.border}
                     activeOutlineColor={tokens.primary}
                     style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm }}
-                    right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
+                    right={<TextInput.Affix text={bookingCurrency} />}
                   />
                 </>
               )}
@@ -915,7 +927,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                 ) : (
                   <Text style={{ color: tokens.text.secondary, fontSize: 13 }}>
                     {t('pro_space.bid_submitted_waiting', {
-                      price: `${myExistingBid.proposedPrice} ${CURRENCY_CONFIG.code}`,
+                      price: `${myExistingBid.proposedPrice} ${bookingCurrency}`,
                     })}
                   </Text>
                 )}
@@ -931,7 +943,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 13, color: tokens.text.secondary }}>{t('pro_space.price_from_offerings')}</Text>
                       <Text style={{ fontSize: 16, fontWeight: '700', color: tokens.primary }}>
-                        {configuredPrice} {CURRENCY_CONFIG.code}
+                        {configuredPrice} {bookingCurrency}
                       </Text>
                     </View>
                     <TouchableOpacity onPress={() => navigation.navigate('ProOfferings')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -952,7 +964,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                       outlineColor={tokens.border}
                       activeOutlineColor={tokens.primary}
                       style={{ backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm }}
-                      right={<TextInput.Affix text={CURRENCY_CONFIG.code} />}
+                      right={<TextInput.Affix text={bookingCurrency} />}
                     />
                   </>
                 )}

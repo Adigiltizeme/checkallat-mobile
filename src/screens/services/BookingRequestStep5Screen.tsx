@@ -109,6 +109,11 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
   };
 
   const handleSubmit = async () => {
+    if (paymentMethod === 'in_app' && (!step4Data.estimatedPrice || step4Data.estimatedPrice <= 0)) {
+      Alert.alert(t('common.error'), t('booking_request.error_price_required_for_inapp'));
+      return;
+    }
+
     try {
       // Uploader les photos locales avant soumission
       let clientPhotos = step1Data.clientPhotos ?? [];
@@ -145,6 +150,18 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
 
       const result = await createBooking(payload).unwrap();
 
+      // Paiement in-app : booking créé, le client paiera après que le pro accepte/propose un prix
+      if (paymentMethod === 'in_app') {
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: 'HomeScreen' },
+            { name: 'BookingDetails', params: { bookingId: result.id } },
+          ],
+        });
+        return;
+      }
+
       Alert.alert(
         t('booking_request.success_title'),
         step4Data.assignmentType === 'auto'
@@ -163,7 +180,6 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
                   ],
                 });
               } else if (result?.id) {
-                // Mode auto : aller sur BookingDetails pour voir et accepter les offres de prix
                 navigation.reset({
                   index: 1,
                   routes: [
