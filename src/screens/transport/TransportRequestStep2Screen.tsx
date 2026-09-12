@@ -298,9 +298,9 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
 
     try {
       if (GooglePlacesService.isConfigured()) {
-        // Google Places — meilleure détection landmarks, noms bilingues arabe/anglais/français
+        // Pas de filtre country — l'utilisateur peut saisir une adresse dans n'importe quel pays supporté
+        // (ex: commander depuis USA pour une livraison en Égypte)
         const suggestions = await GooglePlacesService.suggest(address.trim(), {
-          countryCode: activeCountryCode ?? undefined,
           language: i18n.language,
           ...(locationState.userLat && locationState.userLng
             ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
@@ -309,9 +309,8 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
         });
         setSuggestions(suggestions);
       } else {
-        // Fallback Mapbox SearchBox
+        // Fallback Mapbox SearchBox — sans filtre country pour permettre l'international
         const results = await MapboxService.geocodeAddress(address.trim(), {
-          country: activeCountryCode ?? undefined,
           language: 'fr,ar,en',
           ...(locationState.userLat && locationState.userLng
             ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
@@ -392,10 +391,6 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
         placesSessionRef.current = GooglePlacesService.generateSessionToken();
 
         if (details) {
-          // Toujours utiliser le nom saisi/sélectionné par l'utilisateur (suggestion.name)
-          // comme adresse affichée, accompagné du sous-titre pour précision.
-          // L'adresse geocodée (details.fullAddress) sert uniquement à la précision des coordonnées.
-          // On ne tombe sur fullAddress qu'en dernier recours (si suggestion.name absent).
           const readableAddress = suggestion.name
             ? [suggestion.name, suggestion.subtitle].filter(Boolean).join(', ')
             : details.fullAddress;
@@ -405,6 +400,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
             address: readableAddress || details.fullAddress,
             lat: details.lat,
             lng: details.lng,
+            countryCode: details.countryCode,
           });
         }
       } catch {
@@ -419,6 +415,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
         address: suggestion.placeName ?? suggestion.name,
         lat: suggestion.lat,
         lng: suggestion.lng,
+        countryCode: suggestion.countryCode,
       });
     }
   };

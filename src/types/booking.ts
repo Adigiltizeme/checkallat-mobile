@@ -11,6 +11,7 @@ export interface BookingAddressData {
   floor: number;
   hasElevator: boolean;
   instructions?: string;
+  countryCode?: string; // code ISO 2 lettres majuscules du pays de l'adresse
 }
 
 /** Step 1 — description + champs dynamiques par catégorie */

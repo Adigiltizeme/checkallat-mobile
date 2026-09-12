@@ -138,9 +138,9 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   const geocodeAddress = async (query: string) => {
     if (!query.trim() || query.trim().length < 3) return;
     setIsGeocoding(true);
+    // Pas de filtre country — l'utilisateur peut saisir une adresse dans n'importe quel pays
     const mapboxFallback = async () => {
       const results = await MapboxService.geocodeAddress(query.trim(), {
-        country: activeCountryCode ?? undefined,
         language: i18n.language,
         ...(locationState.userLat && locationState.userLng
           ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
@@ -151,7 +151,6 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
     try {
       if (GooglePlacesService.isConfigured()) {
         const results = await GooglePlacesService.suggest(query.trim(), {
-          countryCode: activeCountryCode ?? undefined,
           language: i18n.language,
           ...(locationState.userLat && locationState.userLng
             ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
@@ -190,7 +189,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
           const readableAddress = suggestion.name
             ? [suggestion.name, suggestion.subtitle].filter(Boolean).join(', ')
             : details.fullAddress;
-          setAddress(prev => ({ ...prev, address: readableAddress || details.fullAddress, lat: details.lat, lng: details.lng }));
+          setAddress(prev => ({ ...prev, address: readableAddress || details.fullAddress, lat: details.lat, lng: details.lng, countryCode: details.countryCode }));
         }
       } catch { /* ignore */ } finally {
         setIsGeocoding(false);
@@ -201,6 +200,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
         address: suggestion.placeName ?? suggestion.name,
         lat: suggestion.lat,
         lng: suggestion.lng,
+        countryCode: suggestion.countryCode,
       }));
     }
   };

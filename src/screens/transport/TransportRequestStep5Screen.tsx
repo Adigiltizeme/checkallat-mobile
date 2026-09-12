@@ -224,9 +224,12 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
   const [createRequest, { isLoading }] = useCreateTransportRequestMutation();
   const [preparePayment, { isLoading: prepareLoading }] = usePrepareTransportPaymentMutation();
   const [calculatePrice, { isLoading: priceLoading }] = useCalculatePriceMutation();
-  const countryCode = useSelector((state: RootState) =>
+  const userCountryCode = useSelector((state: RootState) =>
     state.location.selectedCountryCode ?? state.location.detectedCountryCode ?? undefined
   );
+  // Le pays de l'adresse de pickup prime sur le pays de l'utilisateur
+  // (cas: commande depuis USA pour une livraison en Égypte)
+  const countryCode = step2Data.pickup.countryCode?.toUpperCase() ?? userCountryCode?.toUpperCase();
 
   // Prix retourné par le backend (source unique de vérité)
   const [priceBreakdown, setPriceBreakdown] = useState<any>(null);

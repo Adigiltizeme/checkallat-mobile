@@ -16,6 +16,7 @@ export interface PlaceDetails {
   fullAddress: string;
   lat: number;
   lng: number;
+  countryCode?: string; // code ISO 2 lettres majuscules (ex: 'EG', 'FR')
 }
 
 /**
@@ -126,7 +127,7 @@ export class GooglePlacesService {
       const params: Record<string, string> = {
         place_id: placeId,
         key: GOOGLE_API_KEY,
-        fields: 'geometry,formatted_address,name',
+        fields: 'geometry,formatted_address,name,address_components',
         sessiontoken: sessionToken,
       };
 
@@ -144,12 +145,17 @@ export class GooglePlacesService {
 
       if (!location) return null;
 
+      const countryComponent = (result.address_components ?? []).find(
+        (c: any) => c.types?.includes('country'),
+      );
+
       return {
         placeId,
         name: result.name ?? result.formatted_address,
         fullAddress: result.formatted_address ?? result.name,
         lat: location.lat,
         lng: location.lng,
+        countryCode: countryComponent?.short_name?.toUpperCase(),
       };
     } catch (error: any) {
       console.error('Google Places details error:', error.message);

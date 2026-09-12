@@ -45,6 +45,7 @@ export interface AddressData {
   floor: number;
   hasElevator: boolean;
   instructions?: string;
+  countryCode?: string; // code ISO 2 lettres majuscules du pays de l'adresse (ex: 'EG', 'FR')
 }
 
 export interface Step2Data {

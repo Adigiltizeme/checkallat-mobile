@@ -13,6 +13,7 @@ export interface GeocodingResult {
   featureType?: string;  // 'address', 'poi', 'place', etc.
   city?: string;
   country?: string;
+  countryCode?: string;  // code ISO 2 lettres majuscules (ex: 'EG', 'FR')
 }
 
 /**
@@ -84,6 +85,7 @@ export class MapboxService {
           featureType: props.feature_type,
           city: props.context?.place?.name,
           country: props.context?.country?.name,
+          countryCode: props.context?.country?.country_code?.toUpperCase(),
         };
       });
     } catch (error: any) {
@@ -118,8 +120,9 @@ export class MapboxService {
 
       return response.data.features.map((feature: any) => {
         const city = feature.context?.find((c: any) => c.id.startsWith('place.'))?.text;
-        const country = feature.context?.find((c: any) => c.id.startsWith('country.'))?.text;
-        // Le nom propre est le texte du feature, le contexte est la ville + pays
+        const countryCtx = feature.context?.find((c: any) => c.id.startsWith('country.'));
+        const country = countryCtx?.text;
+        const countryCode = countryCtx?.short_code?.toUpperCase();
         const name = feature.text ?? feature.place_name;
         const subtitle = [city, country].filter(Boolean).join(', ');
         return {
@@ -131,6 +134,7 @@ export class MapboxService {
           subtitle,
           city,
           country,
+          countryCode,
         };
       });
     } catch {
