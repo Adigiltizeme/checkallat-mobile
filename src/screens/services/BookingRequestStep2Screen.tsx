@@ -133,19 +133,17 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, []);
 
-  const activeCountryCode = locationState.selectedCountryCode;
+  const activeCountryCode = locationState.selectedCountryCode ?? locationState.detectedCountryCode;
 
   const geocodeAddress = async (query: string) => {
     if (!query.trim() || query.trim().length < 3) return;
     setIsGeocoding(true);
     const supportedCodes = SUPPORTED_COUNTRIES.map((c) => c.code.toUpperCase());
+    // Pas de proximity — la pertinence textuelle prime sur la position GPS
     const mapboxFallback = async () => {
       const results = await MapboxService.geocodeAddress(query.trim(), {
         country: supportedCodes.map((c) => c.toLowerCase()).join(','),
         language: i18n.language,
-        ...(locationState.userLat && locationState.userLng
-          ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
-          : {}),
       });
       setSuggestions(results.slice(0, 5));
     };
@@ -154,9 +152,6 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
         const results = await GooglePlacesService.suggest(query.trim(), {
           countryCodes: supportedCodes,
           language: i18n.language,
-          ...(locationState.userLat && locationState.userLng
-            ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
-            : {}),
           sessionToken: placesSessionRef.current,
         });
         setSuggestions(results);
@@ -171,7 +166,13 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   };
 
   const handleAddressChange = (text: string) => {
-    setAddress(prev => ({ ...prev, address: text, lat: text !== prev.address ? undefined : prev.lat, lng: text !== prev.address ? undefined : prev.lng }));
+    setAddress(prev => ({
+      ...prev,
+      address: text,
+      lat: text !== prev.address ? undefined : prev.lat,
+      lng: text !== prev.address ? undefined : prev.lng,
+      countryCode: text !== prev.address ? undefined : prev.countryCode,
+    }));
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (text.length >= 3) {
       debounceRef.current = setTimeout(() => geocodeAddress(text), 300);
@@ -223,7 +224,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
       }));
       const result = await MapboxService.reverseGeocode(lat, lng, { language: 'fr,ar,en' });
       if (!result) { Alert.alert(t('common.error'), t('transport.location_error')); return; }
-      setAddress(prev => ({ ...prev, address: result.placeName, lat: result.lat, lng: result.lng }));
+      setAddress(prev => ({ ...prev, address: result.placeName, lat: result.lat, lng: result.lng, countryCode: result.countryCode }));
     } catch (e: any) {
       Alert.alert(t('common.error'), e.message || t('transport.location_error'));
     } finally {
@@ -243,6 +244,30 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
     const step2Data: BookingStep2Data = {
       address: address as BookingAddressData,
     };
+
+    const addressCC = address.countryCode?.toUpperCase();
+    const currentCC = activeCountryCode?.toUpperCase();
+
+    if (addressCC && currentCC && addressCC !== currentCC) {
+      const info = getCountryInfo(addressCC);
+      const countryName = info ? t(`country.${info.nameKey}`) : addressCC;
+      Alert.alert(
+        t('location.country_mismatch_title', { country: countryName, flag: info?.flag ?? '' }),
+        t('location.country_mismatch_msg', { country: countryName, currency: info?.currency ?? addressCC }),
+        [
+          { text: t('location.country_mismatch_cancel'), style: 'cancel' },
+          {
+            text: t('location.country_mismatch_confirm', { country: countryName }),
+            onPress: () => {
+              dispatch(selectCountry(addressCC.toLowerCase()));
+              navigation.navigate('BookingRequestStep3', { categorySlug, step1Data, step2Data });
+            },
+          },
+        ],
+      );
+      return;
+    }
+
     navigation.navigate('BookingRequestStep3', { categorySlug, step1Data, step2Data });
   };
 

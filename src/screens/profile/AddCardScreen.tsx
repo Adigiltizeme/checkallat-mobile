@@ -76,19 +76,24 @@ export const AddCardScreen = ({ navigation }: Props) => {
   };
 
   const handleAddCard = async () => {
-    setState('processing');
-    const { error } = await presentPaymentSheet();
-    if (error) {
-      if (error.code !== 'Canceled') {
-        Alert.alert(t('common.error'), error.message);
+    try {
+      setState('processing');
+      const { error } = await presentPaymentSheet();
+      if (error) {
+        if (error.code !== 'Canceled') {
+          Alert.alert(t('common.error'), error.message);
+        }
+        setState('ready');
+        return;
       }
+      setState('success');
+      Alert.alert(t('common.success'), t('saved_cards.add_success'), [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (err: any) {
+      Alert.alert(t('common.error'), err?.message || t('saved_cards.add_error'));
       setState('ready');
-      return;
     }
-    setState('success');
-    Alert.alert(t('common.success'), t('saved_cards.add_success'), [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
   };
 
   if (state === 'loading') {

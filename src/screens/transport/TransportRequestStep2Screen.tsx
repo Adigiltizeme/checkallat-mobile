@@ -273,8 +273,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     }
   }, []);
 
-  // Pays actif pour restreindre la recherche
-  const activeCountryCode = locationState.selectedCountryCode;
+  const activeCountryCode = locationState.selectedCountryCode ?? locationState.detectedCountryCode;
 
   // Session token Google Places (grouper suggest + getDetails pour la facturation)
   const placesSessionRef = useRef<string>(GooglePlacesService.generateSessionToken());
@@ -299,24 +298,19 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     try {
       const supportedCodes = SUPPORTED_COUNTRIES.map((c) => c.code.toUpperCase());
       if (GooglePlacesService.isConfigured()) {
-        // Restriction aux pays supportés (multi-pays) — permet de commander pour n'importe quel pays supporté
+        // Restriction aux pays supportés — pas de proximity : la pertinence textuelle prime
+        // sur la position GPS (l'utilisateur peut commander pour un autre pays)
         const suggestions = await GooglePlacesService.suggest(address.trim(), {
           countryCodes: supportedCodes,
           language: i18n.language,
-          ...(locationState.userLat && locationState.userLng
-            ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
-            : {}),
           sessionToken: placesSessionRef.current,
         });
         setSuggestions(suggestions);
       } else {
-        // Fallback Mapbox — restriction aux pays supportés (liste CSV)
+        // Fallback Mapbox — restriction aux pays supportés, sans biais de proximité
         const results = await MapboxService.geocodeAddress(address.trim(), {
           country: supportedCodes.map((c) => c.toLowerCase()).join(','),
           language: 'fr,ar,en',
-          ...(locationState.userLat && locationState.userLng
-            ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
-            : {}),
         });
         setSuggestions(results.slice(0, 5));
       }
@@ -334,17 +328,17 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
       setPickup({
         ...pickup,
         address: text,
-        // Réinitialiser les coordonnées si l'utilisateur modifie l'adresse
         lat: text !== pickup.address ? undefined : pickup.lat,
         lng: text !== pickup.address ? undefined : pickup.lng,
+        countryCode: text !== pickup.address ? undefined : pickup.countryCode,
       });
     } else {
       setDelivery({
         ...delivery,
         address: text,
-        // Réinitialiser les coordonnées si l'utilisateur modifie l'adresse
         lat: text !== delivery.address ? undefined : delivery.lat,
         lng: text !== delivery.address ? undefined : delivery.lng,
+        countryCode: text !== delivery.address ? undefined : delivery.countryCode,
       });
     }
 
@@ -492,6 +486,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
           address: result.placeName,
           lat: result.lat,
           lng: result.lng,
+          countryCode: result.countryCode,
         });
       } else {
         setDelivery({
@@ -499,6 +494,7 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
           address: result.placeName,
           lat: result.lat,
           lng: result.lng,
+          countryCode: result.countryCode,
         });
       }
     } catch (error: any) {
@@ -541,7 +537,45 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
       estimatedDuration: result.duration,
     };
 
-    navigation.navigate('TransportRequestStep3', { step1Data, step2Data, step3Prefill });
+    const pickupCC = pickup.countryCode?.toUpperCase();
+    const deliveryCC = delivery.countryCode?.toUpperCase();
+    const currentCC = activeCountryCode?.toUpperCase();
+
+    const doNavigate = (overrideCountry?: string) => {
+      if (overrideCountry) dispatch(selectCountry(overrideCountry.toLowerCase()));
+      navigation.navigate('TransportRequestStep3', { step1Data, step2Data, step3Prefill });
+    };
+
+    // Pickup et delivery dans deux pays différents → erreur bloquante
+    if (pickupCC && deliveryCC && pickupCC !== deliveryCC) {
+      Alert.alert(
+        t('location.cross_country_title'),
+        t('location.cross_country_msg', {
+          pickup: t(`country.${getCountryInfo(pickupCC)?.nameKey ?? 'country_unknown'}`),
+          delivery: t(`country.${getCountryInfo(deliveryCC)?.nameKey ?? 'country_unknown'}`),
+        }),
+        [{ text: t('common.ok') }],
+      );
+      return;
+    }
+
+    // Adresse dans un pays différent du pays actif → confirmation
+    const addressCC = pickupCC ?? deliveryCC;
+    if (addressCC && currentCC && addressCC !== currentCC) {
+      const info = getCountryInfo(addressCC);
+      const countryName = info ? t(`country.${info.nameKey}`) : addressCC;
+      Alert.alert(
+        t('location.country_mismatch_title', { country: countryName, flag: info?.flag ?? '' }),
+        t('location.country_mismatch_msg', { country: countryName, currency: info?.currency ?? addressCC }),
+        [
+          { text: t('location.country_mismatch_cancel'), style: 'cancel' },
+          { text: t('location.country_mismatch_confirm', { country: countryName }), onPress: () => doNavigate(addressCC) },
+        ],
+      );
+      return;
+    }
+
+    doNavigate();
   };
 
   const handleBack = () => {

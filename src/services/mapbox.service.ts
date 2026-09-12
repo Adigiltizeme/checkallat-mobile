@@ -182,7 +182,9 @@ export class MapboxService {
 
       const feature = response.data.features[0];
       const city = feature.context?.find((c: any) => c.id.startsWith('place.'))?.text;
-      const country = feature.context?.find((c: any) => c.id.startsWith('country.'))?.text;
+      const countryCtx = feature.context?.find((c: any) => c.id.startsWith('country.'));
+      const country = countryCtx?.text;
+      const countryCode = countryCtx?.short_code?.split('-')[0]?.toUpperCase();
 
       return {
         address: feature.place_name,
@@ -193,6 +195,7 @@ export class MapboxService {
         subtitle: [city, country].filter(Boolean).join(', '),
         city,
         country,
+        countryCode,
       };
     } catch (error: any) {
       console.error('Mapbox reverse geocoding error:', error.response?.data || error.message);

@@ -147,7 +147,6 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
       const { error } = await initPaymentSheet({
         merchantDisplayName: 'CheckAll@t',
         paymentIntentClientSecret: secret,
-        defaultBillingDetails: {},
         allowsDelayedPaymentMethods: false,
       });
 
@@ -165,52 +164,57 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
   };
 
   const handlePay = async () => {
-    setPaymentState('processing');
+    try {
+      setPaymentState('processing');
 
-    const { error } = await presentPaymentSheet();
+      const { error } = await presentPaymentSheet();
 
-    if (error) {
-      if (error.code === 'Canceled') {
-        setPaymentState('ready');
+      if (error) {
+        if (error.code === 'Canceled') {
+          setPaymentState('ready');
+          return;
+        }
+        setErrorMessage(error.message);
+        setPaymentState('error');
         return;
       }
-      setErrorMessage(error.message);
+
+      setPaymentState('success');
+
+      const onViewPress = () => {
+        // Nouveau flux : pas de requestId avant confirmation webhook, on retourne à l'accueil
+        if (prebuiltClientSecret) {
+          navigation.reset({ index: 0, routes: [{ name: 'HomeScreen' }] });
+          return;
+        }
+        if (type === 'booking') {
+          navigation.reset({
+            index: 1,
+            routes: [
+              { name: 'HomeScreen' },
+              { name: 'BookingDetails', params: { bookingId: resolvedRequestId } },
+            ],
+          });
+        } else {
+          navigation.reset({
+            index: 1,
+            routes: [
+              { name: 'HomeScreen' },
+              { name: 'TransportDetails', params: { requestId: resolvedRequestId } },
+            ],
+          });
+        }
+      };
+      Alert.alert(
+        t('payment.success_title'),
+        t('payment.success_msg'),
+        [{ text: t('transport.view_request'), onPress: onViewPress }],
+        { cancelable: false }
+      );
+    } catch (err: any) {
+      setErrorMessage(err?.message || t('payment.init_error'));
       setPaymentState('error');
-      return;
     }
-
-    setPaymentState('success');
-
-    const onViewPress = () => {
-      // Nouveau flux : pas de requestId avant confirmation webhook, on retourne à l'accueil
-      if (prebuiltClientSecret) {
-        navigation.reset({ index: 0, routes: [{ name: 'HomeScreen' }] });
-        return;
-      }
-      if (type === 'booking') {
-        navigation.reset({
-          index: 1,
-          routes: [
-            { name: 'HomeScreen' },
-            { name: 'BookingDetails', params: { bookingId: resolvedRequestId } },
-          ],
-        });
-      } else {
-        navigation.reset({
-          index: 1,
-          routes: [
-            { name: 'HomeScreen' },
-            { name: 'TransportDetails', params: { requestId: resolvedRequestId } },
-          ],
-        });
-      }
-    };
-    Alert.alert(
-      t('payment.success_title'),
-      t('payment.success_msg'),
-      [{ text: t('transport.view_request'), onPress: onViewPress }],
-      { cancelable: false }
-    );
   };
 
   const handleCancel = () => {

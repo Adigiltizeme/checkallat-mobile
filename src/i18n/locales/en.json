@@ -940,7 +940,13 @@
     "change_country": "Change",
     "change_country_title": "Change country",
     "change_country_msg": "Select the country where you want to carry out your transport.",
-    "detecting": "Detecting your location..."
+    "detecting": "Detecting your location...",
+    "cross_country_title": "Cross-country transport unavailable",
+    "cross_country_msg": "Your pickup address ({{pickup}}) and delivery address ({{delivery}}) are in different countries. We do not yet support cross-country transport. Please choose two addresses in the same country.",
+    "country_mismatch_title": "Ordering for {{country}} {{flag}}",
+    "country_mismatch_msg": "The address you entered is located in {{country}}. If you continue, your order will be processed in {{country}} using the {{currency}} currency.",
+    "country_mismatch_confirm": "Continue in {{country}}",
+    "country_mismatch_cancel": "Change address"
   },
   "driver_docs": {
     "title": "My documents",

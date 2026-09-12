@@ -940,7 +940,13 @@
     "change_country": "تغيير",
     "change_country_title": "تغيير البلد",
     "change_country_msg": "اختر البلد الذي تريد إجراء النقل فيه.",
-    "detecting": "جارٍ تحديد موقعك..."
+    "detecting": "جارٍ تحديد موقعك...",
+    "cross_country_title": "النقل بين الدول غير متاح",
+    "cross_country_msg": "عنوان الانطلاق ({{pickup}}) وعنوان الوصول ({{delivery}}) في دولتين مختلفتين. لا ندعم النقل بين الدول حتى الآن. يرجى اختيار عنوانين في نفس الدولة.",
+    "country_mismatch_title": "الطلب لـ {{country}} {{flag}}",
+    "country_mismatch_msg": "العنوان الذي أدخلته يقع في {{country}}. إذا تابعت، سيُعالَج طلبك في {{country}} بعملة {{currency}}.",
+    "country_mismatch_confirm": "المتابعة في {{country}}",
+    "country_mismatch_cancel": "تعديل العنوان"
   },
   "driver_docs": {
     "title": "وثائقي",
