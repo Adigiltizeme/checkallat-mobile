@@ -21,7 +21,7 @@ import { Step1Data, Step2Data, AddressData } from '../../types/transport';
 import { MapboxService } from '../../services/mapbox.service';
 import { GooglePlacesService } from '../../services/googlePlaces.service';
 import { CountryDetectionService } from '../../services/countryDetection.service';
-import { getCountryInfo } from '../../config/countries';
+import { getCountryInfo, SUPPORTED_COUNTRIES } from '../../config/countries';
 import { UnsupportedCountryModal } from '../../components/shared/UnsupportedCountryModal';
 import {
   setDetecting,
@@ -297,10 +297,11 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     setLoading(true);
 
     try {
+      const supportedCodes = SUPPORTED_COUNTRIES.map((c) => c.code.toUpperCase());
       if (GooglePlacesService.isConfigured()) {
-        // Pas de filtre country — l'utilisateur peut saisir une adresse dans n'importe quel pays supporté
-        // (ex: commander depuis USA pour une livraison en Égypte)
+        // Restriction aux pays supportés (multi-pays) — permet de commander pour n'importe quel pays supporté
         const suggestions = await GooglePlacesService.suggest(address.trim(), {
+          countryCodes: supportedCodes,
           language: i18n.language,
           ...(locationState.userLat && locationState.userLng
             ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
@@ -309,8 +310,9 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
         });
         setSuggestions(suggestions);
       } else {
-        // Fallback Mapbox SearchBox — sans filtre country pour permettre l'international
+        // Fallback Mapbox — restriction aux pays supportés (liste CSV)
         const results = await MapboxService.geocodeAddress(address.trim(), {
+          country: supportedCodes.map((c) => c.toLowerCase()).join(','),
           language: 'fr,ar,en',
           ...(locationState.userLat && locationState.userLng
             ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }

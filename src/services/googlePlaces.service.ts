@@ -57,7 +57,8 @@ export class GooglePlacesService {
   static async suggest(
     query: string,
     options?: {
-      countryCode?: string;
+      countryCode?: string;         // un seul pays (biais utilisateur)
+      countryCodes?: string[];      // liste de pays supportés (restriction multi-pays)
       language?: string;
       proximity?: { lat: number; lng: number };
       sessionToken?: string;
@@ -73,7 +74,12 @@ export class GooglePlacesService {
 
     if (options?.language) params.language = options.language;
     if (options?.sessionToken) params.sessiontoken = options.sessionToken;
-    if (options?.countryCode) params.components = `country:${options.countryCode}`;
+    // countryCodes (multi) prime sur countryCode (single)
+    if (options?.countryCodes?.length) {
+      params.components = options.countryCodes.map((c) => `country:${c.toUpperCase()}`).join('|');
+    } else if (options?.countryCode) {
+      params.components = `country:${options.countryCode}`;
+    }
     if (options?.proximity) {
       // location + radius = biais de proximité (pas une restriction dure).
       // On utilise un rayon couvrant l'ensemble des pays supportés (≈ 2 000 km)

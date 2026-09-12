@@ -22,7 +22,7 @@ import { BookingStep2Data, BookingAddressData } from '../../types/booking';
 import { MapboxService } from '../../services/mapbox.service';
 import { GooglePlacesService } from '../../services/googlePlaces.service';
 import { CountryDetectionService } from '../../services/countryDetection.service';
-import { getCountryInfo } from '../../config/countries';
+import { getCountryInfo, SUPPORTED_COUNTRIES } from '../../config/countries';
 import { UnsupportedCountryModal } from '../../components/shared/UnsupportedCountryModal';
 import {
   setDetecting,
@@ -138,9 +138,10 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   const geocodeAddress = async (query: string) => {
     if (!query.trim() || query.trim().length < 3) return;
     setIsGeocoding(true);
-    // Pas de filtre country — l'utilisateur peut saisir une adresse dans n'importe quel pays
+    const supportedCodes = SUPPORTED_COUNTRIES.map((c) => c.code.toUpperCase());
     const mapboxFallback = async () => {
       const results = await MapboxService.geocodeAddress(query.trim(), {
+        country: supportedCodes.map((c) => c.toLowerCase()).join(','),
         language: i18n.language,
         ...(locationState.userLat && locationState.userLng
           ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
@@ -151,6 +152,7 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
     try {
       if (GooglePlacesService.isConfigured()) {
         const results = await GooglePlacesService.suggest(query.trim(), {
+          countryCodes: supportedCodes,
           language: i18n.language,
           ...(locationState.userLat && locationState.userLng
             ? { proximity: { lat: locationState.userLat, lng: locationState.userLng } }
