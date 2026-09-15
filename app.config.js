@@ -14,5 +14,6 @@ module.exports = ({ config }) => ({
     ...(config.plugins ?? []),
     '@rnmapbox/maps',
     'expo-audio',
+    'expo-font'
   ],
 });
