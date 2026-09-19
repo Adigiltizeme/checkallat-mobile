@@ -30,6 +30,7 @@ import {
   setUnsupportedCountry,
   setDetectionDenied,
   selectCountry,
+  restoreSelectedCountry,
 } from '../../store/slices/locationSlice';
 import { RootState } from '../../store';
 
@@ -90,6 +91,16 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
   const { categorySlug, step1Data, step2Prefill } = route.params as any;
   const dispatch = useDispatch();
   const locationState = useSelector((state: RootState) => state.location);
+
+  // Sauvegarde du pays au moment d'entrer dans le flux de commande
+  const originalCountry = useRef(locationState.selectedCountryCode);
+
+  // Restauration automatique du pays global au sortir de cet écran (retour vers Home)
+  useEffect(() => {
+    return () => {
+      dispatch(restoreSelectedCountry(originalCountry.current));
+    };
+  }, []);
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('booking_request.step_of', { current: 2, total: 5 }) });

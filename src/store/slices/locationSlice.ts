@@ -70,6 +70,10 @@ const locationSlice = createSlice({
         state.detectionStatus = 'done';
       }
     },
+    /** Restaure la valeur de selectedCountryCode (peut être null) — utilisé au sortir d'un flux de commande */
+    restoreSelectedCountry(state, action: PayloadAction<string | null>) {
+      state.selectedCountryCode = action.payload;
+    },
     /** Mise à jour explicite du code devise (depuis platform settings ou pays sélectionné) */
     setActiveCurrency(state, action: PayloadAction<string>) {
       state.activeCurrencyCode = action.payload;
@@ -91,6 +95,7 @@ export const {
   setDetectionDenied,
   setDetectionError,
   selectCountry,
+  restoreSelectedCountry,
   setActiveCurrency,
   resetDetection,
 } = locationSlice.actions;
