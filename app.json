@@ -8,7 +8,12 @@
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "updates": {
-      "enabled": false
+      "enabled": true,
+      "url": "https://u.expo.dev/c7b49218-9afc-4e25-9c72-9dc29e40917d",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -17,6 +22,7 @@
       "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
       "bundleIdentifier": "com.digiltizeme.checkallat",
+      "buildNumber": "3",
       "icon": "./assets/icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
