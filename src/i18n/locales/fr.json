@@ -99,7 +99,7 @@
     "password_special": "Doit contenir au moins un caractère spécial (@$!%*?&#)",
     "passwords_mismatch": "Les mots de passe ne correspondent pas",
     "session_expired": "Votre session a expiré. Veuillez vous reconnecter.",
-    "country_detected_hint": "Détecté automatiquement — appuyez pour corriger."
+    "country_detected_hint": "Pays détecté automatiquement."
   },
   "role_selector": {
     "title": "Choisissez votre espace",

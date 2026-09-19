@@ -99,7 +99,7 @@
     "password_special": "يجب أن تحتوي على رمز خاص (@$!%*?&#)",
     "passwords_mismatch": "كلمتا المرور غير متطابقتين",
     "session_expired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مجدداً.",
-    "country_detected_hint": "تم الكشف تلقائياً — اضغط للتغيير."
+    "country_detected_hint": "تم اكتشاف بلدك تلقائياً."
   },
   "role_selector": {
     "title": "اختر فضاءك",

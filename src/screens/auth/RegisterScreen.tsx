@@ -23,6 +23,7 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { SUPPORTED_COUNTRIES } from '../../config/countries';
+import { CountryDetectionService } from '../../services/countryDetection.service';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const LOGO_SIZE = Dimensions.get('window').width * 0.75;
@@ -60,24 +61,33 @@ export const RegisterScreen = ({ navigation }: Props) => {
     [detectedIso],
   );
 
-  // Géolocalisation silencieuse au montage
+  // Détection silencieuse du pays au montage : GPS d'abord, puis IP en fallback
   useEffect(() => {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') return;
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Low,
-        });
-        const [geo] = await Location.reverseGeocodeAsync({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        });
-        const isoCode = geo?.isoCountryCode?.toLowerCase();
-        if (!isoCode) return;
-        setDetectedIso(isoCode);
-        const found = SUPPORTED_COUNTRIES.find(c => c.code === isoCode);
-        if (found) setSelectedCountryCode(isoCode);
+        if (status === 'granted') {
+          const pos = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Low,
+          });
+          const [geo] = await Location.reverseGeocodeAsync({
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          });
+          const isoCode = geo?.isoCountryCode?.toLowerCase();
+          if (!isoCode) return;
+          setDetectedIso(isoCode);
+          const found = SUPPORTED_COUNTRIES.find(c => c.code === isoCode);
+          if (found) setSelectedCountryCode(isoCode);
+        } else {
+          // GPS refusé : fallback sur l'adresse IP
+          const result = await CountryDetectionService.detectViaIP();
+          if ((result.status === 'supported' || result.status === 'unsupported') && result.countryCode) {
+            const isoCode = result.countryCode.toLowerCase();
+            setDetectedIso(isoCode);
+            if (result.status === 'supported') setSelectedCountryCode(isoCode);
+          }
+        }
       } catch {
         // Silencieux — la sélection de pays n'est jamais bloquante à l'inscription
       }
