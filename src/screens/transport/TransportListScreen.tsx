@@ -9,7 +9,7 @@ import { spacing } from '../../theme/spacing';
 import { useGetMyTransportRequestsQuery } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { TransportRequest, STATUS_COLORS, TransportStatus, TransportObjectType } from '../../types/transport';
-import { formatCurrency } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 
 type Props = StackScreenProps<any, 'TransportList'>;
 type TemporalFilter = 'all' | 'today' | 'upcoming' | 'history';
@@ -19,6 +19,7 @@ const toDay = (d: string) => d ? new Date(d).toLocaleDateString('en-CA') : '';
 
 export const TransportListScreen = ({ navigation }: Props) => {
   const { tokens } = useAppTheme();
+  const { formatWithCurrency } = useCurrencyFormatter();
 
 
   const styles = useMemo(() => StyleSheet.create({
@@ -389,7 +390,7 @@ export const TransportListScreen = ({ navigation }: Props) => {
             </View>
             <View style={styles.requestFooter}>
               <Text variant="bodySmall" style={styles.requestDate}>📅 {formatDate(item.scheduledDate)}</Text>
-              <Text variant="titleSmall" style={styles.requestPrice}>{formatCurrency(item.price || 0)}</Text>
+              <Text variant="titleSmall" style={styles.requestPrice}>{formatWithCurrency(item.price || 0, (item as any).currency || '')}</Text>
             </View>
 
           </Card.Content>

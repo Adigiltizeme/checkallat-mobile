@@ -22,12 +22,13 @@ import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 
 type Props = StackScreenProps<DriverStackParamList, 'DriverAvailableRequests'>;
 
 export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
   const { t, i18n } = useTranslation();
+  const { formatWithCurrency } = useCurrencyFormatter();
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
@@ -137,7 +138,7 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
           {/* Header: price + payment method */}
           <View style={styles.cardHeader}>
             <Text variant="titleLarge" style={styles.price}>
-              {formatCurrency(item.price || item.totalPrice || 0)}
+              {formatWithCurrency(item.price || (item as any).totalPrice || 0, (item as any).currency || '')}
             </Text>
             <Chip
               icon={item.paymentMethod === 'cash' ? 'cash' : 'credit-card'}

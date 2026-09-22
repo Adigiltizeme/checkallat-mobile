@@ -648,7 +648,7 @@
     "escrow_status_label": "Statut escrow",
     "net": "net",
     "cash_commission_due_title": "Commission due à la plateforme",
-    "cash_commission_due_msg": "Vous devez {{amount}} de commission plateforme sur vos paiements cash. Un administrateur viendra la récupérer lors d'un prochain contact.",
+    "cash_commission_due_msg": "Vous devez {{amount}} de commission plateforme sur vos paiements cash.",
     "camera_permission_denied": "Vous devez autoriser l'accès à la caméra pour prendre des photos.",
     "gallery_permission_denied": "Vous devez autoriser l'accès à la galerie pour sélectionner des photos.",
     "photos_required_msg": "Vous devez ajouter au moins une photo avant de continuer.",
@@ -851,7 +851,8 @@
     "cta_sub": "Des chauffeurs disponibles maintenant près de vous",
     "cta_btn": "Réserver maintenant",
     "driver_cannot_book_transport": "En tant que chauffeur actif, vous ne pouvez pas passer une demande de transport en tant que client.",
-    "pro_cannot_book_own_category": "Vous ne pouvez pas réserver un service dans une catégorie dans laquelle vous êtes prestataire."
+    "pro_cannot_book_own_category": "Vous ne pouvez pas réserver un service dans une catégorie dans laquelle vous êtes prestataire.",
+    "become_provider_title": "Devenez prestataire"
   },
   "payment": {
     "title": "Paiement",
@@ -902,7 +903,8 @@
     "details_order_date": "Date commande",
     "details_not_found": "Paiement introuvable",
     "cash": "Espèces",
-    "card": "Carte"
+    "card": "Carte",
+    "dev_build_required": "Le paiement en ligne nécessite l'application native. Installez le build de développement via EAS pour tester cette fonctionnalité."
   },
   "cash_validation": {
     "title": "Validation du paiement cash",
@@ -1123,7 +1125,9 @@
     "cancel_penalty_free_label": "Sans pénalité",
     "cancel_penalty_note": "Attention : ce motif peut impacter votre taux d'acceptation.",
     "cancel_result_refund": "Réservation annulée. Remboursement : {{pct}} %",
-    "cancel_result_fee": "Réservation annulée. Frais d'annulation : {{amount}} {{currency}}"
+    "cancel_result_fee": "Réservation annulée. Frais d'annulation : {{amount}} {{currency}}",
+    "extras_section_title": "Extras optionnels",
+    "extras_total_label": "Total extras"
   },
   "chat": {
     "empty": "Aucun message. Lancez la conversation !",
@@ -1258,7 +1262,7 @@
     "update_pricing": "Modifier mes tarifs",
     "manage_pricing": "Gérer mes tarifs",
     "cash_commission_due_title": "Commission due à la plateforme",
-    "cash_commission_due_msg": "Vous devez {{amount}} de commission sur vos paiements cash. Un administrateur viendra la récupérer, ou payez directement en ligne.",
+    "cash_commission_due_msg": "Vous devez {{amount}} de commission sur vos paiements cash. Payez directement en ligne.",
     "pay_commission_online": "Payer en ligne",
     "commission_paid_success_msg": "Votre dette de commission a été soldée. Les paiements en cash sont de nouveau disponibles.",
     "commission_payment_error": "Impossible d'initier le paiement. Veuillez réessayer.",
@@ -1285,7 +1289,14 @@
     "extra_status_rejected": "❌ Refusé par l'admin",
     "extra_admin_note": "Note admin :",
     "no_categories_registered": "Aucune catégorie de service",
-    "no_categories_hint": "Contactez un administrateur pour associer des services à votre profil"
+    "no_categories_hint": "Contactez un administrateur pour associer des services à votre profil",
+    "category_plumbing": "Plomberie",
+    "category_electricity": "Électricité",
+    "category_painting": "Peinture",
+    "category_handyman": "Bricolage",
+    "category_cleaning": "Ménage",
+    "category_carpentry": "Menuiserie",
+    "category_air_condition": "Climatisation"
   },
   "activity": {
     "page_title": "Mes activités",
@@ -1414,9 +1425,9 @@
     "cat_carpentry_task": "Type de travail",
     "cat_ac_service": "Type d'intervention",
     "cat_handyman_task": "Type de tâche",
-    "urgency_label": "Urgence",
-    "urgency_normal": "Normal",
-    "urgency_urgent": "Urgent",
+    "price_breakdown_base": "Prix de base",
+    "price_breakdown_urgency": "Majoration immédiat (+{{pct}}%)",
+    "price_breakdown_total": "Total estimé",
     "immediate_hint_short": "Un pro vient dès que possible",
     "scheduled_hint_short": "Choisissez une date et un créneau",
     "date_hint": "Utilisez les flèches pour changer de date",

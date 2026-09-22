@@ -20,7 +20,7 @@ import { spacing } from '../../theme/spacing';
 import { getLocalizedName } from '../../utils/localize';
 import { RootState } from '../../store';
 import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
-import { CATEGORY_FIELDS, HAS_URGENCY } from '../../config/categoryFields';
+import { CATEGORY_FIELDS } from '../../config/categoryFields';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep1'>;
 
@@ -50,10 +50,8 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
   }, []);
 
   const fields = CATEGORY_FIELDS[categorySlug] ?? [];
-  const showUrgency = HAS_URGENCY.includes(categorySlug);
 
   const [selections, setSelections] = useState<Record<string, string[]>>(prefill?.categoryData ?? {});
-  const [urgency, setUrgency] = useState<'normal' | 'urgent'>(prefill?.urgency ?? 'normal');
   const [description, setDescription] = useState(prefill?.clientDescription ?? '');
   const [photos, setPhotos] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -101,7 +99,7 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
       categoryNameAr,
       clientDescription: description.trim(),
       clientPhotos: photos,
-      categoryData: { ...selections, urgency },
+      categoryData: { ...selections },
     };
     navigation.navigate('BookingRequestStep2', { categorySlug, step1Data, step2Prefill });
   };
@@ -137,25 +135,6 @@ export const BookingRequestStep1Screen = ({ route, navigation }: Props) => {
           )}
         </View>
       ))}
-
-      {/* Urgence */}
-      {showUrgency && (
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>{t('booking_request.urgency_label')}</Text>
-          <View style={styles.chipsRow}>
-            {(['normal', 'urgent'] as const).map(u => (
-              <ChocolateChip
-                key={u}
-                label={u === 'normal'
-                  ? t('booking_request.urgency_normal')
-                  : t('booking_request.urgency_urgent', { pct: 30 })}
-                selected={urgency === u}
-                onPress={() => setUrgency(u)}
-              />
-            ))}
-          </View>
-        </View>
-      )}
 
       {/* Description */}
       <View style={styles.section}>

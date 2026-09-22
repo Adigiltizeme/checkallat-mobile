@@ -535,6 +535,55 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
 
+  /* Become provider */
+  becomeSection: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  becomeTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.dark,
+    marginBottom: spacing.sm,
+  },
+  becomeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  becomeIconWrap: {
+    width: 46,
+    height: 46,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  becomeTextWrap: {
+    flex: 1,
+  },
+  becomeCardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.dark,
+    marginBottom: 2,
+  },
+  becomeCardDesc: {
+    fontSize: 12,
+    color: colors.gray,
+    lineHeight: 16,
+  },
+
   /* CTA */
   ctaCard: {
     marginHorizontal: spacing.lg,
@@ -829,6 +878,27 @@ export const HomeScreen = ({ navigation }: any) => {
             ))}
           </ScrollView>
         </View>
+
+        {/* ── Devenir prestataire ── */}
+        {(!user?.pro || !user?.driver) ? (
+          <View style={[styles.becomeSection]}>
+            <Text style={[styles.becomeTitle, { color: tokens.text.primary }]}>{t('home.become_provider_title')}</Text>
+            <TouchableOpacity
+              style={[styles.becomeCard, { backgroundColor: tokens.card, borderColor: tokens.border }]}
+              onPress={() => navigation.navigate('Profile', { screen: 'AddActivity' })}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.becomeIconWrap, { backgroundColor: colors.primary + '18' }]}>
+                <Icon name="briefcase-plus" size={24} color={colors.primary} />
+              </View>
+              <View style={styles.becomeTextWrap}>
+                <Text style={[styles.becomeCardTitle, { color: tokens.text.primary }]}>{t('activity.my_activities')}</Text>
+                <Text style={[styles.becomeCardDesc, { color: tokens.text.secondary }]}>{t('activity.my_activities_desc')}</Text>
+              </View>
+              <Icon name="chevron-right" size={20} color={tokens.text.secondary} />
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         {/* ── CTA ── */}
         <Animated.View entering={FadeInDown.delay(300).springify()} style={[styles.ctaCard, { backgroundColor: tokens.primary }]}>

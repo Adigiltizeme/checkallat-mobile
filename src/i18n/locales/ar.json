@@ -851,7 +851,8 @@
     "cta_sub": "سائقون متاحون الآن بالقرب منك",
     "cta_btn": "احجز الآن",
     "driver_cannot_book_transport": "بصفتك سائقاً نشطاً، لا يمكنك تقديم طلب نقل كعميل.",
-    "pro_cannot_book_own_category": "لا يمكنك حجز خدمة في فئة تعمل فيها كمزوّد خدمة."
+    "pro_cannot_book_own_category": "لا يمكنك حجز خدمة في فئة تعمل فيها كمزوّد خدمة.",
+    "become_provider_title": "كن مزوّد خدمة"
   },
   "payment": {
     "title": "الدفع",
@@ -902,7 +903,8 @@
     "details_order_date": "تاريخ الطلب",
     "details_not_found": "الدفع غير موجود",
     "cash": "نقداً",
-    "card": "بطاقة"
+    "card": "بطاقة",
+    "dev_build_required": "الدفع عبر الإنترنت يتطلب التطبيق الأصلي. قم بتثبيت البنية التطويرية عبر EAS لاختبار هذه الميزة."
   },
   "cash_validation": {
     "title": "التحقق من الدفع النقدي",
@@ -1123,7 +1125,9 @@
     "cancel_penalty_free_label": "بدون عقوبة",
     "cancel_penalty_note": "تنبيه: قد يؤثر هذا السبب على معدل قبولك.",
     "cancel_result_refund": "تم إلغاء الحجز. استرداد: {{pct}}٪",
-    "cancel_result_fee": "تم إلغاء الحجز. رسوم الإلغاء: {{amount}} {{currency}}"
+    "cancel_result_fee": "تم إلغاء الحجز. رسوم الإلغاء: {{amount}} {{currency}}",
+    "extras_section_title": "إضافات اختيارية",
+    "extras_total_label": "مجموع الإضافات"
   },
   "chat": {
     "empty": "لا توجد رسائل بعد. ابدأ المحادثة!",
@@ -1285,7 +1289,14 @@
     "extra_status_rejected": "❌ مرفوض من المشرف",
     "extra_admin_note": "ملاحظة المشرف:",
     "no_categories_registered": "لا توجد فئات خدمة",
-    "no_categories_hint": "تواصل مع مشرف لإضافة الخدمات إلى ملفك الشخصي"
+    "no_categories_hint": "تواصل مع مشرف لإضافة الخدمات إلى ملفك الشخصي",
+    "category_plumbing": "السباكة",
+    "category_electricity": "الكهرباء",
+    "category_painting": "الدهان",
+    "category_handyman": "الأعمال اليدوية",
+    "category_cleaning": "التنظيف",
+    "category_carpentry": "النجارة",
+    "category_air_condition": "تكييف الهواء"
   },
   "activity": {
     "page_title": "أنشطتي",
@@ -1414,9 +1425,9 @@
     "cat_carpentry_task": "نوع العمل",
     "cat_ac_service": "نوع الخدمة",
     "cat_handyman_task": "نوع المهمة",
-    "urgency_label": "الأولوية",
-    "urgency_normal": "عادي",
-    "urgency_urgent": "عاجل",
+    "price_breakdown_base": "السعر الأساسي",
+    "price_breakdown_urgency": "رسوم الفورية (+{{pct}}%)",
+    "price_breakdown_total": "الإجمالي المقدّر",
     "immediate_hint_short": "مقدّم خدمة يأتي في أقرب وقت",
     "scheduled_hint_short": "اختر تاريخاً وفترة زمنية",
     "date_hint": "استخدم الأسهم لتغيير التاريخ",

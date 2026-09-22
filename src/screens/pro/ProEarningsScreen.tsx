@@ -7,6 +7,7 @@ import { TFunction } from 'i18next';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useStripe } from '@stripe/stripe-react-native';
+import { isExpoGo } from '../../utils/environment';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { getLocalizedName } from '../../utils/localize';
@@ -120,7 +121,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
 }), [tokens]);
 
   const { t, i18n } = useTranslation();
-  const { format: formatCurrencyDefault, formatWithCurrency } = useCurrencyFormatter();
+  const { format: formatCurrencyDefault, formatWithCurrency, currencyCode: activeCurrencyCode } = useCurrencyFormatter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const pro = useSelector((state: RootState) => (state.auth.user as any)?.pro);
   const proId: string = pro?.id ?? '';
@@ -142,6 +143,10 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   const [commissionPaid, setCommissionPaid] = useState(false);
 
   const handlePayCommissionOnline = async () => {
+    if (isExpoGo) {
+      Alert.alert(t('common.error'), t('payment.dev_build_required'));
+      return;
+    }
     try {
       const result = await payProCommission().unwrap();
       const { error: initError } = await initPaymentSheet({
@@ -178,6 +183,15 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
     return formatWithCurrency(amount, currencyCode);
   };
 
+  const pendingCashBookings = useMemo(
+    () => allBookings.filter((b) => b.paymentMethod === 'cash' && b.status === 'completed' && !b.cashCommissionCollectedAt),
+    [allBookings],
+  );
+  const commissionCurrency: string =
+    pendingCashBookings.length > 0
+      ? (pendingCashBookings[0].currency ?? statsCurrency ?? activeCurrencyCode)
+      : (statsCurrency ?? activeCurrencyCode);
+
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short', year: 'numeric' });
 
@@ -200,15 +214,25 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
     return b.finalPrice ?? b.estimatedPrice ?? 0;
   };
 
-  const periodEarnings = useMemo(
-    () => periodBookings.reduce((sum, b) => sum + getBookingAmount(b), 0),
-    [periodBookings],
-  );
+  const periodEarningsByCurrency = useMemo(() => {
+    const map: Record<string, number> = {};
+    periodBookings.forEach((b) => {
+      const cur = b.currency ?? statsCurrency ?? '';
+      if (cur) map[cur] = (map[cur] ?? 0) + getBookingAmount(b);
+    });
+    return map;
+  }, [periodBookings, statsCurrency]);
 
-  const totalEarnings = useMemo(
-    () => allBookings.filter((b) => b.status === 'completed').reduce((sum, b) => sum + getBookingAmount(b), 0),
-    [allBookings],
-  );
+  const totalEarningsByCurrency = useMemo(() => {
+    const map: Record<string, number> = {};
+    allBookings.filter((b) => b.status === 'completed').forEach((b) => {
+      const cur = b.currency ?? statsCurrency ?? '';
+      if (cur) map[cur] = (map[cur] ?? 0) + getBookingAmount(b);
+    });
+    return map;
+  }, [allBookings, statsCurrency]);
+
+  const activeEarnings = periodMode === 'all' ? totalEarningsByCurrency : periodEarningsByCurrency;
 
   if (statsLoading || bookingsLoading) {
     return <View style={styles.centerContainer}><ActivityIndicator size="large" color={tokens.primary} /></View>;
@@ -236,7 +260,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
             </Text>
             <Text style={styles.commissionAlertText}>
               {t('pro_space.cash_commission_due_msg', {
-                amount: formatAmount((stats as any).pendingCashCommission),
+                amount: formatWithCurrency((stats as any).pendingCashCommission, commissionCurrency),
               })}
             </Text>
             <ChocolateButton
@@ -285,9 +309,14 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
           <Text variant="titleMedium" style={styles.totalLabel}>
             💰 {periodMode === 'all' ? t('driver.earnings_total') : t('driver.earnings_period')}
           </Text>
-          <Text variant="displayMedium" style={styles.totalAmount}>
-            {formatAmount(periodMode === 'all' ? totalEarnings : periodEarnings)}
-          </Text>
+          {Object.entries(activeEarnings).length > 0
+            ? Object.entries(activeEarnings).map(([cur, amount]) => (
+                <Text key={cur} variant="displayMedium" style={styles.totalAmount}>
+                  {formatWithCurrency(amount, cur)}
+                </Text>
+              ))
+            : <Text variant="displayMedium" style={styles.totalAmount}>—</Text>
+          }
           <Text variant="bodySmall" style={styles.totalSubtext}>
             {periodMode === 'all'
               ? t('driver.earnings_since_start')

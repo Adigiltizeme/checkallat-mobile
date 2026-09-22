@@ -17,7 +17,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import RNMapView, { Marker, Circle } from 'react-native-maps';
 import { HomeStackParamList } from '../../navigation/types';
-import { BookingStep4Data, AssignmentType } from '../../types/booking';
+import { BookingStep4Data, AssignmentType, SelectedExtra } from '../../types/booking';
 import { ModePickerCard } from '../../components/shared/ModePickerCard';
 import { useSelector } from 'react-redux';
 import { useSearchProsQuery } from '../../store/api/prosApi';
@@ -54,7 +54,9 @@ const flattenPro = (item: any) => ({
 
 const calcProPrice = (pro: any, basePrice: number): number => {
   const offering = pro.serviceOfferings?.[0];
-  const includedExtras = (offering?.extras ?? []).filter((e: any) => !e.isOptional);
+  const includedExtras = (offering?.extras ?? []).filter(
+    (e: any) => !e.isOptional && e.status === 'approved',
+  );
   const extrasSum = includedExtras.reduce((s: number, e: any) => s + (e.price ?? 0), 0);
   return basePrice + extrasSum;
 };
@@ -378,6 +380,55 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
     },
     modalSelectBtn: {},
 
+    extrasSection: {
+      backgroundColor: tokens.card,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      borderWidth: 1,
+      borderColor: tokens.border,
+    },
+    extraRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: tokens.border + '60',
+      gap: spacing.sm,
+    },
+    extraRowSelected: {
+      backgroundColor: tokens.primary + '0D',
+      borderRadius: 8,
+      paddingHorizontal: 6,
+    },
+    extraCheckbox: {
+      width: 22,
+      height: 22,
+      borderRadius: 5,
+      borderWidth: 1.5,
+      borderColor: tokens.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tokens.background,
+    },
+    extraCheckboxSelected: {
+      backgroundColor: tokens.primary,
+    },
+    extraCheckmark: { fontSize: 13, color: colors.white, fontWeight: '700' },
+    extraLabel: { fontSize: 14, color: tokens.text.primary, flex: 1 },
+    extraPrice: { fontSize: 13, color: tokens.primary, fontWeight: '600' },
+    extrasTotalRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: spacing.sm,
+      paddingTop: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: tokens.border,
+    },
+    extrasTotalLabel: { fontSize: 14, fontWeight: '600', color: tokens.text.primary },
+    extrasTotalValue: { fontSize: 15, fontWeight: '700', color: tokens.primary },
+
     mapProCard: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -446,6 +497,13 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
   const categoryMeta = (allCategories as any[]).find((c: any) => c.slug === categorySlug);
   const basePrice: number | null = categoryMeta?.basePrice ?? null;
   const baseCurrency: string = categoryMeta?.currency ?? CURRENCY_CONFIG.code;
+  const urgencyEnabled: boolean = categoryMeta?.urgencyEnabled ?? true;
+  const urgencyMultiplier: number = categoryMeta?.urgencyMultiplier ?? 1.3;
+  const isImmediate = step3Data.bookingType === 'immediate';
+  const urgencyApplied = isImmediate && urgencyEnabled && basePrice != null;
+  const displayedPrice = urgencyApplied && basePrice != null
+    ? Math.round(basePrice * urgencyMultiplier)
+    : basePrice;
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('booking_request.step_of', { current: 4, total: 5 }) });
@@ -453,9 +511,25 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
 
   const [assignMode, setAssignMode] = useState<AssignmentType>('auto');
   const [selectedProId, setSelectedProId] = useState<string | null>(null);
+  const [selectedOptionalExtras, setSelectedOptionalExtras] = useState<SelectedExtra[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [maxDistance, setMaxDistance] = useState<number>(20);
   const [showcasePro, setShowcasePro] = useState<any | null>(null);
+
+  const extrasTotal = selectedOptionalExtras.reduce((sum, e) => sum + e.price, 0);
+
+  const toggleExtra = (extra: { id: string; label: string; price: number }) => {
+    setSelectedOptionalExtras(prev =>
+      prev.some(e => e.id === extra.id)
+        ? prev.filter(e => e.id !== extra.id)
+        : [...prev, { id: extra.id, label: extra.label, price: extra.price }],
+    );
+  };
+
+  // Réinitialiser les extras quand le pro change (useLayoutEffect pour éviter un frame de prix stale)
+  useLayoutEffect(() => {
+    setSelectedOptionalExtras([]);
+  }, [selectedProId]);
 
   const addressLat = step2Data.address.lat;
   const addressLng = step2Data.address.lng;
@@ -489,6 +563,9 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
 
   const handleNext = () => {
     const selectedPro = pros.find((p: any) => p.id === selectedProId);
+    const baseWithIncluded = selectedPro && displayedPrice != null
+      ? calcProPrice(selectedPro, displayedPrice)
+      : (displayedPrice ?? 0);
     const step4Data: BookingStep4Data = {
       assignmentType: assignMode,
       proId: assignMode === 'manual' ? selectedProId ?? undefined : undefined,
@@ -496,10 +573,10 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
         ? `${selectedPro.user?.firstName} ${selectedPro.user?.lastName}`
         : undefined,
       serviceOfferingId: selectedPro?.serviceOfferings?.[0]?.id,
-      estimatedPrice: selectedPro && basePrice != null
-        ? calcProPrice(selectedPro, basePrice)
-        : (basePrice ?? undefined),
+      estimatedPrice: baseWithIncluded + extrasTotal,
       estimatedCurrency: baseCurrency,
+      selectedOptionalExtras: selectedOptionalExtras.length > 0 ? selectedOptionalExtras : undefined,
+      extrasTotal: extrasTotal > 0 ? extrasTotal : undefined,
     };
     navigation.navigate('BookingRequestStep5', { categorySlug, step1Data, step2Data, step3Data, step4Data });
   };
@@ -659,13 +736,29 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
           />
         </View>
 
-        {/* Prix de base (mode auto) */}
+        {/* Estimation de prix (mode auto) */}
         {assignMode === 'auto' && basePrice != null && (
           <View style={styles.basePriceInfo}>
             <Text style={{ fontSize: 16 }}>💰</Text>
-            <Text style={styles.basePriceInfoText}>
-              {t('booking_request.price_from', { price: basePrice, currency: baseCurrency })}
-            </Text>
+            <View style={{ flex: 1 }}>
+              {urgencyApplied ? (
+                <>
+                  <Text style={[styles.basePriceInfoText, { fontSize: 12, fontWeight: '400' }]}>
+                    {t('booking_request.price_breakdown_base')} : {basePrice} {baseCurrency}
+                  </Text>
+                  <Text style={[styles.basePriceInfoText, { fontSize: 12, fontWeight: '400' }]}>
+                    {t('booking_request.price_breakdown_urgency', { pct: Math.round((urgencyMultiplier - 1) * 100) })}
+                  </Text>
+                  <Text style={[styles.basePriceInfoText, { fontWeight: '700' }]}>
+                    {t('booking_request.price_breakdown_total')} : {displayedPrice} {baseCurrency}
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.basePriceInfoText}>
+                  {t('booking_request.price_from', { price: basePrice, currency: baseCurrency })}
+                </Text>
+              )}
+            </View>
           </View>
         )}
 
@@ -965,6 +1058,45 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
             )}
           </>
         )}
+        {/* Extras optionnels du pro sélectionné (mode manuel) */}
+        {assignMode === 'manual' && selectedProId != null && (() => {
+          const selPro = pros.find((p: any) => p.id === selectedProId);
+          const optExtras = (selPro?.serviceOfferings?.[0]?.extras ?? []).filter(
+            (e: any) => e.isOptional && e.status === 'approved',
+          );
+          if (optExtras.length === 0) return null;
+          return (
+            <View style={[styles.extrasSection, { marginTop: spacing.sm }]}>
+              <Text style={[styles.sectionLabel, { marginBottom: spacing.sm }]}>
+                {t('booking.extras_section_title')}
+              </Text>
+              {optExtras.map((extra: any, idx: number) => {
+                const isSel = selectedOptionalExtras.some(e => e.id === extra.id);
+                const isLast = idx === optExtras.length - 1;
+                return (
+                  <TouchableOpacity
+                    key={extra.id}
+                    style={[styles.extraRow, isSel && styles.extraRowSelected, isLast && { borderBottomWidth: 0 }]}
+                    onPress={() => toggleExtra({ id: extra.id, label: extra.label, price: extra.price })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.extraCheckbox, isSel && styles.extraCheckboxSelected]}>
+                      {isSel && <Text style={styles.extraCheckmark}>✓</Text>}
+                    </View>
+                    <Text style={styles.extraLabel}>{extra.label}</Text>
+                    <Text style={styles.extraPrice}>+{extra.price} {baseCurrency}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+              {extrasTotal > 0 && (
+                <View style={styles.extrasTotalRow}>
+                  <Text style={styles.extrasTotalLabel}>{t('booking.extras_total_label')}</Text>
+                  <Text style={styles.extrasTotalValue}>+{extrasTotal} {baseCurrency}</Text>
+                </View>
+              )}
+            </View>
+          );
+        })()}
       </ScrollView>
 
       <View style={styles.footer}>

@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetDriverAgendaQuery } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
-import { formatCurrency } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -35,7 +35,8 @@ const isToday = (d: Date) => {
 
 export const DriverAgendaScreen = () => {
   const { t, i18n } = useTranslation();
-    const { tokens } = useAppTheme();
+  const { tokens } = useAppTheme();
+  const { formatWithCurrency } = useCurrencyFormatter();
 
   const styles = useMemo(() => StyleSheet.create({
   container: { flex: 1, backgroundColor: tokens.background },
@@ -148,7 +149,7 @@ const navigation = useNavigation<any>();
             <View style={styles.cardRow}>
               <Icon name="cash" size={14} color={tokens.primary} />
               <Text style={[styles.cardMeta, { color: tokens.primary, fontWeight: '700' }]}>
-                {formatCurrency(item.totalPrice)}
+                {formatWithCurrency(item.totalPrice || 0, (item as any).currency || '')}
               </Text>
             </View>
           ) : null}

@@ -1,6 +1,7 @@
 import * as Location from 'expo-location';
 import { MapboxService } from './mapbox.service';
 import { isCountrySupported } from '../config/countries';
+import { API_CONFIG } from '../config/api';
 
 export type CountryDetectionResult =
   | { status: 'supported'; countryCode: string; lat: number; lng: number }
@@ -46,30 +47,49 @@ export class CountryDetectionService {
   }
 
   /**
-   * Fallback : IP géolocalisation via ipapi.co (gratuit, pas de token)
-   * Utilisé quand le GPS est refusé ou indisponible.
+   * Fallback : détection pays par IP.
+   * Essaie d'abord le backend (qui interroge ipapi.co avec l'IP mobile côté serveur),
+   * puis ipapi.co directement si le backend est inaccessible.
    */
   static async detectViaIP(): Promise<CountryDetectionResult> {
+    // Primaire : backend (évite les limites de taux côté mobile)
     try {
-      const response = await fetch('https://ipapi.co/json/');
+      const res = await fetch(`${API_CONFIG.BASE_URL}/auth/detect-country`, {
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const countryCode: string | null = data.countryCode?.toLowerCase() || null;
+        if (countryCode) {
+          if (isCountrySupported(countryCode)) {
+            return { status: 'supported', countryCode, lat: 0, lng: 0 };
+          } else {
+            return { status: 'unsupported', countryCode, lat: 0, lng: 0 };
+          }
+        }
+      }
+    } catch {
+      // Backend inaccessible → fallback direct
+    }
+
+    // Secondaire : ipapi.co en direct
+    try {
+      const response = await fetch('https://ipapi.co/json/', {
+        signal: AbortSignal.timeout(5000),
+      });
       if (!response.ok) throw new Error('IP geolocation unavailable');
 
       const data = await response.json();
       const countryCode: string | null = data.country_code?.toLowerCase() || null;
-      const lat: number = data.latitude ?? 0;
-      const lng: number = data.longitude ?? 0;
 
-      if (!countryCode) {
-        return { status: 'denied' };
-      }
+      if (!countryCode) return { status: 'denied' };
 
       if (isCountrySupported(countryCode)) {
-        return { status: 'supported', countryCode, lat, lng };
+        return { status: 'supported', countryCode, lat: data.latitude ?? 0, lng: data.longitude ?? 0 };
       } else {
-        return { status: 'unsupported', countryCode, lat, lng };
+        return { status: 'unsupported', countryCode, lat: data.latitude ?? 0, lng: data.longitude ?? 0 };
       }
     } catch {
-      // Si IP aussi échoue, on retourne 'denied' — l'utilisateur devra choisir manuellement
       return { status: 'denied' };
     }
   }

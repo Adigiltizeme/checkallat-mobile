@@ -1,3 +1,5 @@
+import { NavigatorScreenParams } from '@react-navigation/native';
+
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
@@ -27,7 +29,7 @@ export type MainTabParamList = {
   DriverMessages: undefined;
   // Shared
   History: undefined;
-  Profile: undefined;
+  Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
 };
 
 export type ProfileStackParamList = {
@@ -96,7 +98,7 @@ export type HomeStackParamList = {
   TransportTracking: { requestId: string };
   TransportDetails: { requestId: string };
   TransportCompletion: { requestId: string };
-  CashValidation: { requestId: string; totalPrice: number };
+  CashValidation: { requestId: string; totalPrice: number; currency?: string };
   StripePayment: { requestId?: string; clientSecret?: string; amount: number; type: 'transport' | 'booking' | 'marketplace'; pendingRequestData?: Record<string, any> };
   PaymentHistory: undefined;
   Dispute: { requestId: string };
@@ -125,7 +127,7 @@ export type TransportStackParamList = {
   TransportTracking: { requestId: string };
   TransportDetails: { requestId: string };
   TransportCompletion: { requestId: string };
-  CashValidation: { requestId: string; totalPrice: number };
+  CashValidation: { requestId: string; totalPrice: number; currency?: string };
   StripePayment: {
     requestId?: string;
     clientSecret?: string;
@@ -157,7 +159,7 @@ export type DriverStackParamList = {
   DriverEarnings: undefined;
   DriverReviews: { driverId?: string };
   TransportCompletion: { requestId: string };
-  CashValidation: { requestId: string; totalPrice: number };
+  CashValidation: { requestId: string; totalPrice: number; currency?: string };
   Dispute: { requestId: string };
   PaymentHistory: undefined;
   PaymentDetails: { paymentId?: string; requestId?: string };

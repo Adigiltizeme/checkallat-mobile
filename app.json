@@ -80,6 +80,13 @@
         }
       ],
       "expo-localization",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.digiltizeme.checkallat",
+          "enableGooglePay": true
+        }
+      ],
       "expo-asset",
       [
         "expo-splash-screen",

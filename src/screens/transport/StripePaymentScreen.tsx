@@ -3,6 +3,7 @@ import { View, StyleSheet, Alert } from 'react-native';
 import { Text, ActivityIndicator, Card } from 'react-native-paper';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useStripe } from '@stripe/stripe-react-native';
+import { isExpoGo } from '../../utils/environment';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -113,6 +114,11 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
   }, []);
 
   const initializePayment = async () => {
+    if (isExpoGo) {
+      setErrorMessage(t('payment.dev_build_required'));
+      setPaymentState('error');
+      return;
+    }
     try {
       setPaymentState('loading');
 

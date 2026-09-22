@@ -6,6 +6,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { useStripe } from '@stripe/stripe-react-native';
+import { isExpoGo } from '../../utils/environment';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -204,6 +205,10 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
   const [commissionPaid, setCommissionPaid] = useState(false);
 
   const handlePayCommissionOnline = async () => {
+    if (isExpoGo) {
+      Alert.alert(t('common.error'), t('payment.dev_build_required'));
+      return;
+    }
     try {
       const result = await payCommission().unwrap();
       const { error: initError } = await initPaymentSheet({

@@ -720,7 +720,7 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
           request.paymentMethod === 'cash' &&
           !(request as any).cashAmountDeclaredByDriver && (
             <ChocolateButton
-              onPress={() => navigation.navigate('CashValidation', { requestId, totalPrice: request.totalPrice })}
+              onPress={() => navigation.navigate('CashValidation', { requestId, totalPrice: (request as any).price ?? 0, currency: (request as any).currency })}
               style={styles.confirmButton}
             >
               {t('driver.validate_cash_btn')}

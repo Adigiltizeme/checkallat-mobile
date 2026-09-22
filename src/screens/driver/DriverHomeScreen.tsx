@@ -29,6 +29,7 @@ import {
   useConfirmCommissionPaymentMutation,
 } from '../../store/api/transportApi';
 import { useStripe } from '@stripe/stripe-react-native';
+import { isExpoGo } from '../../utils/environment';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { CountrySelectorRow } from '../../components/shared/CountrySelectorRow';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
@@ -204,8 +205,13 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const pendingCashCommission = (driverStats as any)?.pendingCashCommission ?? 0;
+  const commissionCurrency = (driverStats as any)?.currency ?? '';
 
   const handlePayCommissionOnline = async () => {
+    if (isExpoGo) {
+      Alert.alert(t('common.error'), t('payment.dev_build_required'));
+      return;
+    }
     try {
       const result = await payCommission().unwrap();
       const { error: initError } = await initPaymentSheet({
@@ -408,8 +414,8 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
                 <Icon name="cash" size={16} color={tokens.text.secondary} />
                 <Text variant="bodySmall" style={styles.infoText}>
                   {(item as any).payment?.proNetAmount
-                    ? formatCurrency((item as any).payment.proNetAmount)
-                    : formatCurrency(item.price || 0)}
+                    ? `${(item as any).payment.proNetAmount} ${(item as any).currency ?? (item as any).payment?.currency ?? commissionCurrency}`
+                    : `${item.price || 0} ${(item as any).currency ?? commissionCurrency}`}
                   {(item as any).payment?.proNetAmount ? ` (${t('driver.net')})` : ''}
                 </Text>
               </View>
@@ -447,7 +453,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
           <View style={{ flex: 1 }}>
             <Text style={styles.commissionAlertTitle}>{t('driver.cash_commission_due_title')}</Text>
             <Text style={styles.commissionAlertText}>
-              {t('driver.cash_commission_due_msg', { amount: formatCurrency(pendingCashCommission) })}
+              {t('driver.cash_commission_due_msg', { amount: `${pendingCashCommission.toFixed(2)} ${commissionCurrency}` })}
             </Text>
             <ChocolateButton
               onPress={handlePayCommissionOnline}

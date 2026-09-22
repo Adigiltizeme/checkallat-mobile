@@ -851,7 +851,8 @@
     "cta_sub": "Drivers available now near you",
     "cta_btn": "Book now",
     "driver_cannot_book_transport": "As an active driver, you cannot place a transport request as a client.",
-    "pro_cannot_book_own_category": "You cannot book a service in a category in which you are registered as a provider."
+    "pro_cannot_book_own_category": "You cannot book a service in a category in which you are registered as a provider.",
+    "become_provider_title": "Become a provider"
   },
   "payment": {
     "title": "Payment",
@@ -902,7 +903,8 @@
     "details_order_date": "Order date",
     "details_not_found": "Payment not found",
     "cash": "Cash",
-    "card": "Card"
+    "card": "Card",
+    "dev_build_required": "Online payment requires the native app. Install the development build via EAS to test this feature."
   },
   "cash_validation": {
     "title": "Cash Payment Validation",
@@ -1123,7 +1125,9 @@
     "cancel_penalty_free_label": "No penalty",
     "cancel_penalty_note": "Warning: this reason may affect your acceptance rate.",
     "cancel_result_refund": "Booking cancelled. Refund: {{pct}}%",
-    "cancel_result_fee": "Booking cancelled. Cancellation fee: {{amount}} {{currency}}"
+    "cancel_result_fee": "Booking cancelled. Cancellation fee: {{amount}} {{currency}}",
+    "extras_section_title": "Optional extras",
+    "extras_total_label": "Extras total"
   },
   "chat": {
     "empty": "No messages yet. Start the conversation!",
@@ -1285,7 +1289,14 @@
     "extra_status_rejected": "❌ Rejected by admin",
     "extra_admin_note": "Admin note:",
     "no_categories_registered": "No service categories",
-    "no_categories_hint": "Contact an administrator to assign services to your profile"
+    "no_categories_hint": "Contact an administrator to assign services to your profile",
+    "category_plumbing": "Plumbing",
+    "category_electricity": "Electricity",
+    "category_painting": "Painting",
+    "category_handyman": "Handyman",
+    "category_cleaning": "Cleaning",
+    "category_carpentry": "Carpentry",
+    "category_air_condition": "Air Conditioning"
   },
   "activity": {
     "page_title": "My activities",
@@ -1414,9 +1425,9 @@
     "cat_carpentry_task": "Task type",
     "cat_ac_service": "Service type",
     "cat_handyman_task": "Task type",
-    "urgency_label": "Urgency",
-    "urgency_normal": "Normal",
-    "urgency_urgent": "Urgent",
+    "price_breakdown_base": "Base price",
+    "price_breakdown_urgency": "Immediate surcharge (+{{pct}}%)",
+    "price_breakdown_total": "Estimated total",
     "immediate_hint_short": "A pro comes ASAP",
     "scheduled_hint_short": "Choose a date & slot",
     "date_hint": "Use arrows to change the date",

@@ -34,6 +34,7 @@ import { useGetProStatsQuery, useUpdateProAvailabilityMutation, usePayProCommiss
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useBeatSound } from '../../hooks/useBeatSound';
 import { useStripe } from '@stripe/stripe-react-native';
+import { isExpoGo } from '../../utils/environment';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { CountrySelectorRow } from '../../components/shared/CountrySelectorRow';
 import { AvailableGlowCard } from '../../components/shared/AvailableGlowCard';
@@ -161,6 +162,10 @@ export const ProHomeScreen = ({ navigation }: Props) => {
   const pendingCashCommission = (stats as any)?.pendingCashCommission ?? 0;
 
   const handlePayCommissionOnline = async () => {
+    if (isExpoGo) {
+      Alert.alert(t('common.error'), t('payment.dev_build_required'));
+      return;
+    }
     try {
       const result = await payProCommission().unwrap();
       const { error: initError } = await initPaymentSheet({
@@ -198,6 +203,15 @@ export const ProHomeScreen = ({ navigation }: Props) => {
 
   const bookings: any[] = Array.isArray(data) ? data : ((data as any)?.bookings ?? []);
   const pendingBookings = bookings.filter((b) => b.status === 'pending');
+
+  // Dérive la devise de la commission depuis les bookings cash en attente de collecte
+  const pendingCashBookingsForCommission = bookings.filter(
+    (b) => b.paymentMethod === 'cash' && b.status === 'completed' && !b.cashCommissionCollectedAt,
+  );
+  const commissionCurrency: string =
+    pendingCashBookingsForCommission.length > 0
+      ? (pendingCashBookingsForCommission[0].currency ?? ((stats as any)?.currency ?? activeCurrencyCode))
+      : ((stats as any)?.currency ?? activeCurrencyCode);
 
   useBeatSound(pendingBookings.length > 0);
 
@@ -347,7 +361,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
               <View style={[styles.infoItem, { marginTop: 2 }]}>
                 <Icon name="cash" size={13} color={tokens.text.secondary} />
                 <Text variant="bodySmall" style={styles.infoText}>
-                  {item.finalPrice ? `${item.finalPrice} ${activeCurrencyCode}` : `~${item.estimatedPrice} ${activeCurrencyCode}`}
+                  {item.finalPrice ? `${item.finalPrice} ${item.currency ?? activeCurrencyCode}` : `~${item.estimatedPrice} ${item.currency ?? activeCurrencyCode}`}
                 </Text>
               </View>
             )}
@@ -382,7 +396,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
           <View style={{ flex: 1 }}>
             <Text style={styles.commissionAlertTitle}>{t('pro_space.cash_commission_due_title')}</Text>
             <Text style={styles.commissionAlertText}>
-              {t('pro_space.cash_commission_due_msg', { amount: formatCurrency(pendingCashCommission) })}
+              {t('pro_space.cash_commission_due_msg', { amount: `${pendingCashCommission.toFixed(2)} ${commissionCurrency}` })}
             </Text>
             <ChocolateButton
               onPress={handlePayCommissionOnline}
@@ -415,7 +429,7 @@ export const ProHomeScreen = ({ navigation }: Props) => {
         const first = pendingBookings[0];
         const catName = getLocalizedName(first.serviceOffering?.category ?? first.category, i18n.language);
         const clientName = first.client ? `${first.client.firstName} ${first.client.lastName}` : null;
-        const price = first.estimatedPrice > 0 ? `~${first.estimatedPrice} ${activeCurrencyCode}` : null;
+        const price = first.estimatedPrice > 0 ? `~${first.estimatedPrice} ${first.currency ?? activeCurrencyCode}` : null;
         const subParts = [catName, clientName, price].filter(Boolean);
         return (
           <Animated.View style={bannerAnimStyle}>

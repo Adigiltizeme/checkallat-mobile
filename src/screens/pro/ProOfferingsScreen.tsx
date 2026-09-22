@@ -26,7 +26,8 @@ import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency, CURRENCY_CONFIG } from '../../config/currency';
+import { CURRENCY_CONFIG } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { RootState } from '../../store';
 
 type Props = StackScreenProps<ProStackParamList, 'ProOfferings'>;
@@ -63,6 +64,9 @@ const CategoryCard = ({
   styles: any;
   t: any;
 }) => {
+  const { formatWithCurrency } = useCurrencyFormatter();
+  const fmt = (amount: number) => formatWithCurrency(amount, adminCurrency);
+
   const [offeringId, setOfferingId] = useState<string | null>(null);
   const [initializing, setInitializing] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -159,7 +163,7 @@ const CategoryCard = ({
         <Icon name="shield-check-outline" size={16} color={tokens.text.secondary} />
         <Text style={styles.basePriceLabel}>{t('pro_space.admin_base_price')}</Text>
         <Text style={styles.basePriceValue}>
-          {adminBasePrice !== null ? formatCurrency(adminBasePrice) : t('pro_space.admin_base_price_none')}
+          {adminBasePrice !== null ? fmt(adminBasePrice) : t('pro_space.admin_base_price_none')}
         </Text>
       </View>
 
@@ -178,7 +182,7 @@ const CategoryCard = ({
             <View key={extra.id} style={{ marginBottom: 8 }}>
               <View style={styles.extraRow}>
                 <Text style={styles.extraLabel} numberOfLines={1}>{extra.label}</Text>
-                <Text style={styles.extraPrice}>+{formatCurrency(extra.price)}</Text>
+                <Text style={styles.extraPrice}>+{fmt(extra.price)}</Text>
                 <TouchableOpacity
                   onPress={() => handleDelete(extra.id)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -215,7 +219,7 @@ const CategoryCard = ({
                   {extra.label}
                 </Text>
                 <Text style={[styles.extraPrice, { color: tokens.text.secondary }]}>
-                  +{formatCurrency(extra.price)}
+                  +{fmt(extra.price)}
                 </Text>
                 <TouchableOpacity
                   onPress={() => handleDelete(extra.id)}
@@ -252,12 +256,14 @@ const CategoryCard = ({
           <View style={styles.divider} />
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>{t('pro_space.total_price')}</Text>
-            <Text style={styles.totalValue}>{formatCurrency(total)}</Text>
+            <Text style={styles.totalValue}>{fmt(total)}</Text>
           </View>
-          {optionalExtras.length > 0 && (
+          {optionalExtras.filter(e => e.status === 'approved').length > 0 && (
             <Text style={styles.totalNote}>
               {t('pro_space.total_note', {
-                amount: formatCurrency(optionalExtras.reduce((s, e) => s + e.price, 0)),
+                amount: fmt(
+                  optionalExtras.filter(e => e.status === 'approved').reduce((s, e) => s + e.price, 0),
+                ),
               })}
             </Text>
           )}
@@ -434,15 +440,8 @@ export const ProOfferingsScreen = ({ navigation: _nav }: Props) => {
     return map;
   }, [allCategories]);
 
-  const categoryLabels: Record<string, string> = {
-    plumbing:      i18n.language === 'ar' ? 'السباكة'         : i18n.language === 'en' ? 'Plumbing'         : 'Plomberie',
-    electricity:   i18n.language === 'ar' ? 'الكهرباء'        : i18n.language === 'en' ? 'Electricity'       : 'Électricité',
-    painting:      i18n.language === 'ar' ? 'الدهان'          : i18n.language === 'en' ? 'Painting'          : 'Peinture',
-    handyman:      i18n.language === 'ar' ? 'الأعمال اليدوية' : i18n.language === 'en' ? 'Handyman'          : 'Bricolage',
-    cleaning:      i18n.language === 'ar' ? 'التنظيف'         : i18n.language === 'en' ? 'Cleaning'          : 'Ménage',
-    carpentry:     i18n.language === 'ar' ? 'النجارة'         : i18n.language === 'en' ? 'Carpentry'         : 'Menuiserie',
-    air_condition: i18n.language === 'ar' ? 'تكييف الهواء'   : i18n.language === 'en' ? 'Air Conditioning'  : 'Climatisation',
-  };
+  const getCategoryLabel = (slug: string) =>
+    t(`pro_space.category_${slug}`, { defaultValue: slug });
 
   if (!serviceCategories.length) {
     return (
@@ -462,7 +461,7 @@ export const ProOfferingsScreen = ({ navigation: _nav }: Props) => {
         <CategoryCard
           key={`${slug}-${countryCode ?? 'all'}`}
           categorySlug={slug}
-          categoryLabel={categoryLabels[slug] ?? slug}
+          categoryLabel={getCategoryLabel(slug)}
           proId={proId}
           adminBasePrice={categoryPricing[slug]?.basePrice ?? null}
           adminCurrency={categoryPricing[slug]?.currency ?? CURRENCY_CONFIG.code}

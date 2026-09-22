@@ -21,7 +21,7 @@ export type DriverAgendaStackParamList = {
   DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string };
   DriverSignature: { requestId: string };
   TransportCompletion: { requestId: string };
-  CashValidation: { requestId: string; totalPrice: number };
+  CashValidation: { requestId: string; totalPrice: number; currency?: string };
   Dispute: { requestId: string };
   BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
 };

@@ -145,7 +145,11 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
         categoryData: step1Data.categoryData,
         estimatedPrice: step4Data.estimatedPrice,
         currency: step4Data.estimatedCurrency,
+        countryId: step2Data.address.countryCode?.toUpperCase() ?? undefined,
         paymentMethod,
+        selectedExtraIds: step4Data.selectedOptionalExtras?.length
+          ? step4Data.selectedOptionalExtras.map(e => e.id)
+          : undefined,
       };
 
       const result = await createBooking(payload).unwrap();
@@ -194,9 +198,10 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
           },
         ],
       );
-    } catch {
+    } catch (err: any) {
       setIsUploading(false);
-      Alert.alert(t('common.error'), t('booking_request.error_submit'));
+      const msg = err?.data?.message || err?.message || t('booking_request.error_submit');
+      Alert.alert(t('common.error'), msg);
     }
   };
 
@@ -249,6 +254,18 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
                 value={`≥ ${step4Data.estimatedPrice} ${step4Data.estimatedCurrency ?? CURRENCY_CONFIG.code}`}
                 highlight
               />
+            </>
+          )}
+          {(step4Data.selectedOptionalExtras ?? []).length > 0 && (
+            <>
+              <Divider style={styles.divider} />
+              {(step4Data.selectedOptionalExtras ?? []).map(extra => (
+                <SummaryRow
+                  key={extra.id}
+                  label={`+ ${extra.label}`}
+                  value={`+${extra.price} ${step4Data.estimatedCurrency ?? CURRENCY_CONFIG.code}`}
+                />
+              ))}
             </>
           )}
         </Card.Content>

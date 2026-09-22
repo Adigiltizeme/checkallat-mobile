@@ -26,7 +26,7 @@ export type CommandesStackParamList = {
   TransportDetails: { requestId: string };
   TransportTracking: { requestId: string };
   TransportCompletion: { requestId: string };
-  CashValidation: { requestId: string; totalPrice: number };
+  CashValidation: { requestId: string; totalPrice: number; currency?: string };
   PaymentHistory: undefined;
 };
 

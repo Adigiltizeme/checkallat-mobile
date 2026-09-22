@@ -1,4 +1,4 @@
-export type BookingTimeSlot = 'morning' | 'afternoon' | 'evening';
+export type BookingTimeSlot = 'morning' | 'afternoon' | 'evening' | 'flexible';
 export type BookingType = 'immediate' | 'scheduled';
 export type RecurringFrequency = 'weekly' | 'biweekly' | 'monthly';
 export type PaymentMethod = 'cash' | 'in_app';
@@ -40,6 +40,13 @@ export interface BookingStep3Data {
   recurringEndDate?: string;
 }
 
+/** Extra optionnel sélectionné par le client en Step4 */
+export interface SelectedExtra {
+  id: string;
+  label: string;
+  price: number;
+}
+
 /** Step 4 — sélection du prestataire */
 export interface BookingStep4Data {
   assignmentType: AssignmentType;
@@ -48,6 +55,8 @@ export interface BookingStep4Data {
   serviceOfferingId?: string;
   estimatedPrice?: number;
   estimatedCurrency?: string;
+  selectedOptionalExtras?: SelectedExtra[];
+  extrasTotal?: number;
 }
 
 /** Payload final envoyé à l'API */
@@ -70,5 +79,7 @@ export interface CreateBookingPayload {
   categoryData?: Record<string, any>;
   estimatedPrice?: number;
   currency?: string;
+  countryId?: string;
   paymentMethod: PaymentMethod;
+  selectedExtraIds?: string[];
 }

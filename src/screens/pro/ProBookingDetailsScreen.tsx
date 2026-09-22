@@ -632,6 +632,21 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
             </Text>
           </View>
         )}
+        {((booking as any).selectedExtras ?? []).length > 0 && (
+          <View style={{ marginTop: 6 }}>
+            <Text style={[styles.detailText, { fontSize: 12, color: tokens.text.secondary, marginBottom: 4 }]}>
+              {t('booking.extras_section_title')}
+            </Text>
+            {((booking as any).selectedExtras as { id: string; label: string; price: number }[]).map((extra) => (
+              <View key={extra.id} style={[styles.detailRow, { marginTop: 2 }]}>
+                <Icon name="plus-circle-outline" size={16} color={tokens.text.secondary} />
+                <Text style={styles.detailText}>
+                  {extra.label} — +{extra.price} {bookingCurrency}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Client photos */}

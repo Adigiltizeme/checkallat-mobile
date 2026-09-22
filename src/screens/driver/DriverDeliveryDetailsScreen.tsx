@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { formatCurrency } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { DriverStackParamList } from '../../navigation/types';
 import {
   useGetTransportRequestQuery,
@@ -33,6 +33,7 @@ type Props = StackScreenProps<DriverStackParamList, 'DriverDeliveryDetails'>;
 export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
   const { tokens } = useAppTheme();
   const { t } = useTranslation();
+  const { formatWithCurrency } = useCurrencyFormatter();
   const { requestId } = route.params;
 
   const styles = useMemo(() => StyleSheet.create({
@@ -298,7 +299,7 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
           <Text variant="titleMedium" style={styles.sectionTitle}>💰 {t('transport.payment')}</Text>
           <View style={styles.paymentRow}>
             <Text variant="bodyLarge" style={styles.paymentLabel}>{t('driver.total_amount')}:</Text>
-            <Text variant="headlineSmall" style={styles.paymentAmount}>{formatCurrency((request as any).price || 0)}</Text>
+            <Text variant="headlineSmall" style={styles.paymentAmount}>{formatWithCurrency((request as any).price || 0, (request as any).currency || '')}</Text>
           </View>
           <Text variant="bodySmall" style={styles.paymentMethod}>
             {t('driver.payment_method_label')}: {request.paymentMethod === 'cash' ? t('transport.pay_cash') : t('driver.payment_card')}

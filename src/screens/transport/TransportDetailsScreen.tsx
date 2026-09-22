@@ -1013,7 +1013,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
 
         {canValidateCash && (
           <ChocolateButton
-            onPress={() => navigation.navigate('CashValidation', { requestId, totalPrice: request.price })}
+            onPress={() => navigation.navigate('CashValidation', { requestId, totalPrice: (request as any).price ?? 0, currency: (request as any).currency })}
             style={styles.button}
           >
             {t('transport.validate_cash')}

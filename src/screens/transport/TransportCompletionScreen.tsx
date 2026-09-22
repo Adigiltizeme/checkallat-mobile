@@ -75,7 +75,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
         }).unwrap();
 
         if (request.paymentMethod === 'cash') {
-          navigation.replace('CashValidation', { requestId, totalPrice: (request as any).price ?? 0 });
+          navigation.replace('CashValidation', { requestId, totalPrice: (request as any).price ?? 0, currency: (request as any).currency });
         } else {
           Alert.alert(
             t('transport.completion_saved_title'),
@@ -91,7 +91,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
         }).unwrap();
 
         if (request.paymentMethod === 'cash') {
-          navigation.replace('CashValidation', { requestId, totalPrice: (request as any).price ?? 0 });
+          navigation.replace('CashValidation', { requestId, totalPrice: (request as any).price ?? 0, currency: (request as any).currency });
         } else {
           Alert.alert(
             t('transport.completion_saved_title'),

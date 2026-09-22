@@ -10,7 +10,8 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
-import { formatCurrency, CURRENCY_CONFIG } from '../../config/currency';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
+import { CURRENCY_PRESETS } from '../../config/currency';
 
 type Props = NativeStackScreenProps<TransportStackParamList, 'CashValidation'>;
 
@@ -71,9 +72,13 @@ export const CashValidationScreen = ({ route, navigation }: Props) => {
     marginBottom: 8,
   },
   }), [tokens]);
-  const { requestId, totalPrice } = route.params;
+  const { requestId, totalPrice: rawTotalPrice, currency: requestCurrency } = route.params;
+  const totalPrice = rawTotalPrice ?? 0;
   const isDriver = useSelector((state: RootState) => state.auth.isDriver);
   const { t } = useTranslation();
+  const { formatWithCurrency, currencyCode: activeCurrencyCode } = useCurrencyFormatter();
+  const displayCurrency = requestCurrency || activeCurrencyCode;
+  const currencySymbol = (CURRENCY_PRESETS[displayCurrency as keyof typeof CURRENCY_PRESETS]?.symbol) ?? displayCurrency;
 
   const [amount, setAmount] = useState(totalPrice.toString());
   const [notes, setNotes] = useState('');
@@ -135,12 +140,12 @@ export const CashValidationScreen = ({ route, navigation }: Props) => {
               {t('cash_validation.expected_amount')}
             </Text>
             <Text variant="headlineMedium" style={styles.expectedPrice}>
-              {formatCurrency(totalPrice)}
+              {formatWithCurrency(totalPrice, displayCurrency)}
             </Text>
           </View>
 
           <TextInput
-            label={t('cash_validation.amount_label', { symbol: CURRENCY_CONFIG.symbol })}
+            label={t('cash_validation.amount_label', { symbol: currencySymbol })}
             value={amount}
             onChangeText={setAmount}
             keyboardType="numeric"
