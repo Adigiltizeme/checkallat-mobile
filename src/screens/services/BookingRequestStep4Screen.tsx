@@ -27,6 +27,8 @@ import type { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { ServicePriceCard } from '../../components/shared/ServicePriceCard';
+import { computeServicePrice, isHourly } from '../../utils/servicePricing';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep4'>;
 
@@ -52,16 +54,20 @@ const flattenPro = (item: any) => ({
 });
 
 
-const calcProPrice = (pro: any, basePrice: number): number => {
-  const offering = pro.serviceOfferings?.[0];
-  const includedExtras = (offering?.extras ?? []).filter(
-    (e: any) => !e.isOptional && e.status === 'approved',
-  );
-  const extrasSum = includedExtras.reduce((s: number, e: any) => s + (e.price ?? 0), 0);
-  return basePrice + extrasSum;
+/** Suppléments toujours inclus par le prestataire (approuvés, non optionnels) */
+const includedExtrasOf = (pro: any): number =>
+  (pro?.serviceOfferings?.[0]?.extras ?? [])
+    .filter((e: any) => !e.isOptional && e.status === 'approved')
+    .reduce((s: number, e: any) => s + (e.price ?? 0), 0);
+
+/** Libellé de prix d'un prestataire : « X /h » (à l'heure) ou « ≥ X » (forfait) */
+const proPriceLabel = (pro: any, meta: any, immediate: boolean, t: any): string | null => {
+  if (isHourly(meta)) return t('service_pricing.rate_badge', { rate: meta.hourlyRate, currency: meta.currency });
+  const price = computeServicePrice(meta, { immediate, extras: includedExtrasOf(pro) });
+  return price ? `≥ ${price.total} ${price.currency}` : null;
 };
 
-const ProCard = ({ pro, selected, onSelect, onViewShowcase, basePrice, currency, t }: any) => {
+const ProCard = ({ pro, selected, onSelect, onViewShowcase, priceLabel, t }: any) => {
   const { tokens: pcTokens } = useAppTheme();
   const pcStyles = useMemo(() => StyleSheet.create({
     proCard: { borderRadius: 12, borderWidth: 2, borderColor: 'transparent', elevation: 1 },
@@ -99,10 +105,8 @@ const ProCard = ({ pro, selected, onSelect, onViewShowcase, basePrice, currency,
               <Text style={pcStyles.proBadge}> · ✦</Text>
             )}
           </View>
-          {basePrice != null ? (
-            <Text style={[pcStyles.proPriceRange, { color: pcTokens.primary }]}>
-              {t('booking_request.price_from', { price: calcProPrice(pro, basePrice), currency })}
-            </Text>
+          {priceLabel ? (
+            <Text style={[pcStyles.proPriceRange, { color: pcTokens.primary }]}>{priceLabel}</Text>
           ) : null}
           <TouchableOpacity
             onPress={(e) => { e.stopPropagation?.(); onViewShowcase(); }}
@@ -495,15 +499,12 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
   const countryCode = step2Data.address.countryCode?.toUpperCase() ?? userCountryCode?.toUpperCase();
   const { data: allCategories = [] } = useGetCategoriesQuery({ activeOnly: true, countryCode: countryCode ?? undefined }, { refetchOnMountOrArgChange: true });
   const categoryMeta = (allCategories as any[]).find((c: any) => c.slug === categorySlug);
-  const basePrice: number | null = categoryMeta?.basePrice ?? null;
   const baseCurrency: string = categoryMeta?.currency ?? CURRENCY_CONFIG.code;
-  const urgencyEnabled: boolean = categoryMeta?.urgencyEnabled ?? true;
-  const urgencyMultiplier: number = categoryMeta?.urgencyMultiplier ?? 1.3;
   const isImmediate = step3Data.bookingType === 'immediate';
-  const urgencyApplied = isImmediate && urgencyEnabled && basePrice != null;
-  const displayedPrice = urgencyApplied && basePrice != null
-    ? Math.round(basePrice * urgencyMultiplier)
-    : basePrice;
+  const hourly = isHourly(categoryMeta);
+  // Prestation à l'heure : durée estimée par le client (plafond facturable sans nouvel accord)
+  const [hours, setHours] = useState<number>(2);
+  const effectiveHours = hourly ? Math.max(categoryMeta?.minimumHours ?? 1, hours) : null;
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: t('booking_request.step_of', { current: 4, total: 5 }) });
@@ -561,11 +562,14 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
     })
     : pros;
 
+  const selectedPro = pros.find((p: any) => p.id === selectedProId);
+  const priceBreakdown = computeServicePrice(categoryMeta, {
+    immediate: isImmediate,
+    hours: effectiveHours,
+    extras: (assignMode === 'manual' && selectedPro ? includedExtrasOf(selectedPro) : 0) + extrasTotal,
+  });
+
   const handleNext = () => {
-    const selectedPro = pros.find((p: any) => p.id === selectedProId);
-    const baseWithIncluded = selectedPro && displayedPrice != null
-      ? calcProPrice(selectedPro, displayedPrice)
-      : (displayedPrice ?? 0);
     const step4Data: BookingStep4Data = {
       assignmentType: assignMode,
       proId: assignMode === 'manual' ? selectedProId ?? undefined : undefined,
@@ -573,8 +577,10 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
         ? `${selectedPro.user?.firstName} ${selectedPro.user?.lastName}`
         : undefined,
       serviceOfferingId: selectedPro?.serviceOfferings?.[0]?.id,
-      estimatedPrice: baseWithIncluded + extrasTotal,
-      estimatedCurrency: baseCurrency,
+      estimatedPrice: priceBreakdown?.total,
+      estimatedCurrency: priceBreakdown?.currency ?? baseCurrency,
+      estimatedHours: effectiveHours ?? undefined,
+      pricingMode: priceBreakdown?.mode,
       selectedOptionalExtras: selectedOptionalExtras.length > 0 ? selectedOptionalExtras : undefined,
       extrasTotal: extrasTotal > 0 ? extrasTotal : undefined,
     };
@@ -736,30 +742,9 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
           />
         </View>
 
-        {/* Estimation de prix (mode auto) */}
-        {assignMode === 'auto' && basePrice != null && (
-          <View style={styles.basePriceInfo}>
-            <Text style={{ fontSize: 16 }}>💰</Text>
-            <View style={{ flex: 1 }}>
-              {urgencyApplied ? (
-                <>
-                  <Text style={[styles.basePriceInfoText, { fontSize: 12, fontWeight: '400' }]}>
-                    {t('booking_request.price_breakdown_base')} : {basePrice} {baseCurrency}
-                  </Text>
-                  <Text style={[styles.basePriceInfoText, { fontSize: 12, fontWeight: '400' }]}>
-                    {t('booking_request.price_breakdown_urgency', { pct: Math.round((urgencyMultiplier - 1) * 100) })}
-                  </Text>
-                  <Text style={[styles.basePriceInfoText, { fontWeight: '700' }]}>
-                    {t('booking_request.price_breakdown_total')} : {displayedPrice} {baseCurrency}
-                  </Text>
-                </>
-              ) : (
-                <Text style={styles.basePriceInfoText}>
-                  {t('booking_request.price_from', { price: basePrice, currency: baseCurrency })}
-                </Text>
-              )}
-            </View>
-          </View>
+        {/* Prix : détail et durée (mode auto) */}
+        {assignMode === 'auto' && priceBreakdown && (
+          <ServicePriceCard breakdown={priceBreakdown} onHoursChange={hourly ? setHours : undefined} />
         )}
 
         {/* Sélection manuelle */}
@@ -965,9 +950,7 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
                       const lat = hasCoords ? rawLat : addressLat + (idx + 1) * 0.003;
                       const lng = hasCoords ? rawLng : addressLng + (idx + 1) * 0.004;
                       const proName = `${pro.user?.firstName ?? ''} ${pro.user?.lastName ?? ''}`.trim();
-                      const priceText = basePrice != null
-                        ? `≥ ${calcProPrice(pro, basePrice)} ${baseCurrency}`
-                        : null;
+                      const priceText = proPriceLabel(pro, categoryMeta, isImmediate, t);
                       return (
                         <Marker
                           key={pro.id}
@@ -990,9 +973,7 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
                 {(() => {
                   const mapPro = pros.find((p: any) => p.id === selectedProId);
                   if (!mapPro) return null;
-                  const mapProPrice = basePrice != null
-                    ? `≥ ${calcProPrice(mapPro, basePrice)} ${baseCurrency}`
-                    : null;
+                  const mapProPrice = proPriceLabel(mapPro, categoryMeta, isImmediate, t);
                   return (
                     <View style={styles.mapProCard}>
                       <Avatar.Image
@@ -1049,8 +1030,7 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
                     selected={selectedProId === pro.id}
                     onSelect={() => setSelectedProId(pro.id === selectedProId ? null : pro.id)}
                     onViewShowcase={() => setShowcasePro(pro)}
-                    basePrice={basePrice}
-                    currency={baseCurrency}
+                    priceLabel={proPriceLabel(pro, categoryMeta, isImmediate, t)}
                     t={t}
                   />
                 ))}
@@ -1097,6 +1077,13 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
             </View>
           );
         })()}
+
+        {/* Prix : détail et durée (mode manuel, prestataire choisi) */}
+        {assignMode === 'manual' && selectedProId != null && priceBreakdown && (
+          <View style={{ marginTop: spacing.sm }}>
+            <ServicePriceCard breakdown={priceBreakdown} onHoursChange={hourly ? setHours : undefined} />
+          </View>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>

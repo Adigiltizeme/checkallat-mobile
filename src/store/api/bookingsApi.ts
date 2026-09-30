@@ -126,6 +126,27 @@ export const bookingsApi = createApi({
       invalidatesTags: ['Booking'],
     }),
 
+    /** Prestation à l'heure : le prestataire demande du temps supplémentaire */
+    requestOvertime: builder.mutation<any, { id: string; minutes: number; reason?: string }>({
+      query: ({ id, ...body }) => ({ url: `/${id}/overtime/request`, method: 'POST', body }),
+      invalidatesTags: ['Booking'],
+    }),
+
+    /** Le client accepte ou refuse le temps supplémentaire (paiement dans l'app : autorisation à confirmer) */
+    respondOvertime: builder.mutation<
+      { status: 'approved' | 'declined' | 'payment_required'; clientSecret?: string; amount?: number; currency?: string },
+      { id: string; approve: boolean }
+    >({
+      query: ({ id, approve }) => ({ url: `/${id}/overtime/respond`, method: 'POST', body: { approve } }),
+      invalidatesTags: ['Booking'],
+    }),
+
+    /** Paiement dans l'app : autorisation complémentaire confirmée */
+    confirmOvertimePayment: builder.mutation<{ status: 'approved' }, string>({
+      query: (id) => ({ url: `/${id}/overtime/confirm-payment`, method: 'POST' }),
+      invalidatesTags: ['Booking'],
+    }),
+
     /**
      * Pro se met en route vers le client
      */
@@ -249,4 +270,7 @@ export const {
   useAcceptBidMutation,
   useRejectBidMutation,
   usePrepareBookingPaymentByIdMutation,
+  useRequestOvertimeMutation,
+  useRespondOvertimeMutation,
+  useConfirmOvertimePaymentMutation,
 } = bookingsApi;

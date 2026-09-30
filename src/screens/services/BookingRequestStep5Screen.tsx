@@ -144,6 +144,7 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
         clientPhotos,
         categoryData: step1Data.categoryData,
         estimatedPrice: step4Data.estimatedPrice,
+        estimatedHours: step4Data.estimatedHours,
         currency: step4Data.estimatedCurrency,
         countryId: step2Data.address.countryCode?.toUpperCase() ?? undefined,
         paymentMethod,
@@ -249,11 +250,29 @@ export const BookingRequestStep5Screen = ({ route, navigation }: Props) => {
           {step4Data.estimatedPrice != null && (
             <>
               <Divider style={styles.divider} />
-              <SummaryRow
-                label={t('booking_request.summary_price_est')}
-                value={`≥ ${step4Data.estimatedPrice} ${step4Data.estimatedCurrency ?? CURRENCY_CONFIG.code}`}
-                highlight
-              />
+              {step4Data.pricingMode === 'hourly' && step4Data.estimatedHours != null ? (
+                <>
+                  <SummaryRow
+                    label={t('service_pricing.summary_duration')}
+                    value={t('service_pricing.summary_duration_value', { hours: step4Data.estimatedHours })}
+                  />
+                  <Divider style={styles.divider} />
+                  <SummaryRow
+                    label={t('service_pricing.total_max')}
+                    value={`${step4Data.estimatedPrice} ${step4Data.estimatedCurrency ?? CURRENCY_CONFIG.code}`}
+                    highlight
+                  />
+                  <Text style={{ fontSize: 12, lineHeight: 17, marginTop: 6, opacity: 0.75 }}>
+                    {t('service_pricing.summary_hourly_note')}
+                  </Text>
+                </>
+              ) : (
+                <SummaryRow
+                  label={t('booking_request.summary_price_est')}
+                  value={`≥ ${step4Data.estimatedPrice} ${step4Data.estimatedCurrency ?? CURRENCY_CONFIG.code}`}
+                  highlight
+                />
+              )}
             </>
           )}
           {(step4Data.selectedOptionalExtras ?? []).length > 0 && (

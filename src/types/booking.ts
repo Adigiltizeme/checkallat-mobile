@@ -57,6 +57,9 @@ export interface BookingStep4Data {
   estimatedCurrency?: string;
   selectedOptionalExtras?: SelectedExtra[];
   extrasTotal?: number;
+  /** Prestation à l'heure : durée choisie (plafond facturable sans nouvel accord) */
+  estimatedHours?: number;
+  pricingMode?: 'flat' | 'hourly';
 }
 
 /** Payload final envoyé à l'API */
@@ -78,6 +81,8 @@ export interface CreateBookingPayload {
   clientPhotos?: string[];
   categoryData?: Record<string, any>;
   estimatedPrice?: number;
+  /** Prestation à l'heure : durée choisie par le client */
+  estimatedHours?: number;
   currency?: string;
   countryId?: string;
   paymentMethod: PaymentMethod;

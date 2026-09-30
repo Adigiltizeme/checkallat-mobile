@@ -16,6 +16,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { HomeStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
+import { HourlyWorkPanel } from '../../components/shared/HourlyWorkPanel';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import {
@@ -293,7 +294,9 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
 
   const handleClientConfirm = () => {
     if (isCash) {
-      setCashAmountInput('');
+      // À l'heure : montant calculé d'après le temps passé, prérempli (le client peut le corriger)
+      const computed = (booking as any)?.pricingMode === 'hourly' ? (booking as any)?.finalPrice : null;
+      setCashAmountInput(computed != null ? String(computed) : '');
       setShowCashModal(true);
     } else {
       Alert.alert(
@@ -648,6 +651,13 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
                     <Text style={styles.waitingText}>{t('booking.waiting_client_confirm')}</Text>
                   </View>
                 )}
+              </View>
+            )}
+
+            {/* Prestation à l'heure : temps écoulé, temps supplémentaire, prix final */}
+            {(booking as any).pricingMode === 'hourly' && ['in_progress', 'completed'].includes(booking.status) && (
+              <View style={{ marginTop: 10 }}>
+                <HourlyWorkPanel booking={booking} role={role} />
               </View>
             )}
 

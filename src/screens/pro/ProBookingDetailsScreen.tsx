@@ -32,6 +32,7 @@ import { useGetCallRelayNumberQuery, useGetUnreadCountQuery } from '../../store/
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { HourlyWorkPanel } from '../../components/shared/HourlyWorkPanel';
 import { spacing } from '../../theme/spacing';
 import { entityCurrencyCode } from '../../config/currency';
 import { RootState } from '../../store';
@@ -256,8 +257,22 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   );
   useRefetchOnFocus(refetchOfferings);
 
+  // À l'heure : tarif horaire de la plateforme, le prestataire ne fixe pas de prix
+  const isHourlyBooking = (booking as any)?.pricingMode === 'hourly';
+
   const configuredPrice = useMemo(() => {
-    if (!bookingCategorySlug) return null;
+    if (!bookingCategorySlug || isHourlyBooking) return null;
+    // Prix calculé par le serveur à la réservation (urgence et suppléments compris) quand il existe
+    const serverPrice: number = (booking as any)?.estimatedPrice ?? 0;
+    if (serverPrice > 0) {
+      const offering = (proOfferings as any[]).find((o: any) => o.category?.slug === bookingCategorySlug);
+      const included = (booking as any)?.assignmentType === 'auto'
+        ? (offering?.extras ?? [])
+            .filter((e: any) => !e.isOptional && e.status === 'approved')
+            .reduce((sum: number, e: any) => sum + (e.price ?? 0), 0)
+        : 0;
+      return serverPrice + included;
+    }
     const catMeta = (allCategories as any[]).find((c: any) => c.slug === bookingCategorySlug);
     const basePrice: number | null = catMeta?.basePrice ?? null;
     if (basePrice === null) return null;
@@ -266,7 +281,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
     const includedExtras = (offering.extras ?? []).filter((e: any) => !e.isOptional && e.status === 'approved');
     const extrasSum = includedExtras.reduce((s: number, e: any) => s + (e.price ?? 0), 0);
     return basePrice + extrasSum;
-  }, [allCategories, proOfferings, bookingCategorySlug]);
+  }, [allCategories, proOfferings, bookingCategorySlug, isHourlyBooking, booking]);
 
   const hasConfiguredPrice = configuredPrice !== null;
 
@@ -280,7 +295,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
 
   useEffect(() => {
     const price = configuredPrice ?? ((booking as any)?.serviceOffering?.priceMin ?? null);
-    if (price !== null && !proposedPrice) {
+    if (price !== null && !proposedPrice && !isHourlyBooking) {
       setProposedPrice(String(price));
     }
   }, [configuredPrice, booking]);
@@ -360,7 +375,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
         id: bookingId,
         status: 'accepted',
         role: 'pro',
-        ...(proposedPrice.trim() && !isNaN(parsedPrice) ? { finalPrice: parsedPrice } : {}),
+        ...(!isHourlyBooking && proposedPrice.trim() && !isNaN(parsedPrice) ? { finalPrice: parsedPrice } : {}),
       }).unwrap();
     } catch {
       Alert.alert(t('common.error'), t('pro_space.error_update'));
@@ -368,7 +383,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   };
 
   const handleSubmitBid = async () => {
-    const parsedPrice = proposedPrice.trim() ? parseFloat(proposedPrice) : undefined;
+    const parsedPrice = !isHourlyBooking && proposedPrice.trim() ? parseFloat(proposedPrice) : undefined;
     if (parsedPrice !== undefined && (isNaN(parsedPrice) || parsedPrice <= 0)) {
       Alert.alert(t('common.error'), t('pro_space.bid_price_invalid'));
       return;
@@ -632,6 +647,11 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
             </Text>
           </View>
         )}
+        {isHourlyBooking && (
+          <View style={{ marginTop: 8 }}>
+            <HourlyWorkPanel booking={booking} role="pro" />
+          </View>
+        )}
         {((booking as any).selectedExtras ?? []).length > 0 && (
           <View style={{ marginTop: 6 }}>
             <Text style={[styles.detailText, { fontSize: 12, color: tokens.text.secondary, marginBottom: 4 }]}>
@@ -849,7 +869,22 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
           ) : (
             <>
               <Text style={styles.cardTitle}>{t('pro_space.submit_bid_title')}</Text>
-              {hasConfiguredPrice ? (
+              {isHourlyBooking ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md, gap: spacing.sm,
+                  backgroundColor: tokens.primary + '12', borderRadius: 10, padding: spacing.sm,
+                  borderWidth: 1, borderColor: tokens.primary + '40' }}>
+                  <Icon name="clock-outline" size={20} color={tokens.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: tokens.primary }}>
+                      {t('service_pricing.rate_badge', { rate: (booking as any).hourlyRate, currency: bookingCurrency })}
+                      {(booking as any).callOutFee ? ` + ${t('service_pricing.call_out_short', { amount: `${(booking as any).callOutFee} ${bookingCurrency}` })}` : ''}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: tokens.text.secondary, marginTop: 2 }}>
+                      {t('service_pricing.pro_hourly_hint', { hours: (booking as any).estimatedHours })}
+                    </Text>
+                  </View>
+                </View>
+              ) : hasConfiguredPrice ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md, gap: spacing.sm,
                   backgroundColor: tokens.primary + '12', borderRadius: 10, padding: spacing.sm,
                   borderWidth: 1, borderColor: tokens.primary + '40' }}>
@@ -950,7 +985,22 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
             ) : (
               <>
                 <Text style={styles.cardTitle}>{t('pro_space.set_price_title')}</Text>
-                {hasConfiguredPrice ? (
+                {isHourlyBooking ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md, gap: spacing.sm,
+                    backgroundColor: tokens.primary + '12', borderRadius: 10, padding: spacing.sm,
+                    borderWidth: 1, borderColor: tokens.primary + '40' }}>
+                    <Icon name="clock-outline" size={20} color={tokens.primary} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '700', color: tokens.primary }}>
+                        {t('service_pricing.rate_badge', { rate: (booking as any).hourlyRate, currency: bookingCurrency })}
+                        {(booking as any).callOutFee ? ` + ${t('service_pricing.call_out_short', { amount: `${(booking as any).callOutFee} ${bookingCurrency}` })}` : ''}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: tokens.text.secondary, marginTop: 2 }}>
+                        {t('service_pricing.pro_hourly_hint', { hours: (booking as any).estimatedHours })}
+                      </Text>
+                    </View>
+                  </View>
+              ) : hasConfiguredPrice ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md, gap: spacing.sm,
                     backgroundColor: tokens.primary + '12', borderRadius: 10, padding: spacing.sm,
                     borderWidth: 1, borderColor: tokens.primary + '40' }}>

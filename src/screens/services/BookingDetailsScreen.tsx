@@ -37,6 +37,7 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useCancellationPolicy } from '../../hooks/useCancellationPolicy';
 import { AutoConfirmNotice } from '../../components/shared/AutoConfirmNotice';
+import { HourlyWorkPanel } from '../../components/shared/HourlyWorkPanel';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingDetails'>;
 
@@ -420,7 +421,9 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
 
   const handleConfirmCompletion = () => {
     if (isCash) {
-      setCashAmountInput('');
+      // À l'heure : montant calculé d'après le temps passé, prérempli (le client peut le corriger)
+      const computed = (booking as any)?.pricingMode === 'hourly' ? (booking as any)?.finalPrice : null;
+      setCashAmountInput(computed != null ? String(computed) : '');
       setShowCashModal(true);
     } else {
       Alert.alert(
@@ -789,6 +792,11 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
             <Text style={[styles.detailText, { color: tokens.primary, fontWeight: '700' }]}>
               {t('booking.final_price_label')} : {(booking as any).finalPrice} {bookingCurrency}
             </Text>
+          </View>
+        )}
+        {(booking as any).pricingMode === 'hourly' && (
+          <View style={{ marginTop: 8 }}>
+            <HourlyWorkPanel booking={booking} role="client" />
           </View>
         )}
         {((booking as any).selectedExtras ?? []).length > 0 && (

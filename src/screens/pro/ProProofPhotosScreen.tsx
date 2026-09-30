@@ -9,7 +9,7 @@ import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { ProStackParamList } from '../../navigation/types';
-import { useUploadBookingPhotosMutation, useMarkStartedMutation, useConfirmBookingCompletionMutation } from '../../store/api/bookingsApi';
+import { useUploadBookingPhotosMutation, useMarkStartedMutation, useConfirmBookingCompletionMutation, useGetBookingByIdQuery } from '../../store/api/bookingsApi';
 import { uploadMultipleImages } from '../../services/uploadService';
 import { RootState } from '../../store';
 import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
@@ -51,7 +51,10 @@ export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
     submitButton: { flex: 2 },
   }), [tokens]);
 
-  const showCashField = isCash && nextAction === 'complete';
+  // À l'heure : le montant en espèces est calculé d'après le temps passé (pas de saisie)
+  const { data: booking } = useGetBookingByIdQuery(bookingId, { refetchOnMountOrArgChange: true });
+  const hourly = (booking as any)?.pricingMode === 'hourly';
+  const showCashField = isCash && nextAction === 'complete' && !hourly;
 
   const handleConfirm = async () => {
     if (photos.length === 0) {
@@ -134,6 +137,13 @@ export const ProProofPhotosScreen = ({ navigation, route }: Props) => {
           💡 {t('driver.photos_hint')}
         </Text>
 
+        {isCash && nextAction === 'complete' && hourly && (
+          <View style={styles.cashSection}>
+            <Text variant="bodyMedium" style={styles.cashLabel}>
+              💵 {t('service_pricing.cash_computed_pro')}
+            </Text>
+          </View>
+        )}
         {showCashField && (
           <View style={styles.cashSection}>
             <Text variant="titleSmall" style={styles.cashLabel}>
