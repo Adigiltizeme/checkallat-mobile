@@ -30,8 +30,12 @@ import {
   setDetectionDenied,
   selectCountry,
   restoreSelectedCountry,
+  setUserPosition,
+  setActiveCurrency,
 } from '../../store/slices/locationSlice';
 import { RootState } from '../../store';
+import { setCurrencyConfig } from '../../config/currency';
+import { useCourierLimits } from '../../hooks/useCourierLimits';
 
 type Props = StackScreenProps<any, 'TransportRequestStep2'>;
 
@@ -219,6 +223,9 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
   };
   const dispatch = useDispatch();
   const locationState = useSelector((state: RootState) => state.location);
+  const courierLimits = useCourierLimits();
+  const isCourierMode = step1Data.vehicleCategory === 'courier';
+
 
   // Sauvegarde du pays au moment d'entrer dans le flux de commande
   const originalCountry = useRef(locationState.selectedCountryCode);
@@ -473,12 +480,8 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
       const location = await require('expo-location').getCurrentPositionAsync({});
       const { latitude: lat, longitude: lng } = location.coords;
 
-      // Mettre à jour la position dans Redux (améliore le proximity bias)
-      dispatch(setDetectedCountry({
-        countryCode: locationState.selectedCountryCode ?? locationState.detectedCountryCode ?? 'eg',
-        lat,
-        lng,
-      }));
+      // Mettre à jour les coordonnées dans Redux (sans écraser le pays)
+      dispatch(setUserPosition({ lat, lng }));
 
       // Géocodage inverse avec Mapbox
       const result = await MapboxService.reverseGeocode(lat, lng, {
@@ -489,6 +492,15 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
         Alert.alert(t('common.error'), t('transport.location_error'));
         setLoading(false);
         return;
+      }
+
+      // Si Mapbox retourne un pays, mettre à jour Redux avec le vrai pays GPS
+      if (result.countryCode) {
+        dispatch(setDetectedCountry({
+          countryCode: result.countryCode.toLowerCase(),
+          lat,
+          lng,
+        }));
       }
 
       if (type === 'pickup') {
@@ -541,6 +553,17 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
       return;
     }
 
+    if (isCourierMode && result.distance > courierLimits.maxDistanceKm) {
+      Alert.alert(
+        t('transport.courier_distance_too_far_title'),
+        t('transport.courier_distance_too_far_msg', {
+          max: courierLimits.maxDistanceKm,
+          distance: Math.round(result.distance * 10) / 10,
+        }),
+      );
+      return;
+    }
+
     const step2Data: Step2Data = {
       pickup: pickup as AddressData,
       delivery: delivery as AddressData,
@@ -553,7 +576,15 @@ export const TransportRequestStep2Screen = ({ route, navigation }: Props) => {
     const currentCC = activeCountryCode?.toUpperCase();
 
     const doNavigate = (overrideCountry?: string) => {
-      if (overrideCountry) dispatch(selectCountry(overrideCountry.toLowerCase()));
+      if (overrideCountry) {
+        const cc = overrideCountry.toLowerCase();
+        dispatch(selectCountry(cc));
+        const info = getCountryInfo(cc);
+        if (info) {
+          dispatch(setActiveCurrency(info.currency));
+          setCurrencyConfig(info.currency);
+        }
+      }
       navigation.navigate('TransportRequestStep3', { step1Data, step2Data, step3Prefill });
     };
 

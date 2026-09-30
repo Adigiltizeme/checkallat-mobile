@@ -6,6 +6,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Text, Chip } from 'react-native-paper';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
@@ -13,6 +14,7 @@ import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useOpenBookingDisputeMutation } from '../../store/api/bookingsApi';
+import { useOpenOrderClaimMutation } from '../../store/api/marketplaceApi';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -20,6 +22,8 @@ import { spacing } from '../../theme/spacing';
 type Props = StackScreenProps<any, 'BookingDispute'>;
 
 const CATEGORIES = ['quality', 'payment', 'cancellation', 'damage', 'fraud', 'other'] as const;
+/** Commande marketplace livrée : problèmes de produit ou de livraison */
+const ORDER_CATEGORIES = ['damage', 'missing_item', 'quality', 'delivery', 'other'] as const;
 
 export const BookingDisputeScreen = ({ route, navigation }: Props) => {
   const { tokens } = useAppTheme();
@@ -72,14 +76,17 @@ export const BookingDisputeScreen = ({ route, navigation }: Props) => {
   }), [tokens]);
 
   const { t } = useTranslation();
-  const { bookingId } = route.params as { bookingId: string };
+  const { bookingId, orderId } = route.params as { bookingId?: string; orderId?: string };
+  const categories: readonly string[] = orderId ? ORDER_CATEGORIES : CATEGORIES;
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [showError, setShowError] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const [openDispute, { isLoading }] = useOpenBookingDisputeMutation();
+  const [openBookingDispute, { isLoading: bookingLoading }] = useOpenBookingDisputeMutation();
+  const [openOrderClaim, { isLoading: orderLoading }] = useOpenOrderClaimMutation();
+  const isLoading = bookingLoading || orderLoading;
 
   const handleSubmit = async () => {
     if (!selectedCategory || description.trim().length < 20) {
@@ -88,11 +95,18 @@ export const BookingDisputeScreen = ({ route, navigation }: Props) => {
     }
     setShowError(false);
     try {
-      await openDispute({ id: bookingId, category: selectedCategory, description: description.trim() }).unwrap();
+      const body = { category: selectedCategory, description: description.trim() };
+      if (orderId) await openOrderClaim({ id: orderId, ...body }).unwrap();
+      else await openBookingDispute({ id: bookingId!, ...body }).unwrap();
       setSubmitted(true);
     } catch (error: any) {
       if (error?.status === 409 || error?.data?.statusCode === 409) {
         setSubmitted(true);
+      } else {
+        Alert.alert(
+          t('common.error'),
+          error?.data?.code === 'CLAIM_WINDOW_EXPIRED' ? t('dispute.claim_window_expired') : t('dispute.submit_error'),
+        );
       }
     }
   };
@@ -128,7 +142,7 @@ export const BookingDisputeScreen = ({ route, navigation }: Props) => {
 
         <Text variant="titleMedium" style={styles.sectionLabel}>{t('dispute.category_label')}</Text>
         <View style={styles.chips}>
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Chip
               key={cat}
               selected={selectedCategory === cat}

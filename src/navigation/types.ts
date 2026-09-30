@@ -1,4 +1,4 @@
-import { NavigatorScreenParams } from '@react-navigation/native';
+﻿import { NavigatorScreenParams } from '@react-navigation/native';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -6,9 +6,12 @@ export type RootStackParamList = {
 };
 
 export type AuthStackParamList = {
-  Login: undefined;
+  /** Après une réinitialisation : numéro pré-rempli et message de confirmation */
+  Login: { phone?: string; passwordReset?: boolean } | undefined;
   Register: undefined;
   OTP: { phone: string };
+  ForgotPassword: { phone?: string } | undefined;
+  ResetPassword: { phone: string };
 };
 
 export type MainTabParamList = {
@@ -27,6 +30,11 @@ export type MainTabParamList = {
   DriverAvailables: undefined;
   DriverAgenda: undefined;
   DriverMessages: undefined;
+  // Seller tabs
+  SellerHome: undefined;
+  SellerOrders: undefined;
+  SellerCatalog: undefined;
+  SellerMessages: undefined;
   // Shared
   History: undefined;
   Profile: NavigatorScreenParams<ProfileStackParamList> | undefined;
@@ -54,6 +62,21 @@ export type ProfileStackParamList = {
   SavedCards: undefined;
   AddCard: undefined;
   ProOfferings: undefined;
+  SellerApplication: undefined;
+};
+
+export type SellerStackParamList = {
+  SellerDashboard: undefined;
+  SellerOrdersList: undefined;
+  SellerOrderDetails: { orderId: string };
+  SellerProducts: undefined;
+  SellerProductForm: { productId?: string };
+  SellerSections: undefined;
+  SellerShopSettings: undefined;
+  MarketplaceShop: { sellerId: string };
+  ProductDetail: { productId: string };
+  TransportTracking: { requestId: string };
+  BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
 };
 
 export type ProStackParamList = {
@@ -67,20 +90,22 @@ export type ProStackParamList = {
   BookingTracking: { bookingId: string; role: 'client' | 'pro' };
   BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
   ProProofPhotos: { bookingId: string; type: 'before' | 'after'; nextAction: 'start' | 'complete'; isCash?: boolean };
-  BookingDispute: { bookingId: string };
+  BookingDispute: { bookingId?: string; orderId?: string };
 };
 
 export type HomeStackParamList = {
   HomeScreen: undefined;
+  Notifications: undefined;
   SearchPros: { category: string };
   ProDetail: { proId: string };
   CreateBooking: { proId: string; offeringId?: string };
   BookingDetails: { bookingId: string };
   MyBookings: undefined;
   MarketplaceHome: undefined;
+  MarketplaceShop: { sellerId: string };
   ProductDetail: { productId: string };
   Cart: undefined;
-  Checkout: undefined;
+  MarketplaceOrderDetails: { orderId: string };
   BookingRequestStep1: { categorySlug: string; categoryNameFr: string; categoryNameEn: string; categoryNameAr: string; prefill?: { clientDescription: string; categoryData: Record<string, string[]>; urgency?: 'normal' | 'urgent' }; step2Prefill?: BookingStep2Data };
   BookingRequestStep2: { categorySlug: string; step1Data: BookingStep1Data; step2Prefill?: BookingStep2Data };
   BookingRequestStep3: { categorySlug: string; step1Data: BookingStep1Data; step2Data: BookingStep2Data };
@@ -89,8 +114,8 @@ export type HomeStackParamList = {
   BookingTracking: { bookingId: string; role: 'client' | 'pro' };
   BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
   ProProofPhotos: { bookingId: string; type: 'before' | 'after'; nextAction: 'start' | 'complete'; isCash?: boolean };
-  BookingDispute: { bookingId: string };
-  TransportRequestStep1: { prefill?: { objectTypes: string[]; description: string; estimatedVolume: number }; step2Prefill?: Step2Data; step3Prefill?: Step3Data } | undefined;
+  BookingDispute: { bookingId?: string; orderId?: string };
+  TransportRequestStep1: { prefill?: { objectTypes: string[]; description: string; estimatedVolume: number }; step2Prefill?: Step2Data; step3Prefill?: Step3Data; vehicleCategory?: 'standard' | 'courier' } | undefined;
   TransportRequestStep2: { step1Data: Step1Data; step2Prefill?: Step2Data; step3Prefill?: Step3Data };
   TransportRequestStep3: { step1Data: Step1Data; step2Data: Step2Data; step3Prefill?: Step3Data };
   TransportRequestStep4: { step1Data: Step1Data; step2Data: Step2Data; step3Data: Step3Data };
@@ -154,8 +179,8 @@ export type DriverStackParamList = {
   DriverTransportDetails: { requestId: string };
   DriverDeliveryDetails: { requestId: string };
   DriverNavigation: { requestId: string };
-  DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string };
-  DriverSignature: { requestId: string };
+  DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string; requiresSignature?: boolean };
+  DriverSignature: { requestId: string; completeAfter?: boolean };
   DriverEarnings: undefined;
   DriverReviews: { driverId?: string };
   TransportCompletion: { requestId: string };

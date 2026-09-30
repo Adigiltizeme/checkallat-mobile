@@ -120,6 +120,18 @@ export const payoutAccountsApi = createApi({
       query: (id) => ({ url: `/pro/${id}`, method: 'DELETE' }),
       invalidatesTags: ['PayoutAccount'],
     }),
+
+    /** Définir par défaut (vendeur) */
+    setDefaultSellerAccount: builder.mutation<PayoutAccount, string>({
+      query: (id) => ({ url: `/seller/${id}/set-default`, method: 'POST' }),
+      invalidatesTags: ['PayoutAccount'],
+    }),
+
+    /** Supprimer (vendeur) */
+    deleteSellerAccount: builder.mutation<void, string>({
+      query: (id) => ({ url: `/seller/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['PayoutAccount'],
+    }),
   }),
 });
 
@@ -135,4 +147,6 @@ export const {
   useSetDefaultProAccountMutation,
   useDeleteDriverAccountMutation,
   useDeleteProAccountMutation,
+  useSetDefaultSellerAccountMutation,
+  useDeleteSellerAccountMutation,
 } = payoutAccountsApi;

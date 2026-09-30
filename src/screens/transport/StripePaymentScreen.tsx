@@ -13,6 +13,9 @@ import { useCreateTransportRequestMutation, useCancelTransportMutation } from '.
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { formatCurrency, CURRENCY_CONFIG } from '../../config/currency';
+import { useDispatch } from 'react-redux';
+import { clearCart } from '../../store/slices/cartSlice';
+import { toStripeAmount } from '../../utils/stripeAmount';
 
 type Props = StackScreenProps<HomeStackParamList, 'StripePayment'>;
 
@@ -101,6 +104,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
   const { requestId: initialRequestId, clientSecret: prebuiltClientSecret, amount, type, pendingRequestData } = route.params;
   const { t } = useTranslation();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const dispatch = useDispatch();
 
   const [createPaymentIntent] = useCreatePaymentIntentMutation();
   const [createTransportRequest] = useCreateTransportRequestMutation();
@@ -142,7 +146,7 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
         if (type === 'marketplace' && activeRequestId) metadata.marketplaceOrderId = activeRequestId;
 
         const result = await createPaymentIntent({
-          amount: Math.round(amount * 100),
+          amount: toStripeAmount(amount, CURRENCY_CONFIG.code),
           currency: CURRENCY_CONFIG.code.toLowerCase(),
           metadata,
           type,
@@ -186,6 +190,28 @@ export const StripePaymentScreen = ({ route, navigation }: Props) => {
       }
 
       setPaymentState('success');
+
+      // Marketplace : la commande est créée par le webhook ; on vide le panier
+      // et on envoie le client sur l'onglet Commandes > Boutiques.
+      if (type === 'marketplace') {
+        dispatch(clearCart());
+        Alert.alert(
+          t('payment.success_title'),
+          t('marketplace.order_placed_msg'),
+          [{
+            text: t('marketplace.view_my_orders'),
+            onPress: () => {
+              navigation.reset({ index: 0, routes: [{ name: 'HomeScreen' }] });
+              navigation.getParent()?.navigate('Commandes', {
+                screen: 'MyOrders',
+                params: { initialTab: 'marketplace' },
+              });
+            },
+          }],
+          { cancelable: false },
+        );
+        return;
+      }
 
       const onViewPress = () => {
         // Nouveau flux : pas de requestId avant confirmation webhook, on retourne à l'accueil

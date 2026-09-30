@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View, StyleSheet, FlatList, Alert, TouchableOpacity,
 } from 'react-native';
@@ -16,11 +16,15 @@ import {
   PayoutAccount,
   useGetDriverAccountsQuery,
   useGetProAccountsQuery,
+  useGetSellerAccountsQuery,
   useSetDefaultDriverAccountMutation,
   useSetDefaultProAccountMutation,
+  useSetDefaultSellerAccountMutation,
   useDeleteDriverAccountMutation,
   useDeleteProAccountMutation,
+  useDeleteSellerAccountMutation,
 } from '../../store/api/payoutAccountsApi';
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 
 type NavProp = StackNavigationProp<ProfileStackParamList, 'PayoutAccounts'>;
 
@@ -129,23 +133,37 @@ const navigation = useNavigation<NavProp>();
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
   const isDriver = activeRole === 'driver';
   const isPro = activeRole === 'pro';
+  const isSeller = activeRole === 'seller';
 
-  const {
-    data: accounts = [],
-    isLoading,
-    refetch,
-  } = isDriver
-    ? useGetDriverAccountsQuery()
-    : useGetProAccountsQuery();
+  // Les trois requêtes sont toujours déclarées (règles des hooks) ; seule celle du rôle actif s'exécute
+  // Vérification des comptes par l'admin visible sans relancer l'app
+  const LIVE = { pollingInterval: 30_000, refetchOnMountOrArgChange: true } as const;
+  const driverQuery = useGetDriverAccountsQuery(undefined, { skip: !isDriver, ...LIVE });
+  const proQuery = useGetProAccountsQuery(undefined, { skip: !isPro, ...LIVE });
+  const sellerQuery = useGetSellerAccountsQuery(undefined, { skip: !isSeller, ...LIVE });
+  const refetchDriver = driverQuery.refetch;
+  const refetchPro = proQuery.refetch;
+  const refetchSeller = sellerQuery.refetch;
+  const refetchAccounts = useCallback(() => {
+    if (isDriver) refetchDriver();
+    if (isPro) refetchPro();
+    if (isSeller) refetchSeller();
+  }, [isDriver, isPro, isSeller, refetchDriver, refetchPro, refetchSeller]);
+  useRefetchOnFocus(refetchAccounts);
+  const activeQuery = isDriver ? driverQuery : isSeller ? sellerQuery : proQuery;
+  const { data: accounts = [], isLoading, refetch } = activeQuery;
 
   const [setDefaultDriver] = useSetDefaultDriverAccountMutation();
   const [setDefaultPro] = useSetDefaultProAccountMutation();
+  const [setDefaultSeller] = useSetDefaultSellerAccountMutation();
   const [deleteDriver] = useDeleteDriverAccountMutation();
   const [deletePro] = useDeleteProAccountMutation();
+  const [deleteSeller] = useDeleteSellerAccountMutation();
 
   const handleSetDefault = async (id: string) => {
     try {
       if (isDriver) await setDefaultDriver(id).unwrap();
+      else if (isSeller) await setDefaultSeller(id).unwrap();
       else await setDefaultPro(id).unwrap();
     } catch {
       Alert.alert(t('common.error'), t('payout_accounts.error_set_default'));
@@ -164,6 +182,7 @@ const navigation = useNavigation<NavProp>();
           onPress: async () => {
             try {
               if (isDriver) await deleteDriver(account.id).unwrap();
+              else if (isSeller) await deleteSeller(account.id).unwrap();
               else await deletePro(account.id).unwrap();
             } catch {
               Alert.alert(t('common.error'), t('payout_accounts.error_delete'));
@@ -179,7 +198,7 @@ const navigation = useNavigation<NavProp>();
     return d.ipaAddress ?? d.phoneNumber ?? d.iban ?? d.accountNumber ?? '—';
   };
 
-  if (!isDriver && !isPro) {
+  if (!isDriver && !isPro && !isSeller) {
     return (
       <View style={styles.empty}>
         <Text style={styles.emptyText}>{t('payout_accounts.not_available')}</Text>

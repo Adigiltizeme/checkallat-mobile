@@ -73,3 +73,17 @@ export const uploadMultipleImages = async (
 
   return uploadedUrls;
 };
+
+const isRemoteUrl = (uri: string) => /^https?:\/\//i.test(uri);
+
+/**
+ * Envoie uniquement les images locales (nouvelles) et conserve les URL déjà en ligne, dans le même ordre.
+ * Lève une erreur si un envoi échoue, pour ne jamais enregistrer une liste incomplète.
+ */
+export const uploadLocalImages = async (imageUris: string[], token: string): Promise<string[]> => {
+  const result: string[] = [];
+  for (const uri of imageUris) {
+    result.push(isRemoteUrl(uri) ? uri : await uploadImageToCloudinary(uri, token));
+  }
+  return result;
+};

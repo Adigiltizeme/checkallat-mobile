@@ -13,6 +13,7 @@ import {
 } from '../../store/api/transportApi';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadges';
 import { StatusTimeline } from '../../components/transport/StatusTimeline';
 import { DriverActionButton } from '../../components/transport/DriverActionButton';
 import { DriverCancelModal } from '../../components/transport/DriverCancelModal';
@@ -283,6 +284,11 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
     { skip: !canContact },
   );
 
+  const signatureMissing =
+    (request as any)?.vehicleCategory === 'courier' &&
+    !!(request as any)?.courierOptions?.requiresSignature &&
+    !(request as any)?.clientSignature;
+
   const handleStatusChange = async (newStatus: TransportStatus) => {
     if (newStatus === 'in_transit') {
       const hasPhotos = (request as any)?.photosBeforeLoading?.length > 0;
@@ -294,7 +300,11 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
     if (newStatus === 'completed') {
       const hasPhotos = (request as any)?.photosAfterDelivery?.length > 0;
       if (!hasPhotos) {
-        navigation.navigate('DriverProofPhotos', { requestId, type: 'after', nextStatus: 'completed' });
+        navigation.navigate('DriverProofPhotos', { requestId, type: 'after', nextStatus: 'completed', requiresSignature: signatureMissing });
+        return;
+      }
+      if (signatureMissing) {
+        navigation.navigate('DriverSignature', { requestId, completeAfter: true });
         return;
       }
     }
@@ -425,6 +435,7 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
             <Card.Content>
               <StatusTimeline
                 currentStatus={request.status as TransportStatus}
+                vehicleCategory={(request as any).vehicleCategory}
                 timestamps={{
                   driverAcceptedAt: request.driverAcceptedAt,
                   arrivedAtPickupAt: request.arrivedAtPickupAt,
@@ -540,6 +551,10 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
             left={(props) => <Icon {...props} name="package-variant" size={24} />}
           />
           <Card.Content>
+            <CourierOptionsBadges
+              vehicleCategory={(request as any).vehicleCategory}
+              courierOptions={(request as any).courierOptions}
+            />
             {/* Types d'objets */}
             <View style={styles.chipsContainer}>
               {(request as any).objectTypes && (request as any).objectTypes.length > 0 ? (
@@ -567,10 +582,12 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
               <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.distance_label_driver')}</Text>
               <Text variant="bodySmall">{request.distance} km</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.volume_label_driver')}</Text>
-              <Text variant="bodySmall">{request.estimatedVolume} m³</Text>
-            </View>
+            {(request as any).vehicleCategory !== 'courier' && (
+              <View style={styles.infoRow}>
+                <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.volume_label_driver')}</Text>
+                <Text variant="bodySmall">{request.estimatedVolume} m³</Text>
+              </View>
+            )}
             {request.estimatedWeight && (
               <View style={styles.infoRow}>
                 <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.weight_label')}</Text>

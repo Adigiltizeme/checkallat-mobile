@@ -10,6 +10,7 @@ import { useGetDriverReviewsQuery } from '../../store/api/reviewsApi';
 import { ReviewCard } from '../../components/ReviewCard';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 
 type Props = StackScreenProps<any, 'DriverReviews'>;
 
@@ -90,8 +91,9 @@ export const DriverReviewsScreen = ({ route, navigation }: Props) => {
   const [page, setPage] = useState(1);
   const { data, isLoading, isFetching, refetch } = useGetDriverReviewsQuery(
     { driverId: targetDriverId || '', page, limit: 10 },
-    { skip: !targetDriverId }
+    { skip: !targetDriverId, pollingInterval: 30_000, refetchOnMountOrArgChange: true }
   );
+  useRefetchOnFocus(refetch);
 
   const handleRefresh = () => {
     setPage(1);

@@ -32,6 +32,12 @@ import { CashValidationScreen } from '../screens/transport/CashValidationScreen'
 import { StripePaymentScreen } from '../screens/transport/StripePaymentScreen';
 import { PaymentHistoryScreen } from '../screens/transport/PaymentHistoryScreen';
 import { DisputeScreen } from '../screens/transport/DisputeScreen';
+import { MarketplaceHomeScreen } from '../screens/marketplace/MarketplaceHomeScreen';
+import { MarketplaceShopScreen } from '../screens/marketplace/MarketplaceShopScreen';
+import { ProductDetailScreen } from '../screens/marketplace/ProductDetailScreen';
+import { CartScreen } from '../screens/marketplace/CartScreen';
+import { MarketplaceOrderDetailsScreen } from '../screens/marketplace/MarketplaceOrderDetailsScreen';
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 
 const Stack = createStackNavigator<HomeStackParamList>();
 
@@ -47,6 +53,12 @@ export const HomeStack = () => {
         component={HomeScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen name="MarketplaceHome" component={MarketplaceHomeScreen} options={{ title: t('marketplace.title') }} />
+      <Stack.Screen name="MarketplaceShop" component={MarketplaceShopScreen} options={{ title: t('marketplace.shop_title') }} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: t('marketplace.product_title') }} />
+      <Stack.Screen name="Cart" component={CartScreen} options={{ title: t('marketplace.cart_title') }} />
+      <Stack.Screen name="MarketplaceOrderDetails" component={MarketplaceOrderDetailsScreen} options={{ title: t('marketplace.order_title') }} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: t('notifications.title') }} />
       <Stack.Screen
         name="SearchPros"
         component={SearchProsScreen}

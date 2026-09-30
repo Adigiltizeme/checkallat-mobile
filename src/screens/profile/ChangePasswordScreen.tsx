@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { useSendOtpMeMutation, useChangePasswordMutation } from '../../store/api/authApi';
 import { colors } from '../../theme/colors';
+import { otpErrorMessage, otpMustBeRenewed, passwordRuleErrors } from '../../utils/passwordRules';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
@@ -88,8 +89,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
       Alert.alert(t('common.error'), t('auth.passwords_mismatch'));
       return;
     }
-    if (newPassword.length < 8) {
-      Alert.alert(t('common.error'), t('auth.password_min_length'));
+    const ruleErrors = passwordRuleErrors(newPassword, t);
+    if (ruleErrors.length > 0) {
+      Alert.alert(t('common.error'), ruleErrors[0]);
       return;
     }
     try {
@@ -98,10 +100,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err: any) {
-      const msg = err?.data?.message?.includes('expired')
-        ? t('auth.otp_failed')
-        : t('auth.otp_failed');
-      Alert.alert(t('common.error'), msg);
+      Alert.alert(t('common.error'), otpErrorMessage(err, t, 'auth.otp_failed'));
+      // Code expiré ou bloqué : retour à l'étape d'envoi pour en demander un nouveau
+      if (otpMustBeRenewed(err)) setStep('send');
     }
   };
 

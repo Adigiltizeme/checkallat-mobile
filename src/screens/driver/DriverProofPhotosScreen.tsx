@@ -22,7 +22,7 @@ type Props = StackScreenProps<DriverStackParamList, 'DriverProofPhotos'>;
 export const DriverProofPhotosScreen = ({ navigation, route }: Props) => {
   const { tokens } = useAppTheme();
   const { t } = useTranslation();
-  const { requestId, type, nextStatus } = route.params;
+  const { requestId, type, nextStatus, requiresSignature } = route.params;
 
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -70,6 +70,12 @@ export const DriverProofPhotosScreen = ({ navigation, route }: Props) => {
       // 2. Enregistrer les photos sur le transport
       setUploadProgress(t('driver.saving_photos'));
       await uploadProofPhotos({ requestId, type, photos: uploadedUrls }).unwrap();
+
+      // Livraison avec signature exigée : la signature termine la livraison
+      if (type === 'after' && requiresSignature) {
+        navigation.replace('DriverSignature', { requestId, completeAfter: true });
+        return;
+      }
 
       // 3. Déclencher la transition de statut immédiatement après
       setUploadProgress(t('driver.updating_status'));

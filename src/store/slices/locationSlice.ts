@@ -40,10 +40,8 @@ const locationSlice = createSlice({
       state.userLat = action.payload.lat;
       state.userLng = action.payload.lng;
       state.detectionStatus = 'done';
-      // Si pas encore de sélection manuelle, appliquer le pays détecté
-      if (!state.selectedCountryCode) {
-        state.selectedCountryCode = action.payload.countryCode;
-      }
+      // Le GPS prime toujours sur toute valeur précédente (DB, booking temp, etc.)
+      state.selectedCountryCode = action.payload.countryCode;
     },
     setUserPosition(state, action: PayloadAction<{ lat: number; lng: number }>) {
       state.userLat = action.payload.lat;

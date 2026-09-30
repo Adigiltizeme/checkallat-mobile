@@ -21,11 +21,13 @@ import { getLocalizedName } from '../../utils/localize';
 import { RootState } from '../../store';
 import { clearProRecord, updateUser, refreshProfile } from '../../store/slices/authSlice';
 import { useCreateProProfileMutation, useDeleteProProfileMutation, useUpdateProProfileMutation } from '../../store/api/prosApi';
-import { useGetCategoriesQuery } from '../../store/api/servicesApi';
 import { useGetProfileQuery } from '../../store/api/authApi';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { useServiceCategories } from '../../hooks/useServiceCategories';
+import { EmailVerificationCard } from '../../components/shared/EmailVerificationCard';
+import { useEmailVerification } from '../../hooks/useEmailVerification';
 
 
 const isMCIconName = (s?: string | null) => !!s && /^[a-z0-9-]+$/.test(s);
@@ -39,7 +41,8 @@ const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; 
   const [deleteProProfile, { isLoading: isCancelling }] = useDeleteProProfileMutation();
   const [updateProProfile, { isLoading: isUpdating }] = useUpdateProProfileMutation();
 
-  const { data: allCategories = [] } = useGetCategoriesQuery({ activeOnly: true });
+  // Catégories du web-admin ; availableInCountry indique si elles sont proposées dans le pays du prestataire
+  const { categories: allCategories } = useServiceCategories({ availableOnly: false });
 
   const [addingCategories, setAddingCategories] = useState(false);
   const [newSlugs, setNewSlugs] = useState<string[]>([]);
@@ -139,7 +142,7 @@ const ApplicationTracking = ({ navigation, styles, tokens }: { navigation: any; 
   if (isActive) {
     const currentSlugs: string[] = pro?.serviceCategories ?? [];
     const availableToAdd = (allCategories as any[]).filter(
-      (c: any) => !currentSlugs.includes(c.slug),
+      (c: any) => !currentSlugs.includes(c.slug) && c.availableInCountry !== false,
     );
 
     return (
@@ -461,7 +464,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   const token = useSelector((state: RootState) => state.auth.token);
   const { userLat, userLng } = useSelector((state: RootState) => state.location);
 
-  const { data: categories = [] } = useGetCategoriesQuery({ activeOnly: true });
+  const { categories } = useServiceCategories();
   const [createProProfile, { isLoading }] = useCreateProProfileMutation();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -473,6 +476,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
 
   const kyc = useKycState();
   const kybFr = useKybFranceState();
+  const emailCheck = useEmailVerification();
 
   // KYB légal France (obligatoire si le pays actif de l'utilisateur est FR)
   const isFR = (user?.activeCountryId ?? user?.homeCountryId ?? '').toUpperCase() === 'FR';
@@ -499,6 +503,7 @@ export const ProApplicationScreen = ({ navigation }: any) => {
     bio.trim().length >= 20 &&
     kycValid &&
     frKybValid &&
+    !emailCheck.blocksApplication &&
     !isLoading &&
     !uploading;
 
@@ -570,6 +575,9 @@ export const ProApplicationScreen = ({ navigation }: any) => {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={'padding'}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+
+        {/* E-mail : obligatoire pour candidater selon le pays, recommandé ailleurs */}
+        <EmailVerificationCard required={emailCheck.requiredForApplication} />
 
         {/* Header */}
         <View style={styles.formHeader}>

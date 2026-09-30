@@ -11,6 +11,7 @@ import { useGetProReviewsQuery } from '../../store/api/reviewsApi';
 import { ReviewCard } from '../../components/ReviewCard';
 import { ProStackParamList } from '../../navigation/types';
 import { RootState } from '../../store';
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 
 type Props = StackScreenProps<ProStackParamList, 'ProReviews'>;
 
@@ -41,8 +42,9 @@ export const ProReviewsScreen = ({ route }: Props) => {
   const [page, setPage] = useState(1);
   const { data, isLoading, isFetching, refetch } = useGetProReviewsQuery(
     { proId, page, limit: 10 },
-    { skip: !proId },
+    { skip: !proId, pollingInterval: 30_000, refetchOnMountOrArgChange: true },
   );
+  useRefetchOnFocus(refetch);
 
   const handleRefresh = () => { setPage(1); refetch(); };
   const handleLoadMore = () => {

@@ -1,5 +1,6 @@
 ﻿import React, { useMemo, useEffect, useState } from 'react';
-import { StyleSheet, KeyboardAvoidingView, ScrollView, Platform, View, Image, Dimensions } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, ScrollView, Platform, View, Image, Dimensions, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const LOGO_SIZE = Dimensions.get('window').width * 0.85;
 import { TextInput, Text } from 'react-native-paper';
@@ -25,7 +26,7 @@ interface LoginForm {
 
 type Props = StackScreenProps<AuthStackParamList, 'Login'>;
 
-export const LoginScreen = ({ navigation }: Props) => {
+export const LoginScreen = ({ navigation, route }: Props) => {
   const { tokens } = useAppTheme();
 
   const styles = useMemo(() => StyleSheet.create({
@@ -67,6 +68,33 @@ export const LoginScreen = ({ navigation }: Props) => {
     marginBottom: 8,
     marginTop: -8,
   },
+  forgotLink: {
+    alignSelf: 'flex-end',
+    marginTop: -8,
+    paddingVertical: 4,
+  },
+  forgotText: {
+    color: tokens.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.success + '18',
+    borderColor: colors.success,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
+  },
+  successText: {
+    flex: 1,
+    color: tokens.text.primary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
   }), [tokens]);
   const { t } = useTranslation();
   const [login, { isLoading, error }] = useLoginMutation();
@@ -85,13 +113,30 @@ export const LoginScreen = ({ navigation }: Props) => {
     password: z.string().min(8, t('auth.password_min_length')),
   }), [t]);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+  const { control, handleSubmit, setValue, getValues, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
+
+  // Retour depuis la réinitialisation du mot de passe : numéro pré-rempli + confirmation
+  const resetPhone = route.params?.phone;
+  const passwordReset = !!route.params?.passwordReset;
+  useEffect(() => {
+    if (resetPhone) setValue('identifier', resetPhone);
+  }, [resetPhone, setValue]);
+
+  const openForgotPassword = () => {
+    const identifier = (getValues('identifier') ?? '').replace(/\s/g, '');
+    navigation.navigate('ForgotPassword', /^\+\d{10,15}$/.test(identifier) ? { phone: identifier } : undefined);
+  };
 
   const onSubmit = async (data: LoginForm) => {
     try {
       const result = await login(data).unwrap();
+      // Numéro jamais confirmé : un code vient d'être envoyé par SMS
+      if (result.requiresPhoneVerification) {
+        navigation.navigate('OTP', { phone: result.phone });
+        return;
+      }
       const savedDefault = await AsyncStorage.getItem(DEFAULT_ROLE_KEY) as UserRole | null;
       dispatch(setCredentials({ ...result, defaultRole: savedDefault }));
       // Navigation handled automatically by RootNavigator
@@ -124,6 +169,13 @@ export const LoginScreen = ({ navigation }: Props) => {
         <Text variant="bodyLarge" style={styles.title}>
           {t('auth.login_title')}
         </Text>
+
+        {passwordReset && (
+          <View style={styles.successBanner}>
+            <Icon name="check-circle-outline" size={20} color={colors.success} />
+            <Text style={styles.successText}>{t('auth.reset_success')}</Text>
+          </View>
+        )}
 
         <Controller
           control={control}
@@ -175,6 +227,10 @@ export const LoginScreen = ({ navigation }: Props) => {
         {errors.password && (
           <Text style={styles.errorText}>{errors.password.message}</Text>
         )}
+
+        <TouchableOpacity style={styles.forgotLink} onPress={openForgotPassword}>
+          <Text style={styles.forgotText}>{t('auth.forgot_password_link')}</Text>
+        </TouchableOpacity>
 
         {error && (
           <Text style={styles.errorText}>

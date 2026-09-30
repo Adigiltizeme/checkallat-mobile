@@ -26,8 +26,8 @@
       "icon": "./assets/icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUseUsageDescription": "CheckAll@t uses your location to find nearby service providers and enable real-time tracking.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "CheckAll@t uses your location to find nearby service providers and enable real-time tracking.",
+        "NSLocationWhenInUseUsageDescription": "CheckAll@t uses your location to show nearby service providers, set your addresses and, during a delivery or service you carry out, let your client follow your arrival in real time.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "When you carry out a delivery or a service, CheckAll@t keeps sharing your location with your client while you use a navigation app, until the mission ends. It is never used outside an active mission.",
         "NSCameraUsageDescription": "CheckAll@t uses your camera to take before/after photos for service orders.",
         "NSPhotoLibraryUsageDescription": "CheckAll@t accesses your photos to upload profile pictures and proof photos.",
         "NSPhotoLibraryAddUsageDescription": "CheckAll@t saves photos to your library."
@@ -61,7 +61,11 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow CheckAll@t to use your location for nearby pros."
+          "locationWhenInUsePermission": "CheckAll@t uses your location to show nearby service providers, set your addresses and, during a delivery or service you carry out, let your client follow your arrival in real time.",
+          "locationAlwaysAndWhenInUsePermission": "When you carry out a delivery or a service, CheckAll@t keeps sharing your location with your client while you use a navigation app, until the mission ends. It is never used outside an active mission.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       [

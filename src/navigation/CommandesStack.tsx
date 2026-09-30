@@ -14,15 +14,17 @@ import { TransportTrackingScreen } from '../screens/transport/TransportTrackingS
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
 import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
 import { PaymentHistoryScreen } from '../screens/transport/PaymentHistoryScreen';
+import { MarketplaceOrderDetailsScreen } from '../screens/marketplace/MarketplaceOrderDetailsScreen';
 
 import { BookingStep1Data, BookingStep2Data, BookingStep3Data, BookingStep4Data } from '../types/booking';
 
 export type CommandesStackParamList = {
-  MyOrders: undefined;
+  MyOrders: { initialTab?: 'transport' | 'services' | 'marketplace' } | undefined;
+  MarketplaceOrderDetails: { orderId: string };
   BookingDetails: { bookingId: string };
   BookingTracking: { bookingId: string; role: 'client' | 'pro' };
   BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
-  BookingDispute: { bookingId: string };
+  BookingDispute: { bookingId?: string; orderId?: string };
   TransportDetails: { requestId: string };
   TransportTracking: { requestId: string };
   TransportCompletion: { requestId: string };
@@ -43,6 +45,11 @@ export const CommandesStack = () => {
         name="MyOrders"
         component={MyOrdersScreen}
         options={{ title: t('commandes.title') }}
+      />
+      <Stack.Screen
+        name="MarketplaceOrderDetails"
+        component={MarketplaceOrderDetailsScreen}
+        options={{ title: t('marketplace.order_title') }}
       />
       <Stack.Screen
         name="BookingDetails"

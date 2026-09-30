@@ -134,20 +134,18 @@ export const EditProfileScreen = ({ navigation }: any) => {
     color: tokens.text.secondary,
     marginTop: 4,
   },
-  radioGroup: {
+  vehicleSummaryRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
+    justifyContent: 'space-between',
+    paddingVertical: 6,
   },
-  capacityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  capacityUnit: {
-    fontSize: 15,
+  vehicleSummaryLabel: {
     color: tokens.text.secondary,
+    fontSize: 14,
+  },
+  vehicleSummaryValue: {
+    color: tokens.text.primary,
+    fontSize: 14,
     fontWeight: '600',
   },
   docsLink: {
@@ -169,25 +167,6 @@ export const EditProfileScreen = ({ navigation }: any) => {
   },
   docsChevron: {
     fontSize: 20,
-    color: tokens.primary,
-    fontWeight: '600',
-  },
-  radioBtn: {
-    borderWidth: 1,
-    borderColor: tokens.border,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: spacing.md,
-  },
-  radioBtnActive: {
-    borderColor: tokens.primary,
-    backgroundColor: tokens.primary + '15',
-  },
-  radioBtnText: {
-    color: tokens.text.secondary,
-    fontSize: 14,
-  },
-  radioBtnTextActive: {
     color: tokens.primary,
     fontWeight: '600',
   },
@@ -274,11 +253,6 @@ export const EditProfileScreen = ({ navigation }: any) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
 
-  const VEHICLE_TYPE_OPTIONS = [
-    { value: 'van', label: t('profile.vehicle_van') },
-    { value: 'small_truck', label: t('profile.vehicle_small_truck') },
-    { value: 'large_truck', label: t('profile.vehicle_large_truck') },
-  ];
 
   const user = useSelector((state: RootState) => state.auth.user);
   const isDriver = useSelector((state: RootState) => state.auth.isDriver);
@@ -295,12 +269,6 @@ export const EditProfileScreen = ({ navigation }: any) => {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  // Driver vehicle fields
-  const [vehicleType, setVehicleType] = useState<string>(user?.driver?.vehicleType ?? 'van');
-  const [vehiclePlate, setVehiclePlate] = useState<string>(user?.driver?.vehiclePlate ?? '');
-  const [vehicleCapacity, setVehicleCapacity] = useState<string>(
-    user?.driver?.vehicleCapacity ? String(user.driver.vehicleCapacity) : ''
-  );
 
   // Portfolio fields
   const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>(
@@ -314,7 +282,6 @@ export const EditProfileScreen = ({ navigation }: any) => {
 
   const lastNameRef = useRef<RNTextInput>(null);
   const emailRef = useRef<RNTextInput>(null);
-  const plateRef = useRef<RNTextInput>(null);
 
   const originalPortfolioPhotos: string[] =
     (isDriver ? user?.driver?.portfolioPhotos : user?.pro?.portfolioPhotos) ?? [];
@@ -325,19 +292,13 @@ export const EditProfileScreen = ({ navigation }: any) => {
     email.trim() !== (user?.email ?? '') ||
     photoUri !== null;
 
-  const driverHasChanges =
-    isDriver &&
-    (vehicleType !== (user?.driver?.vehicleType ?? 'van') ||
-      vehiclePlate.trim() !== (user?.driver?.vehiclePlate ?? '') ||
-      vehicleCapacity.trim() !== (user?.driver?.vehicleCapacity ? String(user.driver.vehicleCapacity) : ''));
-
   const portfolioHasChanges =
     (isDriver || isPro) &&
     (JSON.stringify(portfolioPhotos) !== JSON.stringify(originalPortfolioPhotos) ||
       (isDriver && activityDescription !== (user?.driver?.activityDescription ?? '')) ||
       (isPro && bio !== (user?.pro?.bio ?? '')));
 
-  const hasChanges = profileHasChanges || driverHasChanges || portfolioHasChanges;
+  const hasChanges = profileHasChanges || portfolioHasChanges;
 
   // ── Upload helpers ────────────────────────────────────────────────
 
@@ -526,15 +487,6 @@ export const EditProfileScreen = ({ navigation }: any) => {
       // 2. Update driver (vehicle info + portfolio)
       const driverBody: Record<string, any> = {};
 
-      if (driverHasChanges) {
-        if (vehicleType !== user?.driver?.vehicleType) driverBody.vehicleType = vehicleType;
-        if (vehiclePlate.trim() !== user?.driver?.vehiclePlate)
-          driverBody.vehiclePlate = vehiclePlate.trim();
-        const capacityNum = parseFloat(vehicleCapacity);
-        if (!isNaN(capacityNum) && capacityNum !== user?.driver?.vehicleCapacity)
-          driverBody.vehicleCapacity = capacityNum;
-      }
-
       if (isDriver && portfolioHasChanges) {
         setUploadingPortfolio(true);
         const finalPhotos = await resolvePortfolioPhotos(portfolioPhotos);
@@ -667,53 +619,20 @@ export const EditProfileScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <Text variant="labelLarge" style={styles.sectionTitle}>{t('profile.vehicle_section')}</Text>
 
-          <Text variant="labelMedium" style={styles.label}>{t('profile.vehicle_type')}</Text>
-          <View style={styles.radioGroup}>
-            {VEHICLE_TYPE_OPTIONS.map((opt) => (
-              <TouchableOpacity
-                key={opt.value}
-                style={[styles.radioBtn, vehicleType === opt.value && styles.radioBtnActive]}
-                onPress={() => setVehicleType(opt.value)}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[
-                    styles.radioBtnText,
-                    vehicleType === opt.value && styles.radioBtnTextActive,
-                  ]}
-                >
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          {/* Lecture seule : un changement de véhicule passe par l'écran dédié (pièces + revalidation) */}
+          <View style={styles.vehicleSummaryRow}>
+            <Text style={styles.vehicleSummaryLabel}>{t('profile.vehicle_type')}</Text>
+            <Text style={styles.vehicleSummaryValue}>
+              {t(`transport.vehicle_${user?.driver?.vehicleType ?? 'van'}`)}
+              {user?.driver?.motorbikeClass ? ` · ${t(`driver_apply.motorbike_class_${user.driver.motorbikeClass}`)}` : ''}
+            </Text>
           </View>
-
-          <Text variant="labelMedium" style={styles.label}>{t('profile.license_plate')}</Text>
-          <RNTextInput
-            ref={plateRef}
-            style={styles.input}
-            value={vehiclePlate}
-            onChangeText={setVehiclePlate}
-            placeholder={t('profile.plate_placeholder')}
-            placeholderTextColor={tokens.text.secondary}
-            autoCapitalize="characters"
-            returnKeyType="next"
-            onSubmitEditing={() => {}}
-          />
-
-          <Text variant="labelMedium" style={styles.label}>{t('driver_apply.vehicle_capacity')}</Text>
-          <View style={styles.capacityRow}>
-            <RNTextInput
-              style={[styles.input, { flex: 1 }]}
-              value={vehicleCapacity}
-              onChangeText={setVehicleCapacity}
-              placeholder="Ex: 10"
-              placeholderTextColor={tokens.text.secondary}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-            />
-            <Text style={styles.capacityUnit}>m³</Text>
-          </View>
+          {!!user?.driver?.vehiclePlate && (
+            <View style={styles.vehicleSummaryRow}>
+              <Text style={styles.vehicleSummaryLabel}>{t('profile.license_plate')}</Text>
+              <Text style={styles.vehicleSummaryValue}>{user.driver.vehiclePlate}</Text>
+            </View>
+          )}
 
           <TouchableOpacity
             style={styles.docsLink}

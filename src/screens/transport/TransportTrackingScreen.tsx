@@ -8,6 +8,7 @@ import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useGetTrackingInfoQuery, useGetTransportRequestQuery } from '../../store/api/transportApi';
 import { StatusTimeline } from '../../components/transport/StatusTimeline';
+import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadges';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useTranslation } from 'react-i18next';
@@ -244,6 +245,8 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
   const driverCoord: [number, number] | null = hasDriverLocation
     ? [trackingInfo!.driverLng!, trackingInfo!.driverLat!]
     : null;
+  const driverMarkerEmoji = (request as any).vehicleCategory === 'courier' ? '🛵' : '🚚';
+  const driverMarkerTitle = trackingInfo?.driverName || t('transport.assigned_driver');
 
   const routeShape = {
     type: 'Feature' as const,
@@ -267,8 +270,8 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
             title={t('transport.delivery_point')} description={request.delivery.address} pinColor="red" />
           {driverCoord && (
             <Marker coordinate={{ latitude: driverCoord[1], longitude: driverCoord[0] }}
-              title={trackingInfo?.driverName || 'Chauffeur'}>
-              <View style={styles.driverMarker}><Text style={styles.markerText}>🚚</Text></View>
+              title={driverMarkerTitle}>
+              <View style={styles.driverMarker}><Text style={styles.markerText}>{driverMarkerEmoji}</Text></View>
             </Marker>
           )}
           <Polyline
@@ -301,9 +304,9 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
         {driverCoord && (
           <Mapbox.PointAnnotation id="driver" coordinate={driverCoord}>
             <View style={[styles.markerContainer, { backgroundColor: tokens.primary }]}>
-              <Text style={styles.markerText}>🚚</Text>
+              <Text style={styles.markerText}>{driverMarkerEmoji}</Text>
             </View>
-            <Mapbox.Callout title={trackingInfo?.driverName || 'Driver'} />
+            <Mapbox.Callout title={driverMarkerTitle} />
           </Mapbox.PointAnnotation>
         )}
         <Mapbox.ShapeSource id="routeSource" shape={routeShape}>
@@ -368,6 +371,10 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
         {/* Contenu étendu */}
         {!collapsed && (
           <ScrollView style={styles.panelContent} showsVerticalScrollIndicator={false}>
+            <CourierOptionsBadges
+              vehicleCategory={(request as any).vehicleCategory}
+              courierOptions={(request as any).courierOptions}
+            />
             {trackingInfo?.driverName && (
               <View style={styles.driverHeader}>
                 <Avatar.Icon size={48} icon="account" style={styles.driverAvatar} />
@@ -441,6 +448,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
             {/* Suivi détaillé des étapes — pour le client */}
             <StatusTimeline
               currentStatus={request.status as TransportStatus}
+              vehicleCategory={(request as any).vehicleCategory}
               timestamps={{
                 driverAcceptedAt: (request as any).driverAcceptedAt,
                 arrivedAtPickupAt: (request as any).arrivedAtPickupAt,

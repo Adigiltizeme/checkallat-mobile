@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Image, TouchableOpacity, Modal, Dimensions, Linking } from 'react-native';
 import { Text, Card, Divider, ActivityIndicator, Chip, IconButton } from 'react-native-paper';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
+import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadges';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { colors } from '../../theme/colors';
@@ -25,6 +26,8 @@ import {
   Step2Data,
   Step3Data,
 } from '../../types/transport';
+import { useCancellationPolicy } from '../../hooks/useCancellationPolicy';
+import { AutoConfirmNotice } from '../../components/shared/AutoConfirmNotice';
 
 type Props = StackScreenProps<any, 'TransportDetails'>;
 
@@ -377,6 +380,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const cancellationPolicy = useCancellationPolicy();
   const { requestId } = route.params as { requestId: string };
   const { data: request, isLoading, refetch } = useGetTransportRequestQuery(requestId, {
     pollingInterval: 5000,
@@ -443,7 +447,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
     const alertMessage = isArrivedAtPickup
       ? t('transport.cancel_arrived_warning')
       : isHeadingToPickup
-        ? t('transport.cancel_heading_warning')
+        ? t('transport.cancel_heading_warning', { minutes: cancellationPolicy.transport.headingFreeCancelMin })
         : request?.paymentMethod === 'in_app'
           ? t('transport.cancel_request_message_inapp')
           : t('transport.cancel_request_message');
@@ -460,17 +464,20 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
             try {
               const result: any = await cancelRequest({ id: requestId, reason: 'Annulé par le client' }).unwrap();
               if (result?.feeAmount && result.feeAmount > 0) {
-                // Fee charged — show specific message
+                // Frais : retenus sur le paiement in-app, ou facturés avant la prochaine commande (cash)
                 Alert.alert(
                   t('transport.cancelled_alert_title'),
-                  t('transport.cancel_fee_charged', { amount: result.feeAmount, currency: (request as any).currency || CURRENCY_CONFIG.code }),
+                  t(result.paymentRefunded ? 'transport.cancel_fee_retained' : 'transport.cancel_fee_charged', {
+                    amount: result.feeAmount,
+                    currency: (request as any).currency || CURRENCY_CONFIG.code,
+                  }),
                   [{ text: t('common.ok'), onPress: () => navigation.goBack() }],
                 );
               } else if (result?.refundPercentage !== undefined) {
                 const msg = result.refundPercentage === 100
                   ? t('transport.cancel_refund_full')
                   : result.refundPercentage === 0
-                    ? t('transport.cancel_refund_none')
+                    ? t('transport.cancel_refund_none', { hours: cancellationPolicy.transport.freeCancelHoursBeforeSlot })
                     : t('transport.cancel_refund_partial', { pct: result.refundPercentage });
                 Alert.alert(t('transport.cancelled_alert_title'), msg, [
                   { text: t('common.ok'), onPress: () => navigation.goBack() },
@@ -631,7 +638,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
         <Card style={styles.card}>
           <Card.Content>
             <Text variant="labelLarge" style={styles.sectionTitle}>
-              🚚 {t('transport.assigned_driver')}
+              {(request as any).vehicleCategory === 'courier' ? '🛵' : '🚚'} {t('transport.assigned_driver')}
             </Text>
             <View style={styles.driverRow}>
               <View style={styles.driverAvatar}>
@@ -669,9 +676,9 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                   </View>
                 )}
                 <Text variant="bodySmall" style={styles.driverDetail}>
-                  🚛 {t('transport.vehicle_' + (request as any).driver.vehicleType)}
-                  {'  ·  '}
-                  🔖 {(request as any).driver.vehiclePlate}
+                  {['motorbike', 'bicycle'].includes((request as any).driver.vehicleType) ? '🛵' : '🚛'}{' '}
+                  {t('transport.vehicle_' + (request as any).driver.vehicleType)}
+                  {(request as any).driver.vehiclePlate ? `  ·  🔖 ${(request as any).driver.vehiclePlate}` : ''}
                 </Text>
                 {(request as any).driver.averageRating > 0 && (
                   <Text variant="bodySmall" style={styles.driverDetail}>
@@ -690,6 +697,10 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
           <Text variant="labelLarge" style={styles.sectionTitle}>
             📦 {t('transport.objects_section')}
           </Text>
+          <CourierOptionsBadges
+            vehicleCategory={(request as any).vehicleCategory}
+            courierOptions={(request as any).courierOptions}
+          />
 
           {/* Afficher tous les types d'objets sous forme de chips */}
           <View style={styles.chipsContainer}>
@@ -715,7 +726,9 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
             {request.description}
           </Text>
           <Text variant="bodySmall" style={styles.detail}>
-            {t('transport.volume')}: {request.estimatedVolume} m³
+            {(request as any).vehicleCategory === 'courier'
+              ? `${t('transport.weight_label')}: ${(request as any).estimatedWeight ?? 0} kg`
+              : `${t('transport.volume')}: ${request.estimatedVolume} m³`}
           </Text>
 
           {/* Galerie de photos */}
@@ -978,7 +991,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
             {(request as any).driverCompletionNotes && (
               <View style={styles.noteContainer}>
                 <Text variant="bodySmall" style={styles.noteLabel}>
-                  🚚 {t('transport.driver_label')}
+                  {(request as any).vehicleCategory === 'courier' ? '🛵' : '🚚'} {t('transport.driver_label')}
                 </Text>
                 <Text variant="bodyMedium" style={styles.noteText}>
                   {(request as any).driverCompletionNotes}
@@ -994,10 +1007,21 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
         <Card style={styles.infoCard}>
           <Card.Content>
             <Text variant="bodySmall" style={styles.infoText}>
-              💡 {t('transport.cancellation_info')}
+              💡 {t('transport.cancellation_info', { hours: cancellationPolicy.transport.freeCancelHoursBeforeSlot })}
             </Text>
           </Card.Content>
         </Card>
+      )}
+
+      {/* Livraison déclarée terminée : échéance de la confirmation automatique (in-app, hors Marketplace) */}
+      {canConfirm && !isDriver && request.paymentMethod === 'in_app' && !(request as any).marketplaceOrder && !!(request as any).completedAt && (
+        <AutoConfirmNotice
+          title={t('completion.transport_title')}
+          declaredAt={(request as any).completedAt}
+          hours={cancellationPolicy.transport.autoConfirmCompletionHours}
+          message={(deadline) => t('completion.transport_message', { deadline })}
+          onReport={() => navigation.navigate('Dispute', { requestId })}
+        />
       )}
 
       {/* Actions */}

@@ -22,6 +22,7 @@ import {
 } from '../../store/api/transportApi';
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadges';
 import {
   STATUS_COLORS,
   TransportStatus,
@@ -87,7 +88,16 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
   useRefetchOnFocus(refetch);
   const [updateStatus, { isLoading: isUpdating }] = useUpdateTransportStatusMutation();
 
+  const signatureMissing =
+    (request as any)?.vehicleCategory === 'courier' &&
+    !!(request as any)?.courierOptions?.requiresSignature &&
+    !(request as any)?.clientSignature;
+
   const handleStatusUpdate = async (newStatus: TransportStatus) => {
+    if (newStatus === 'completed' && signatureMissing) {
+      navigation.navigate('DriverSignature', { requestId, completeAfter: true });
+      return;
+    }
     try {
       await updateStatus({ requestId, status: newStatus }).unwrap();
       if (newStatus === 'completed') {
@@ -113,7 +123,12 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
   };
 
   const handleProofPhotos = (type: 'before' | 'after', nextStatus: string) => {
-    navigation.navigate('DriverProofPhotos', { requestId, type, nextStatus });
+    navigation.navigate('DriverProofPhotos', {
+      requestId,
+      type,
+      nextStatus,
+      requiresSignature: type === 'after' && signatureMissing,
+    });
   };
 
   const getNextAction = () => {
@@ -224,6 +239,10 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
       <Card style={styles.card}>
         <Card.Content>
           <Text variant="titleMedium" style={styles.sectionTitle}>📦 {t('driver.items_to_transport')}</Text>
+          <CourierOptionsBadges
+            vehicleCategory={(request as any).vehicleCategory}
+            courierOptions={(request as any).courierOptions}
+          />
           <View style={styles.chipsContainer}>
             {(request as any).objectTypes && (request as any).objectTypes.length > 0
               ? (request as any).objectTypes.map((type: string, index: number) => (
@@ -234,10 +253,12 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
           </View>
           <Text variant="bodyMedium" style={styles.description}>{(request as any).description}</Text>
           <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text variant="bodySmall" style={styles.detailLabel}>{t('driver.estimated_volume')}</Text>
-              <Text variant="bodyMedium" style={styles.detailValue}>{request.estimatedVolume} m³</Text>
-            </View>
+            {(request as any).vehicleCategory !== 'courier' && (
+              <View style={styles.detailItem}>
+                <Text variant="bodySmall" style={styles.detailLabel}>{t('driver.estimated_volume')}</Text>
+                <Text variant="bodyMedium" style={styles.detailValue}>{request.estimatedVolume} m³</Text>
+              </View>
+            )}
             {request.estimatedWeight && (
               <View style={styles.detailItem}>
                 <Text variant="bodySmall" style={styles.detailLabel}>{t('driver.estimated_weight')}</Text>

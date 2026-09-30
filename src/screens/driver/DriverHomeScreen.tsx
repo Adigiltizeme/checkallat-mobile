@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import {
   View,
@@ -32,6 +32,7 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { isExpoGo } from '../../utils/environment';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { CountrySelectorRow } from '../../components/shared/CountrySelectorRow';
+import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadges';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useBeatSound } from '../../hooks/useBeatSound';
 import { TransportRequest, STATUS_COLORS, TransportStatus } from '../../types/transport';
@@ -375,9 +376,15 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
         <Card style={[styles.deliveryCard, isActive && styles.activeCard]}>
           <Card.Content>
             <View style={styles.cardHeader}>
-              <Text variant="titleMedium" style={styles.deliveryTitle}>
-                {t('driver.delivery_title', { id: item.id.slice(0, 8) })}
-              </Text>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <Text variant="titleMedium" style={styles.deliveryTitle}>
+                  {t('driver.delivery_title', { id: item.id.slice(0, 8) })}
+                </Text>
+                <CourierOptionsBadges
+                  vehicleCategory={(item as any).vehicleCategory}
+                  courierOptions={(item as any).courierOptions}
+                />
+              </View>
               <Chip
                 mode="flat"
                 textStyle={{ fontSize: 12, lineHeight: 16, color: colors.white }}

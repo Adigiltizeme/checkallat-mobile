@@ -31,8 +31,10 @@ import {
   setDetectionDenied,
   selectCountry,
   restoreSelectedCountry,
+  setActiveCurrency,
 } from '../../store/slices/locationSlice';
 import { RootState } from '../../store';
+import { setCurrencyConfig } from '../../config/currency';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingRequestStep2'>;
 
@@ -271,6 +273,10 @@ export const BookingRequestStep2Screen = ({ route, navigation }: Props) => {
             text: t('location.country_mismatch_confirm', { country: countryName }),
             onPress: () => {
               dispatch(selectCountry(addressCC.toLowerCase()));
+              if (info) {
+                dispatch(setActiveCurrency(info.currency));
+                setCurrencyConfig(info.currency);
+              }
               navigation.navigate('BookingRequestStep3', { categorySlug, step1Data, step2Data });
             },
           },

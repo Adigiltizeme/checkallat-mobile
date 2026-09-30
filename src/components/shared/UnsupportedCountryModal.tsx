@@ -15,8 +15,9 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { SupportedCountry } from '../../config/countries';
 import { useCountries } from '../../hooks/useCountries';
-import { selectCountry } from '../../store/slices/locationSlice';
+import { selectCountry, setActiveCurrency } from '../../store/slices/locationSlice';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { setCurrencyConfig } from '../../config/currency';
 
 interface Props {
   visible: boolean;
@@ -113,6 +114,8 @@ export const UnsupportedCountryModal = ({
 
   const handleSelect = (country: SupportedCountry) => {
     dispatch(selectCountry(country.code));
+    dispatch(setActiveCurrency(country.currency));
+    setCurrencyConfig(country.currency);
     onCountrySelected(country);
   };
 

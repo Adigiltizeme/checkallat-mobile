@@ -7,9 +7,29 @@ export type TransportObjectType =
   | 'appliances'
   | 'boxes'
   | 'vehicle'
-  | 'other';
+  | 'other'
+  | 'small_parcel'
+  | 'medium_parcel'
+  | 'document'
+  | 'food';
 
-export type VehicleType = 'van' | 'small_truck' | 'large_truck';
+export const COURIER_OBJECT_TYPES: TransportObjectType[] = [
+  'small_parcel',
+  'medium_parcel',
+  'document',
+  'food',
+  'other',
+];
+
+export const STANDARD_OBJECT_TYPES: TransportObjectType[] = [
+  'furniture',
+  'appliances',
+  'boxes',
+  'vehicle',
+  'other',
+];
+
+export type VehicleType = 'van' | 'small_truck' | 'large_truck' | 'motorbike' | 'bicycle';
 
 export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'flexible';
 
@@ -30,7 +50,9 @@ export interface Step1Data {
   objectTypes?: TransportObjectType[]; // Types multiples (optionnel, pour affichage)
   description: string;
   photos: string[]; // URIs locales ou URLs
-  estimatedVolume: number; // en m³
+  estimatedVolume: number; // en m³ (transport standard) — 0.01 pour courier
+  estimatedWeight?: number; // en kg (courier CheckAllPack)
+  vehicleCategory?: 'standard' | 'courier';
   dimensions?: {
     length?: number;
     width?: number;
@@ -61,6 +83,11 @@ export interface Step3Data {
   needDisassembly: boolean;
   needReassembly: boolean;
   needPacking: boolean;
+  // Options courier CheckAllPack (ignorées en mode standard)
+  isExpress?: boolean;
+  requiresSignature?: boolean;
+  isFragile?: boolean;
+  isColdChain?: boolean;
 }
 
 export interface Step4Data {
@@ -156,12 +183,27 @@ export const OBJECT_TYPE_LABELS: Record<TransportObjectType, string> = {
   boxes: 'Cartons',
   vehicle: 'Véhicule',
   other: 'Autre',
+  small_parcel: 'Petit colis',
+  medium_parcel: 'Colis moyen',
+  document: 'Documents',
+  food: 'Alimentation',
+};
+
+// Estimations volume pour livraison courrier (m³)
+export const COURIER_VOLUME_ESTIMATES: Record<string, number> = {
+  envelope:    0.001,
+  small_box:   0.005,
+  medium_box:  0.02,
+  large_box:   0.04,
+  food_bag:    0.003,
 };
 
 export const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
   van: 'Camionnette',
   small_truck: 'Petit camion',
   large_truck: 'Grand camion',
+  motorbike: 'Moto',
+  bicycle: 'Vélo'
 };
 
 export const TIME_SLOT_LABELS: Record<TimeSlot, string> = {

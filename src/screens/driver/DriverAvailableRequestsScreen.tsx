@@ -23,6 +23,7 @@ import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
+import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadges';
 
 type Props = StackScreenProps<DriverStackParamList, 'DriverAvailableRequests'>;
 
@@ -181,6 +182,8 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
             </View>
           </View>
 
+          <CourierOptionsBadges vehicleCategory={item.vehicleCategory} courierOptions={item.courierOptions} />
+
           {/* Object types */}
           {objectTypes.length > 0 && (
             <View style={styles.detailSection}>
@@ -204,12 +207,14 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
 
           {/* Volume / Weight */}
           <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Icon name="cube-outline" size={16} color={tokens.text.secondary} />
-              <Text variant="bodySmall" style={styles.statText}>
-                {t('driver.volume_m3', { volume: item.estimatedVolume ?? 0 })}
-              </Text>
-            </View>
+            {item.vehicleCategory !== 'courier' && (
+              <View style={styles.statItem}>
+                <Icon name="cube-outline" size={16} color={tokens.text.secondary} />
+                <Text variant="bodySmall" style={styles.statText}>
+                  {t('driver.volume_m3', { volume: item.estimatedVolume ?? 0 })}
+                </Text>
+              </View>
+            )}
             {!!item.estimatedWeight && (
               <View style={styles.statItem}>
                 <Icon name="weight-kilogram" size={16} color={tokens.text.secondary} />

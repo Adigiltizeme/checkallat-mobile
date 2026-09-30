@@ -17,6 +17,8 @@ import { useCreateTransportReviewMutation } from '../../store/api/reviewsApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { Ionicons } from '@expo/vector-icons';
+import { AutoConfirmNotice } from '../../components/shared/AutoConfirmNotice';
+import { useCancellationPolicy } from '../../hooks/useCancellationPolicy';
 
 type Props = StackScreenProps<any, 'TransportCompletion'>;
 
@@ -47,6 +49,7 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
   });
   useRefetchOnFocus(refetch);
   const isDriver = useSelector((state: RootState) => state.auth.isDriver);
+  const cancellationPolicy = useCancellationPolicy();
 
   const [clientConfirm] = useClientConfirmCompletionMutation();
   const [driverConfirm] = useDriverConfirmCompletionMutation();
@@ -280,6 +283,16 @@ export const TransportCompletionScreen = ({ route, navigation }: Props) => {
           ? t('transport.completion_subtitle_driver')
           : t('transport.completion_subtitle_client')}
       </Text>
+
+      {!isDriver && request?.paymentMethod === 'in_app' && !(request as any)?.marketplaceOrder && !!(request as any)?.completedAt && (
+        <AutoConfirmNotice
+          title={t('completion.transport_title')}
+          declaredAt={(request as any).completedAt}
+          hours={cancellationPolicy.transport.autoConfirmCompletionHours}
+          message={(deadline) => t('completion.transport_message', { deadline })}
+          onReport={() => (navigation as any).navigate('Dispute', { requestId })}
+        />
+      )}
 
       <Divider style={styles.divider} />
 

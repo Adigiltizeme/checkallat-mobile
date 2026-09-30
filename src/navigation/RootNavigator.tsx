@@ -2,14 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Linking, Platform } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootState } from '../store';
 import { AuthNavigator } from './AuthNavigator';
 import { MainNavigator } from './MainNavigator';
 import { RoleSelectorScreen } from '../screens/auth/RoleSelectorScreen';
+import { TermsUpdateGate } from '../components/shared/TermsUpdateGate';
 import { OnboardingScreen, ONBOARDING_DONE_KEY } from '../screens/onboarding/OnboardingScreen';
-import { useDriverApprovalPolling } from '../hooks/useDriverApprovalPolling';
+import { useAccountStatusSync } from '../hooks/useAccountStatusSync';
+import { useNotificationRouting } from '../hooks/useNotificationRouting';
+import { navigationRef } from './navigationRef';
+import { AnalyticsConsentPrompt } from '../components/shared/AnalyticsConsentPrompt';
+import { trackScreen } from '../services/analytics';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { colors } from '../theme/colors';
 import { API_CONFIG } from '../config/api';
@@ -33,6 +39,7 @@ const STORE_URL = Platform.select({
 });
 
 function useForceUpdateCheck() {
+  const { t } = useTranslation();
   useEffect(() => {
     fetch(`${API_CONFIG.BASE_URL.replace('/api/v1', '')}/api/v1`)
       .then((r) => r.json())
@@ -40,24 +47,33 @@ function useForceUpdateCheck() {
         const min = data.minAppVersion;
         if (min && isOutdated(APP_VERSION, min)) {
           Alert.alert(
-            'Mise à jour requise',
-            `La version ${min} est requise. Veuillez mettre à jour l'application pour continuer.`,
+            t('common.update_required_title'),
+            t('common.update_required_msg', { version: min }),
             [
-              { text: 'Mettre à jour', onPress: () => Linking.openURL(STORE_URL!) },
+              { text: t('common.update_required_btn'), onPress: () => Linking.openURL(STORE_URL!) },
             ],
             { cancelable: false },
           );
         }
       })
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
 
 const AuthenticatedRoot = () => {
-  useDriverApprovalPolling();
+  useAccountStatusSync();
+  // Toucher une notification ouvre l'écran concerné
+  useNotificationRouting();
   useForceUpdateCheck();
   const needsRoleSelection = useSelector((state: RootState) => state.auth.needsRoleSelection);
-  return needsRoleSelection ? <RoleSelectorScreen /> : <MainNavigator />;
+  return (
+    <>
+      {needsRoleSelection ? <RoleSelectorScreen /> : <MainNavigator />}
+      {/* Ré-acceptation obligatoire des CGU si une nouvelle version est publiée */}
+      <TermsUpdateGate />
+    </>
+  );
 };
 
 export const RootNavigator = () => {
@@ -89,7 +105,13 @@ export const RootNavigator = () => {
   };
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer
+      ref={navigationRef}
+      theme={navTheme}
+      // Mesure d'usage : écran affiché (uniquement avec l'accord de la personne)
+      onReady={() => trackScreen(navigationRef.getCurrentRoute()?.name)}
+      onStateChange={() => trackScreen(navigationRef.getCurrentRoute()?.name)}
+    >
       {!onboardingDone ? (
         <OnboardingScreen onDone={() => setOnboardingDone(true)} />
       ) : isAuthenticated ? (
@@ -97,6 +119,7 @@ export const RootNavigator = () => {
       ) : (
         <AuthNavigator />
       )}
+      {onboardingDone && <AnalyticsConsentPrompt />}
     </NavigationContainer>
   );
 };

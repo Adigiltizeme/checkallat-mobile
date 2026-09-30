@@ -18,6 +18,8 @@ import { DriverAgendaStack } from './DriverAgendaStack';
 import { ProStack } from './ProStack';
 import { ProDemandesStack } from './ProDemandesStack';
 import { ProAgendaStack } from './ProAgendaStack';
+import { SellerCatalogStack, SellerHomeStack, SellerOrdersStack } from './SellerStacks';
+import { useGetSellerOrdersQuery } from '../store/api/marketplaceApi';
 import { colors } from '../theme/colors';
 import { useAppTheme } from '../theme/ThemeProvider';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -44,6 +46,7 @@ export const MainNavigator = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const isDriver = activeRole === 'driver';
   const isPro = activeRole === 'pro';
+  const isSeller = activeRole === 'seller';
 
   const { data: conversations } = useGetMyConversationsListQuery(undefined, {
     pollingInterval: 8000,
@@ -62,8 +65,14 @@ export const MainNavigator = () => {
   });
   const pendingDemandesCount = proDemandes?.filter((d: any) => d.status === 'pending').length ?? 0;
 
+  const { data: sellerPendingOrders } = useGetSellerOrdersQuery(
+    { status: 'pending' },
+    { skip: !isSeller, pollingInterval: 8000, refetchOnMountOrArgChange: true },
+  );
+  const sellerPendingCount = sellerPendingOrders?.length ?? 0;
+
   const currentTab = useNavigationState((state) => state?.routes?.[state?.index ?? 0]?.name ?? '');
-  const messagesTabNames = ['Messages', 'DriverMessages', 'ProMessages'];
+  const messagesTabNames = ['Messages', 'DriverMessages', 'ProMessages', 'SellerMessages'];
   const isOnMessagesTab = messagesTabNames.includes(currentTab);
 
   useNotificationSound(isOnMessagesTab ? 0 : totalUnread);
@@ -121,6 +130,56 @@ export const MainNavigator = () => {
             name="DriverMessages"
             component={MessagesStack}
             listeners={resetTo('DriverMessages', 'MessagesHome')}
+            options={{
+              title: t('nav.messages'),
+              tabBarIcon: ({ color, size }) => <Icon name="message-outline" size={size} color={color} />,
+              tabBarBadge: supportUnread > 0 ? supportUnread : undefined,
+            }}
+          />
+          <Tab.Screen
+            name="Profile"
+            component={ProfileStack}
+            listeners={resetTo('Profile', 'ProfileHome')}
+            options={{
+              title: t('nav.profile'),
+              tabBarIcon: ({ color, size }) => <Icon name="account" size={size} color={color} />,
+            }}
+          />
+        </>
+      ) : isSeller ? (
+        <>
+          <Tab.Screen
+            name="SellerHome"
+            component={SellerHomeStack}
+            listeners={resetTo('SellerHome', 'SellerDashboard')}
+            options={{
+              title: t('nav.shop'),
+              tabBarIcon: ({ color, size }) => <Icon name="storefront-outline" size={size} color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="SellerOrders"
+            component={SellerOrdersStack}
+            listeners={resetTo('SellerOrders', 'SellerOrdersList')}
+            options={{
+              title: t('nav.commandes'),
+              tabBarIcon: ({ color, size }) => <Icon name="clipboard-list-outline" size={size} color={color} />,
+              tabBarBadge: sellerPendingCount > 0 ? sellerPendingCount : undefined,
+            }}
+          />
+          <Tab.Screen
+            name="SellerCatalog"
+            component={SellerCatalogStack}
+            listeners={resetTo('SellerCatalog', 'SellerProducts')}
+            options={{
+              title: t('nav.catalog'),
+              tabBarIcon: ({ color, size }) => <Icon name="package-variant-closed" size={size} color={color} />,
+            }}
+          />
+          <Tab.Screen
+            name="SellerMessages"
+            component={MessagesStack}
+            listeners={resetTo('SellerMessages', 'MessagesHome')}
             options={{
               title: t('nav.messages'),
               tabBarIcon: ({ color, size }) => <Icon name="message-outline" size={size} color={color} />,

@@ -5,6 +5,7 @@ import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import Constants from 'expo-constants';
 import * as Location from 'expo-location';
+import { startMissionTracking, stopMissionTracking } from '../../services/missionTracking';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -17,6 +18,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 
 import RNMapView, { Marker, Polyline } from 'react-native-maps';
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 
 const isExpoGo = Constants.appOwnership === 'expo';
 const Mapbox = isExpoGo ? null : require('@rnmapbox/maps').default;
@@ -60,7 +62,11 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
 
   const { t } = useTranslation();
   const { requestId } = route.params;
-  const { data: request } = useGetTransportRequestQuery(requestId);
+  const { data: request, refetch: refetchRequest } = useGetTransportRequestQuery(requestId, {
+    pollingInterval: 5000,
+    refetchOnMountOrArgChange: true,
+  });
+  useRefetchOnFocus(refetchRequest);
   const [updateLocation] = useUpdateDriverLocationMutation();
 
   const [currentLocation, setCurrentLocation] = useState<{
@@ -70,6 +76,8 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
   const [heading, setHeading] = useState<number>(0);
   const cameraRef = useRef<any>(null);
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
+  // Suivi en arrière-plan actif : c'est lui qui envoie la position au serveur (pas de double envoi)
+  const backgroundTracking = useRef(false);
 
   useEffect(() => {
     startLocationTracking();
@@ -82,6 +90,28 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
       if (status !== 'granted') {
         Alert.alert(t('transport.permission_denied'), t('transport.cannot_track_location'));
         return;
+      }
+
+      // Suivi pendant la mission, y compris quand Google Maps est ouvert (permission « Toujours »)
+      const mode = await startMissionTracking('transport', requestId, () =>
+        new Promise<boolean>((resolve) =>
+          Alert.alert(
+            t('mission_tracking.disclosure_title'),
+            t('mission_tracking.disclosure_msg'),
+            [
+              { text: t('mission_tracking.disclosure_decline'), style: 'cancel', onPress: () => resolve(false) },
+              { text: t('mission_tracking.disclosure_accept'), onPress: () => resolve(true) },
+            ],
+            { cancelable: false },
+          ),
+        ),
+      );
+      backgroundTracking.current = mode === 'background';
+      if (mode === 'foreground_only') {
+        Alert.alert(t('mission_tracking.background_denied_title'), t('mission_tracking.background_denied_msg'), [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('mission_tracking.open_settings'), onPress: () => Linking.openSettings() },
+        ]);
       }
 
       const location = await Location.getCurrentPositionAsync({});
@@ -119,11 +149,13 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
             });
           }
 
-          updateLocation({
-            id: requestId,
-            lat: newLocation.coords.latitude,
-            lng: newLocation.coords.longitude,
-          });
+          if (!backgroundTracking.current) {
+            updateLocation({
+              id: requestId,
+              lat: newLocation.coords.latitude,
+              lng: newLocation.coords.longitude,
+            });
+          }
         }
       );
     } catch (error) {
@@ -135,6 +167,8 @@ export const DriverNavigationScreen = ({ navigation, route }: Props) => {
     if (locationSubscription.current) {
       locationSubscription.current.remove();
     }
+    backgroundTracking.current = false;
+    stopMissionTracking();
   };
 
   const handleCenterMap = () => {

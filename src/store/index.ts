@@ -17,6 +17,10 @@ import { payoutAccountsApi } from './api/payoutAccountsApi';
 import { communicationApi } from './api/communicationApi';
 import { savedCardsApi } from './api/savedCardsApi';
 import { settingsApi } from './api/settingsApi';
+import { payoutsApi } from './api/payoutsApi';
+import { notificationsApi } from './api/notificationsApi';
+import { analyticsMiddleware } from './analyticsMiddleware';
+import { configureAnalytics } from '../services/analytics';
 
 export const store = configureStore({
   reducer: {
@@ -37,6 +41,8 @@ export const store = configureStore({
     [communicationApi.reducerPath]: communicationApi.reducer,
     [savedCardsApi.reducerPath]: savedCardsApi.reducer,
     [settingsApi.reducerPath]: settingsApi.reducer,
+    [payoutsApi.reducerPath]: payoutsApi.reducer,
+    [notificationsApi.reducerPath]: notificationsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -54,10 +60,19 @@ export const store = configureStore({
       communicationApi.middleware,
       savedCardsApi.middleware,
       settingsApi.middleware,
+      payoutsApi.middleware,
+      notificationsApi.middleware,
+      analyticsMiddleware,
     ),
 });
 
 setupListeners(store.dispatch);
+
+// Mesure d'usage : session et pays courants lus dans le store au moment de l'envoi
+configureAnalytics({
+  getToken: () => store.getState().auth.token,
+  getCountry: () => store.getState().location.selectedCountryCode,
+});
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

@@ -134,11 +134,17 @@ const authSlice = createSlice({
       state.isDriver = !!user?.driver;
       state.driverId = user?.driver?.id || null;
 
+      const previousRoles = state.availableRoles;
       const roles = computeAvailableRoles(user);
       state.availableRoles = roles;
 
-      // Si le rôle driver vient d'être débloqué et qu'on est encore en 'client'
-      if (roles.includes('driver') && state.activeRole === 'client') {
+      // Activité suspendue ou refusée alors qu'elle est utilisée : retour à l'espace client
+      if (state.activeRole && !roles.includes(state.activeRole)) {
+        state.activeRole = 'client';
+      }
+      // Nouvelle activité validée (chauffeur, prestataire, vendeur) : proposer de basculer
+      const unlocked = roles.some((r) => r !== 'client' && !previousRoles.includes(r));
+      if (unlocked && state.activeRole === 'client') {
         state.needsRoleSelection = true;
       }
     },

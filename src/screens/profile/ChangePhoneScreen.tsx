@@ -16,6 +16,7 @@ import { useDispatch } from 'react-redux';
 import { updateUser } from '../../store/slices/authSlice';
 import { useSendOtpMeMutation, useChangePhoneMutation } from '../../store/api/authApi';
 import { colors } from '../../theme/colors';
+import { otpErrorMessage } from '../../utils/passwordRules';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
 
@@ -91,7 +92,7 @@ export const ChangePhoneScreen = ({ navigation }: any) => {
     } catch (err: any) {
       const msg = err?.data?.message?.includes('use')
         ? t('auth.phone_taken')
-        : t('auth.otp_failed');
+        : otpErrorMessage(err, t, 'auth.otp_failed');
       Alert.alert(t('common.error'), msg);
     }
   };

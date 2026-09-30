@@ -19,7 +19,7 @@ export type ProAgendaStackParamList = {
   ProProofPhotos: { bookingId: string; type: 'before' | 'after'; nextAction: 'start' | 'complete'; isCash?: boolean };
   BookingTracking: { bookingId: string; role: 'client' | 'pro' };
   BookingChat: { entityType: 'booking' | 'transport' | 'order'; entityId: string; otherPartyName: string };
-  BookingDispute: { bookingId: string };
+  BookingDispute: { bookingId?: string; orderId?: string };
 };
 
 const Stack = createStackNavigator<ProAgendaStackParamList>();

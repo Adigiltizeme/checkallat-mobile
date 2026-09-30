@@ -18,8 +18,8 @@ export type DriverAgendaStackParamList = {
   DriverAgendaHome: undefined;
   DriverDeliveryDetails: { requestId: string };
   DriverNavigation: { requestId: string };
-  DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string };
-  DriverSignature: { requestId: string };
+  DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string; requiresSignature?: boolean };
+  DriverSignature: { requestId: string; completeAfter?: boolean };
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number; currency?: string };
   Dispute: { requestId: string };

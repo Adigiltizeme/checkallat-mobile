@@ -19,6 +19,9 @@ import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
 import { useGetProStatsQuery, usePayProCommissionMutation, useConfirmProCommissionPaymentMutation } from '../../store/api/prosApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { RootState } from '../../store';
+import { PayoutBalanceCard } from '../../components/shared/PayoutBalanceCard';
+import { payoutsApi } from '../../store/api/payoutsApi';
+import { useDispatch } from 'react-redux';
 
 type PeriodMode = 'daily' | 'weekly' | 'monthly' | 'all';
 type Props = StackScreenProps<ProStackParamList, 'ProEarnings'>;
@@ -121,6 +124,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
 }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const dispatch = useDispatch();
   const { format: formatCurrencyDefault, formatWithCurrency, currencyCode: activeCurrencyCode } = useCurrencyFormatter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const pro = useSelector((state: RootState) => (state.auth.user as any)?.pro);
@@ -163,6 +167,7 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
       // Confirmation immédiate côté backend (sans attendre le webhook Stripe)
       await confirmProCommissionPayment({ paymentIntentId: result.paymentIntentId }).unwrap();
       setCommissionPaid(true);
+      dispatch(payoutsApi.util.invalidateTags(['Earnings']));
       refetchStats();
       Alert.alert(t('payment.success_title'), t('pro_space.commission_paid_success_msg'), [{ text: t('common.ok') }]);
     } catch (error: any) {
@@ -275,6 +280,9 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
           </View>
         </View>
       )}
+
+      {/* Gains gardés de côté par la plateforme jusqu'au versement */}
+      <PayoutBalanceCard role="pro" fallbackCurrency={commissionCurrency} />
 
       {/* Onglets de période */}
       <View style={styles.tabsContainer}>

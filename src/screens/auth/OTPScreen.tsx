@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, Image, Dimensions } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, StyleSheet, Image, Dimensions, Alert } from 'react-native';
 
 const LOGO_SIZE = Dimensions.get('window').width * 0.58;
 import { TextInput, Text } from 'react-native-paper';
@@ -12,6 +12,9 @@ import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { StackScreenProps } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../navigation/types';
+import { otpErrorKey } from '../../utils/otpErrors';
+
+const RESEND_DELAY_S = 60;
 
 type Props = StackScreenProps<AuthStackParamList, 'OTP'>;
 
@@ -33,25 +36,38 @@ export const OTPScreen = ({ route }: Props) => {
 
   const { phone } = route.params;
   const [otp, setOtp] = useState('');
-  const [verifyOTP, { isLoading, error }] = useVerifyOTPMutation();
+  const [verifyOTP, { isLoading }] = useVerifyOTPMutation();
   const [resendOTP, { isLoading: isResending }] = useSendOTPMutation();
   const dispatch = useDispatch();
+  const [errorKey, setErrorKey] = useState<string | null>(null);
+  // Un code vient d'être envoyé : renvoi possible après une minute
+  const [cooldown, setCooldown] = useState(RESEND_DELAY_S);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
 
   const handleVerify = async () => {
+    setErrorKey(null);
     try {
       const result = await verifyOTP({ phone, code: otp }).unwrap();
       dispatch(setCredentials(result));
     } catch (err) {
-      console.error('OTP verification failed:', err);
+      setErrorKey(otpErrorKey(err));
     }
   };
 
   const handleResend = async () => {
+    setErrorKey(null);
     try {
       await resendOTP({ phone }).unwrap();
-      alert(t('auth.resend_success'));
-    } catch (err) {
-      console.error('Failed to resend OTP:', err);
+      setOtp('');
+      setCooldown(RESEND_DELAY_S);
+      Alert.alert(t('auth.otp_title'), t('auth.resend_success'));
+    } catch (err: any) {
+      setErrorKey(err?.status === 429 ? 'email_verification.too_many_requests' : 'email_verification.send_failed');
     }
   };
 
@@ -74,7 +90,7 @@ export const OTPScreen = ({ route }: Props) => {
       <TextInput
         label={t('auth.otp_code')}
         value={otp}
-        onChangeText={setOtp}
+        onChangeText={(v) => setOtp(v.replace(/\D/g, '').slice(0, 6))}
         keyboardType="number-pad"
         maxLength={6}
         style={styles.input}
@@ -83,9 +99,9 @@ export const OTPScreen = ({ route }: Props) => {
         activeOutlineColor={tokens.primary}
       />
 
-      {error && (
+      {errorKey && (
         <Text style={styles.errorText}>
-          {t('auth.otp_failed')}
+          {t(errorKey)}
         </Text>
       )}
 
@@ -102,9 +118,10 @@ export const OTPScreen = ({ route }: Props) => {
         variant="ghost"
         onPress={handleResend}
         loading={isResending}
+        disabled={cooldown > 0 || isResending}
         style={styles.linkButton}
       >
-        {t('auth.resend_code')}
+        {cooldown > 0 ? t('auth.reset_resend_in', { seconds: cooldown }) : t('auth.resend_code')}
       </ChocolateButton>
     </View>
   );

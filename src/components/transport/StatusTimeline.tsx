@@ -17,9 +17,16 @@ interface StatusTimelineProps {
     unloadingStartedAt?: string;
     completedAt?: string;
   };
+  vehicleCategory?: string;
 }
 
-export const StatusTimeline: React.FC<StatusTimelineProps> = ({ currentStatus, timestamps }) => {
+// Livraison 2 roues : icônes deux-roues à la place des camions sur les étapes de trajet
+const COURIER_ICON_OVERRIDES: Partial<Record<TransportStatus, string>> = {
+  heading_to_pickup: 'moped',
+  in_transit: 'moped',
+};
+
+export const StatusTimeline: React.FC<StatusTimelineProps> = ({ currentStatus, timestamps, vehicleCategory }) => {
   const { t, i18n } = useTranslation();
   const { colors } = useTheme();
 
@@ -50,7 +57,9 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ currentStatus, t
       </Text>
 
       {timeline.map((item, index) => {
-        const config = TRANSPORT_STATUS_CONFIG[item.status];
+        const baseConfig = TRANSPORT_STATUS_CONFIG[item.status];
+        const courierIcon = vehicleCategory === 'courier' ? COURIER_ICON_OVERRIDES[item.status] : undefined;
+        const config = courierIcon ? { ...baseConfig, icon: courierIcon } : baseConfig;
         const isPast = index < currentIndex;
         const isCurrent = index === currentIndex;
 

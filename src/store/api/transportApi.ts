@@ -14,7 +14,9 @@ const determineVehicleType = (volume: number): 'van' | 'small_truck' | 'large_tr
  * Transformer les données backend (format plat) vers format frontend (imbriqué)
  */
 const transformTransportRequest = (item: any) => {
-  const vehicleType = determineVehicleType(item.estimatedVolume || 0);
+  const vehicleType = item.vehicleCategory === 'courier'
+    ? (item.driver?.vehicleType === 'bicycle' ? 'bicycle' : 'motorbike')
+    : determineVehicleType(item.estimatedVolume || 0);
 
   return {
     ...item,
@@ -310,12 +312,17 @@ export const transportApi = createApi({
         vehiclePlate?: string;
         vehicleCapacity?: number;
         vehiclePhotos?: string[];
-        drivingLicense?: string;
+        drivingLicense?: string | null;
         vehicleInsurance?: string;
         idDocumentType?: string;
         idDocumentFront?: string;
         idDocumentBack?: string | null;
         selfiePhoto?: string;
+        hasInsulatedBag?: boolean;
+        motorbikeClass?: string | null;
+        vehicleDeclarationAccepted?: boolean;
+        portfolioPhotos?: string[];
+        activityDescription?: string;
       }
     >({
       query: (data) => ({
@@ -335,7 +342,7 @@ export const transportApi = createApi({
         vehicleCapacity: number;
         vehiclePlate: string;
         vehiclePhotos: string[];
-        drivingLicense: string;
+        drivingLicense?: string;
         vehicleInsurance: string;
         idDocumentType: string;
         idDocumentFront: string;
@@ -345,6 +352,9 @@ export const transportApi = createApi({
         siret?: string;
         apeNafCode?: string;
         rcProInsuranceUrl?: string;
+        hasInsulatedBag?: boolean;
+        motorbikeClass?: string;
+        vehicleDeclarationAccepted: boolean;
       }
     >({
       query: (body) => ({
@@ -441,6 +451,7 @@ export const transportApi = createApi({
       packingRate: number;
     }, string | void>({
       query: (countryCode) => countryCode ? `/pricing/active?countryCode=${countryCode}` : '/pricing/active',
+      keepUnusedDataFor: 60,
     }),
 
     getDriverAgenda: builder.query<any[], void>({

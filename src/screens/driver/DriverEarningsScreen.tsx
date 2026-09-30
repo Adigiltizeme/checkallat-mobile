@@ -15,6 +15,9 @@ import { DriverStackParamList } from '../../navigation/types';
 import { useGetDriverStatsQuery, useGetMyDeliveriesQuery, usePayCommissionMutation, useConfirmCommissionPaymentMutation } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { PayoutBalanceCard } from '../../components/shared/PayoutBalanceCard';
+import { payoutsApi } from '../../store/api/payoutsApi';
+import { useDispatch } from 'react-redux';
 
 type PeriodMode = 'daily' | 'weekly' | 'monthly' | 'all';
 
@@ -188,6 +191,7 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const dispatch = useDispatch();
   const { formatWithCurrency, format: formatCurrencyDefault } = useCurrencyFormatter();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useGetDriverStatsQuery(undefined, {
@@ -225,6 +229,7 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
       // Confirmation immédiate côté backend (sans attendre le webhook Stripe)
       await confirmCommissionPayment({ paymentIntentId: result.paymentIntentId }).unwrap();
       setCommissionPaid(true);
+      dispatch(payoutsApi.util.invalidateTags(['Earnings']));
       refetchStats();
       Alert.alert(t('payment.success_title'), t('driver.commission_paid_success_msg'), [{ text: t('common.ok') }]);
     } catch (error: any) {
@@ -313,6 +318,9 @@ export const DriverEarningsScreen = ({ navigation }: Props) => {
           </View>
         </View>
       )}
+
+      {/* Gains gardés de côté par la plateforme jusqu'au versement */}
+      <PayoutBalanceCard role="driver" fallbackCurrency={statsCurrency} />
 
       {/* Onglets de période */}
       <View style={styles.tabsContainer}>

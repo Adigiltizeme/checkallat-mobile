@@ -25,6 +25,7 @@ import { AuthStackParamList } from '../../navigation/types';
 import { SUPPORTED_COUNTRIES } from '../../config/countries';
 import { CountryDetectionService } from '../../services/countryDetection.service';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { LegalConsentCheckbox } from '../../components/shared/LegalConsent';
 
 const LOGO_SIZE = Dimensions.get('window').width * 0.75;
 
@@ -46,6 +47,9 @@ export const RegisterScreen = ({ navigation }: Props) => {
   const [register, { isLoading, error }] = useRegisterMutation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Acceptation obligatoire des CGU et de la politique de confidentialité (vérifiée aussi par le serveur)
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   // Pays — détection silencieuse via géolocalisation
   const [selectedCountryCode, setSelectedCountryCode] = useState<string | null>(null);
@@ -149,13 +153,20 @@ export const RegisterScreen = ({ navigation }: Props) => {
   });
 
   const onSubmit = async (data: RegisterForm) => {
+    if (!acceptedTerms) return;
     try {
       const { confirmPassword, ...registerData } = data;
       const result = await register({
         ...registerData,
+        acceptTerms: true,
         // homeCountryId envoyé uniquement si détecté/sélectionné — jamais bloquant
         ...(selectedCountryCode && { homeCountryId: selectedCountryCode.toUpperCase() }),
       }).unwrap();
+      // Numéro à confirmer par code SMS : la session s'ouvre sur l'écran de vérification
+      if (result.requiresPhoneVerification) {
+        navigation.navigate('OTP', { phone: result.phone });
+        return;
+      }
       dispatch(setCredentials({
         user: result.user,
         accessToken: result.accessToken,
@@ -343,9 +354,20 @@ export const RegisterScreen = ({ navigation }: Props) => {
           </View>
         )}
 
+        {/* ─── CGU & politique de confidentialité (obligatoire) ─── */}
+        <LegalConsentCheckbox
+          checked={acceptedTerms}
+          onToggle={() => setAcceptedTerms(v => !v)}
+          showError={submitAttempted}
+        />
+
         {error && <Text style={styles.errorText}>{t('auth.register_failed')}</Text>}
 
-        <ChocolateButton onPress={handleSubmit(onSubmit)} loading={isLoading} style={styles.button}>
+        <ChocolateButton
+          onPress={() => { setSubmitAttempted(true); handleSubmit(onSubmit)(); }}
+          loading={isLoading}
+          style={styles.button}
+        >
           {t('auth.register_btn')}
         </ChocolateButton>
 

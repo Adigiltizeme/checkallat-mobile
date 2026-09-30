@@ -9,6 +9,7 @@ import { DriverTransportDetailsScreen } from '../screens/driver/DriverTransportD
 import { DriverDeliveryDetailsScreen } from '../screens/driver/DriverDeliveryDetailsScreen';
 import { DriverNavigationScreen } from '../screens/driver/DriverNavigationScreen';
 import { DriverProofPhotosScreen } from '../screens/driver/DriverProofPhotosScreen';
+import { DriverSignatureScreen } from '../screens/driver/DriverSignatureScreen';
 import { TransportCompletionScreen } from '../screens/transport/TransportCompletionScreen';
 import { CashValidationScreen } from '../screens/transport/CashValidationScreen';
 import { BookingChatScreen } from '../screens/services/BookingChatScreen';
@@ -19,7 +20,8 @@ export type DriverAvailablesStackParamList = {
   DriverTransportDetails: { requestId: string };
   DriverDeliveryDetails: { requestId: string };
   DriverNavigation: { requestId: string };
-  DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string };
+  DriverProofPhotos: { requestId: string; type: 'before' | 'after'; nextStatus: string; requiresSignature?: boolean };
+  DriverSignature: { requestId: string; completeAfter?: boolean };
   TransportCompletion: { requestId: string };
   CashValidation: { requestId: string; totalPrice: number; currency?: string };
   Dispute: { requestId: string };
@@ -59,6 +61,11 @@ export const DriverAvailablesStack = () => {
         name="DriverProofPhotos"
         component={DriverProofPhotosScreen}
         options={{ title: t('driver.proof_photos_title') }}
+      />
+      <Stack.Screen
+        name="DriverSignature"
+        component={DriverSignatureScreen as React.ComponentType<any>}
+        options={{ title: t('driver.signature_title') }}
       />
       <Stack.Screen
         name="TransportCompletion"

@@ -26,6 +26,7 @@ import { PayoutAccountFormScreen } from '../screens/profile/PayoutAccountFormScr
 import { SavedCardsScreen } from '../screens/profile/SavedCardsScreen';
 import { AddCardScreen } from '../screens/profile/AddCardScreen';
 import { ProOfferingsScreen } from '../screens/pro/ProOfferingsScreen';
+import { SellerApplicationScreen } from '../screens/seller/SellerApplicationScreen';
 
 const Stack = createStackNavigator<ProfileStackParamList>();
 
@@ -41,6 +42,11 @@ export const ProfileStack = () => {
         name="ProfileHome"
         component={ProfileScreen}
         options={{ title: t('profile.title') }}
+      />
+      <Stack.Screen
+        name="SellerApplication"
+        component={SellerApplicationScreen}
+        options={{ title: t('seller.application_title') }}
       />
       <Stack.Screen
         name="EditProfile"

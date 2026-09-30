@@ -10,22 +10,22 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { Text, TextInput } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { clearDriverRecord, updateUser } from '../../store/slices/authSlice';
 import { useApplyAsDriverMutation, useCancelDriverApplicationMutation } from '../../store/api/transportApi';
 import { uploadMultipleImages } from '../../services/uploadService';
-import { PhotoPickerGrid } from '../../components/shared/PhotoPickerGrid';
 import { KycSection, useKycState, isKycValid } from '../../components/shared/KycSection';
 import { KybFranceSection, useKybFranceState, isKybFranceValid } from '../../components/shared/KybFranceSection';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-
-const VEHICLE_TYPES = ['van', 'small_truck', 'large_truck'] as const;
-type VehicleType = typeof VEHICLE_TYPES[number];
+import { DriverVehicleForm, VehicleDeclaration, useDriverVehicleForm } from '../../components/transport/DriverVehicleForm';
+import { VEHICLE_ERROR_KEYS } from '../../utils/vehicleRequirements';
+import { EmailVerificationCard } from '../../components/shared/EmailVerificationCard';
+import { useEmailVerification } from '../../hooks/useEmailVerification';
 
 // ─── Styles hook ─────────────────────────────────────────────────────────────
 function useDriverStyles() {
@@ -33,9 +33,6 @@ function useDriverStyles() {
   return useMemo(() => StyleSheet.create({
   container: { flex: 1, backgroundColor: tokens.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-  label: { color: tokens.text.primary, marginBottom: spacing.sm, marginTop: spacing.md },
-  hint: { color: tokens.text.secondary, marginBottom: spacing.sm, lineHeight: 18 },
-  errorHint: { color: colors.error, marginTop: 4 },
 
   // Status card
   statusCard: {
@@ -84,10 +81,6 @@ function useDriverStyles() {
   btnDisabled: { opacity: 0.5 },
 
   // Form
-  radioGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
-  radioBtn: { borderWidth: 1, borderColor: tokens.border, borderRadius: 8, paddingVertical: 8, paddingHorizontal: spacing.md },
-  radioBtnText: { color: tokens.text.secondary, fontSize: 14 },
-  input: { backgroundColor: tokens.backgroundAlt, marginBottom: spacing.sm },
   uploadingContainer: { alignItems: 'center', padding: spacing.md, marginVertical: spacing.md },
   uploadingText: { marginTop: spacing.sm, color: tokens.text.secondary, fontSize: 14 },
   submitBtn: { paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: spacing.xl },
@@ -208,7 +201,7 @@ const ApplicationTracking = ({ navigation }: { navigation: any }) => {
           {driver?.vehicleInsurance && (
             <>
               <Text variant="bodySmall" style={styles.docsLabel}>
-                ✓ {t('driver_apply.insurance_label')}
+                ✓ {t(driver.vehicleType === 'bicycle' ? 'driver_apply.bike_proof_label' : 'driver_apply.insurance_label')}
               </Text>
               <Image source={{ uri: driver.vehicleInsurance }} style={styles.docThumb} resizeMode="contain" />
             </>
@@ -253,29 +246,26 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.auth.token);
 
-  const [vehicleType, setVehicleType] = useState<VehicleType>('van');
-  const [vehiclePlate, setVehiclePlate] = useState('');
-  const [vehicleCapacity, setVehicleCapacity] = useState('');
-  const [vehiclePhotos, setVehiclePhotos] = useState<string[]>([]);
-  const [licensePhotos, setLicensePhotos] = useState<string[]>([]);
-  const [insurancePhotos, setInsurancePhotos] = useState<string[]>([]);
+  const vehicle = useDriverVehicleForm();
+  const { state: v, requirements } = vehicle;
+  const [hasInsulatedBag, setHasInsulatedBag] = useState(false);
+  const [declarationAccepted, setDeclarationAccepted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [applyAsDriver, { isLoading }] = useApplyAsDriverMutation();
 
   const kyc = useKycState();
   const kybFr = useKybFranceState();
+  const emailCheck = useEmailVerification();
   const user = useSelector((state: RootState) => state.auth.user);
   const isFR = (user?.activeCountryId ?? user?.homeCountryId ?? '').toUpperCase() === 'FR';
 
-  const capacity = parseFloat(vehicleCapacity);
+  const isCourierVehicle = v.vehicleType === 'motorbike' || v.vehicleType === 'bicycle';
   const canSubmit =
-    vehiclePlate.trim().length >= 3 &&
-    !isNaN(capacity) && capacity > 0 &&
-    vehiclePhotos.length >= 2 &&
-    licensePhotos.length === 1 &&
-    insurancePhotos.length === 1 &&
+    vehicle.isValid &&
+    declarationAccepted &&
     isKycValid(kyc.state) &&
     (!isFR || isKybFranceValid(kybFr.state)) &&
+    !emailCheck.blocksApplication &&
     !uploading && !isLoading;
 
   const handleSubmit = async () => {
@@ -283,20 +273,21 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
     const { idDocumentType, idFrontPhotos, idBackPhotos, selfiePhotos } = kyc.state;
     const { legalStatus, siret, apeNafCode, rcPhotos } = kybFr.state;
     const isPassport = idDocumentType === 'passport';
+    const sendLicense = requirements.license !== 'none' && v.licensePhotos.length > 0;
 
-    let uploadedVehiclePhotos = vehiclePhotos;
-    let uploadedLicense = licensePhotos[0];
-    let uploadedInsurance = insurancePhotos[0];
-    let uploadedIdFront = idFrontPhotos[0];
-    let uploadedIdBack = idBackPhotos[0] ?? undefined;
-    let uploadedSelfie = selfiePhotos[0];
+    let uploadedVehiclePhotos: string[];
+    let uploadedLicense: string | undefined;
+    let uploadedVehicleDoc: string;
+    let uploadedIdFront: string;
+    let uploadedIdBack: string | undefined;
+    let uploadedSelfie: string;
     let uploadedRcTransport: string | undefined;
 
     try {
       setUploading(true);
-      uploadedVehiclePhotos = await uploadMultipleImages(vehiclePhotos, token);
-      uploadedLicense = (await uploadMultipleImages(licensePhotos, token))[0];
-      uploadedInsurance = (await uploadMultipleImages(insurancePhotos, token))[0];
+      uploadedVehiclePhotos = await uploadMultipleImages(v.vehiclePhotos, token);
+      if (sendLicense) uploadedLicense = (await uploadMultipleImages(v.licensePhotos, token))[0];
+      uploadedVehicleDoc = (await uploadMultipleImages(v.vehicleDocPhotos, token))[0];
       uploadedIdFront = (await uploadMultipleImages(idFrontPhotos, token))[0];
       if (!isPassport && idBackPhotos.length > 0) {
         uploadedIdBack = (await uploadMultipleImages(idBackPhotos, token))[0];
@@ -306,7 +297,6 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
         uploadedRcTransport = (await uploadMultipleImages(rcPhotos, token))[0];
       }
     } catch (err: any) {
-      setUploading(false);
       Alert.alert(t('common.error'), t('transport.upload_error_msg', { error: err.message }));
       return;
     } finally {
@@ -315,16 +305,19 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
 
     try {
       const result = await applyAsDriver({
-        vehicleType,
-        vehicleCapacity: capacity,
-        vehiclePlate: vehiclePlate.trim().toUpperCase(),
+        vehicleType: v.vehicleType,
+        motorbikeClass: v.vehicleType === 'motorbike' ? v.motorbikeClass ?? undefined : undefined,
+        vehicleCapacity: vehicle.effectiveCapacity,
+        vehiclePlate: requirements.plate ? v.vehiclePlate.trim().toUpperCase() : '',
         vehiclePhotos: uploadedVehiclePhotos,
         drivingLicense: uploadedLicense,
-        vehicleInsurance: uploadedInsurance,
+        vehicleInsurance: uploadedVehicleDoc,
+        vehicleDeclarationAccepted: declarationAccepted,
         idDocumentType,
         idDocumentFront: uploadedIdFront,
         idDocumentBack: uploadedIdBack,
         selfiePhoto: uploadedSelfie,
+        ...(isCourierVehicle && { hasInsulatedBag }),
         ...(isFR && {
           legalStatus,
           siret: siret.replace(/\s/g, ''),
@@ -335,8 +328,9 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
 
       dispatch(updateUser({ driver: result }));
       Alert.alert(t('driver_apply.success_title'), t('driver_apply.success_msg'));
-    } catch {
-      Alert.alert(t('common.error'), t('driver_apply.error_msg'));
+    } catch (err: any) {
+      const code = err?.data?.code;
+      Alert.alert(t('common.error'), code && VEHICLE_ERROR_KEYS[code] ? t(VEHICLE_ERROR_KEYS[code]) : t('driver_apply.error_msg'));
     }
   };
 
@@ -344,70 +338,23 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={'padding'}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-        {/* Type de véhicule */}
-        <Text variant="labelLarge" style={styles.label}>{t('profile.vehicle_type')} *</Text>
-        <View style={styles.radioGroup}>
-          {VEHICLE_TYPES.map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.radioBtn,
-                vehicleType === type && { borderColor: tokens.primary, backgroundColor: tokens.primary + '15' },
-              ]}
-              onPress={() => setVehicleType(type)}
-              activeOpacity={0.8}
-            >
-              <Text style={[
-                styles.radioBtnText,
-                vehicleType === type && { color: tokens.primary, fontWeight: '600' },
-              ]}>
-                {t(`transport.vehicle_${type}`)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* E-mail : obligatoire pour candidater selon le pays, recommandé ailleurs */}
+        <EmailVerificationCard required={emailCheck.requiredForApplication} />
 
-        {/* Immatriculation */}
-        <Text variant="labelLarge" style={styles.label}>{t('profile.license_plate')} *</Text>
-        <TextInput mode="outlined" value={vehiclePlate} onChangeText={setVehiclePlate}
-          placeholder={t('profile.plate_placeholder')} autoCapitalize="characters"
-          outlineColor={tokens.border} activeOutlineColor={tokens.primary} style={styles.input} />
-
-        {/* Capacité */}
-        <Text variant="labelLarge" style={styles.label}>{t('driver_apply.vehicle_capacity')} *</Text>
-        <TextInput mode="outlined" value={vehicleCapacity} onChangeText={setVehicleCapacity}
-          keyboardType="decimal-pad" placeholder="Ex: 10" right={<TextInput.Affix text="m³" />}
-          outlineColor={tokens.border} activeOutlineColor={tokens.primary} style={styles.input} />
-
-        {/* Photos véhicule */}
-        <Text variant="labelLarge" style={styles.label}>{t('driver_apply.vehicle_photos_label')} *</Text>
-        <Text variant="bodySmall" style={styles.hint}>{t('driver_apply.vehicle_photos_hint')}</Text>
-        <PhotoPickerGrid photos={vehiclePhotos} onPhotosChange={setVehiclePhotos} maxPhotos={5} />
-        {vehiclePhotos.length < 2 && (
-          <Text variant="bodySmall" style={styles.errorHint}>{t('driver_apply.vehicle_photos_min')}</Text>
-        )}
-
-        {/* Permis */}
-        <Text variant="labelLarge" style={[styles.label, { marginTop: spacing.lg }]}>{t('driver_apply.license_label')} *</Text>
-        <Text variant="bodySmall" style={styles.hint}>{t('driver_apply.license_hint')}</Text>
-        <PhotoPickerGrid photos={licensePhotos} onPhotosChange={setLicensePhotos} maxPhotos={1} />
-        {licensePhotos.length === 0 && (
-          <Text variant="bodySmall" style={styles.errorHint}>{t('driver_apply.license_required')}</Text>
-        )}
-
-        {/* Document véhicule */}
-        <Text variant="labelLarge" style={[styles.label, { marginTop: spacing.lg }]}>{t('driver_apply.insurance_label')} *</Text>
-        <Text variant="bodySmall" style={styles.hint}>{t('driver_apply.insurance_hint')}</Text>
-        <PhotoPickerGrid photos={insurancePhotos} onPhotosChange={setInsurancePhotos} maxPhotos={1} />
-        {insurancePhotos.length === 0 && (
-          <Text variant="bodySmall" style={styles.errorHint}>{t('driver_apply.insurance_required')}</Text>
-        )}
+        <DriverVehicleForm
+          state={v}
+          onChange={vehicle.set}
+          requirements={requirements}
+          insulatedBag={{ value: hasInsulatedBag, onValueChange: setHasInsulatedBag }}
+        />
 
         {/* Section KYC */}
         <KycSection {...kyc.props} showErrors />
 
         {/* Section KYB France */}
         {isFR && <KybFranceSection {...kybFr.props} showErrors />}
+
+        <VehicleDeclaration checked={declarationAccepted} onToggle={() => setDeclarationAccepted((c) => !c)} />
 
         {uploading && (
           <View style={styles.uploadingContainer}>

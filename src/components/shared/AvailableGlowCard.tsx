@@ -90,7 +90,7 @@ export const AvailableGlowCard: React.FC<AvailableGlowCardProps> = ({
           {/* Lueur de fond pulsante */}
           <Animated.View
             style={{
-              ...StyleSheet.absoluteFillObject,
+              ...StyleSheet.absoluteFill,
               borderRadius,
               backgroundColor: color,
               opacity: bgOpacity,
@@ -99,7 +99,7 @@ export const AvailableGlowCard: React.FC<AvailableGlowCardProps> = ({
           {/* Anneau expansif (se dilate légèrement et disparaît) */}
           <Animated.View
             style={{
-              ...StyleSheet.absoluteFillObject,
+              ...StyleSheet.absoluteFill,
               borderRadius,
               borderWidth: 1.5,
               borderColor: color,

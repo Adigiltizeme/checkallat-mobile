@@ -35,6 +35,8 @@ import { WEB_URL } from '../../config/api';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { useCancellationPolicy } from '../../hooks/useCancellationPolicy';
+import { AutoConfirmNotice } from '../../components/shared/AutoConfirmNotice';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingDetails'>;
 
@@ -285,6 +287,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const cancellationPolicy = useCancellationPolicy();
   const { bookingId } = route.params;
 
   const { data: booking, isLoading, refetch } = useGetBookingByIdQuery(bookingId, {
@@ -490,7 +493,9 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     if (status === 'arrived') {
       Alert.alert(
         t('booking.cancel_fee_title'),
-        t('booking.cancel_arrived_warning'),
+        t(cancellationPolicy.feeEnabled ? 'booking.cancel_arrived_warning' : 'booking.cancel_confirm_no_fee', {
+          pct: cancellationPolicy.feeRatePct,
+        }),
         [
           { text: t('common.back'), style: 'cancel' },
           { text: t('booking.cancel_anyway'), style: 'destructive', onPress: () => setShowCancelForm(true) },
@@ -499,7 +504,10 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     } else if (status === 'en_route') {
       Alert.alert(
         t('booking.cancel_fee_title'),
-        t('booking.cancel_en_route_warning'),
+        t(cancellationPolicy.feeEnabled ? 'booking.cancel_en_route_warning' : 'booking.cancel_confirm_no_fee', {
+          minutes: cancellationPolicy.booking.enRouteFreeCancelMin,
+          pct: cancellationPolicy.feeRatePct,
+        }),
         [
           { text: t('common.back'), style: 'cancel' },
           { text: t('booking.cancel_anyway'), style: 'destructive', onPress: () => setShowCancelForm(true) },
@@ -1065,6 +1073,17 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
           <Icon name="close-circle-outline" size={20} color={colors.error} />
           <Text style={styles.cancelBtnText}>{t('booking.cancel_btn')}</Text>
         </TouchableOpacity>
+      )}
+
+      {/* Fin déclarée par le prestataire : échéance de la confirmation automatique */}
+      {isInProgress && proConfirmed && !clientConfirmed && !!(booking as any).proConfirmedAt && (
+        <AutoConfirmNotice
+          title={t('completion.booking_title')}
+          declaredAt={(booking as any).proConfirmedAt}
+          hours={cancellationPolicy.booking.autoCompleteHours}
+          message={(deadline) => t('completion.booking_message', { deadline })}
+          onReport={() => navigation.navigate('BookingDispute', { bookingId })}
+        />
       )}
 
       {/* Confirm completion — contextuel selon l'état */}

@@ -11,6 +11,7 @@ import { useGetTransportRequestQuery } from '../../store/api/transportApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { entityCurrencyCode } from '../../config/currency';
+import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 
 const ESCROW_CONFIG: Record<string, { color: string; icon: string }> = {
   pending:  { color: '#FF9800', icon: 'clock-outline' },
@@ -65,14 +66,19 @@ export const PaymentDetailsScreen = ({ route }: Props) => {
   const isDriver = useSelector((state: RootState) => state.auth.isDriver);
 
   // Mode payment entity (in-app / stripe)
-  const { data: payment, isLoading: paymentLoading } = useGetPaymentByIdQuery(paymentId!, {
+  const { data: payment, isLoading: paymentLoading, refetch: refetchPayment } = useGetPaymentByIdQuery(paymentId!, {
     skip: !paymentId,
+    pollingInterval: 8000,
+    refetchOnMountOrArgChange: true,
   });
 
   // Mode cash (requestId only, no payment entity)
-  const { data: transportRequest, isLoading: transportLoading } = useGetTransportRequestQuery(requestId!, {
+  const { data: transportRequest, isLoading: transportLoading, refetch: refetchTransport } = useGetTransportRequestQuery(requestId!, {
     skip: !requestId || !!paymentId,
+    pollingInterval: 8000,
+    refetchOnMountOrArgChange: true,
   });
+  useRefetchOnFocus(paymentId ? refetchPayment : refetchTransport);
 
   const isLoading = paymentLoading || transportLoading;
 

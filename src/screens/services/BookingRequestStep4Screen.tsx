@@ -493,7 +493,7 @@ export const BookingRequestStep4Screen = ({ route, navigation }: Props) => {
   const userCountryCode = useSelector((s: RootState) => s.location.selectedCountryCode ?? s.location.detectedCountryCode ?? undefined);
   // Le pays de l'adresse de service prime sur le pays de l'utilisateur
   const countryCode = step2Data.address.countryCode?.toUpperCase() ?? userCountryCode?.toUpperCase();
-  const { data: allCategories = [] } = useGetCategoriesQuery({ activeOnly: true, countryCode: countryCode ?? undefined });
+  const { data: allCategories = [] } = useGetCategoriesQuery({ activeOnly: true, countryCode: countryCode ?? undefined }, { refetchOnMountOrArgChange: true });
   const categoryMeta = (allCategories as any[]).find((c: any) => c.slug === categorySlug);
   const basePrice: number | null = categoryMeta?.basePrice ?? null;
   const baseCurrency: string = categoryMeta?.currency ?? CURRENCY_CONFIG.code;

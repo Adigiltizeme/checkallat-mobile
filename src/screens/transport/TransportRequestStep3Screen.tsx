@@ -12,6 +12,7 @@ import { Step1Data, Step2Data, Step3Data } from '../../types/transport';
 import { useGetActivePricingQuery } from '../../store/api/transportApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import { useCourierLimits } from '../../hooks/useCourierLimits';
 
 type Props = StackScreenProps<any, 'TransportRequestStep3'>;
 
@@ -104,12 +105,14 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
     step2Data: Step2Data;
     step3Prefill?: Step3Data;
   };
+  const isCourierMode = step1Data.vehicleCategory === 'courier';
+  const { expressSurchargePct } = useCourierLimits();
 
   const countryCode = useSelector((state: RootState) =>
     state.location.selectedCountryCode ?? state.location.detectedCountryCode ?? undefined
   );
 
-  const { data: pricing } = useGetActivePricingQuery(countryCode);
+  const { data: pricing } = useGetActivePricingQuery(countryCode, { refetchOnMountOrArgChange: true });
   const cur = pricing?.currency || CURRENCY_CONFIG.code;
 
   const [needHelpers, setNeedHelpers] = useState(step3Prefill?.needHelpers ?? false);
@@ -117,15 +120,32 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
   const [needDisassembly, setNeedDisassembly] = useState(step3Prefill?.needDisassembly ?? false);
   const [needReassembly, setNeedReassembly] = useState(step3Prefill?.needReassembly ?? false);
   const [needPacking, setNeedPacking] = useState(step3Prefill?.needPacking ?? false);
+  // Options courier
+  const [isExpress, setIsExpress] = useState(step3Prefill?.isExpress ?? false);
+  const [requiresSignature, setRequiresSignature] = useState(step3Prefill?.requiresSignature ?? false);
+  const [isFragile, setIsFragile] = useState(step3Prefill?.isFragile ?? false);
+  const [isColdChain, setIsColdChain] = useState(step3Prefill?.isColdChain ?? false);
 
   const handleNext = () => {
-    const step3Data: Step3Data = {
-      needHelpers,
-      helpersCount: needHelpers ? helpersCount : 0,
-      needDisassembly,
-      needReassembly,
-      needPacking,
-    };
+    const step3Data: Step3Data = isCourierMode
+      ? {
+          needHelpers: false,
+          helpersCount: 0,
+          needDisassembly: false,
+          needReassembly: false,
+          needPacking: false,
+          isExpress,
+          requiresSignature,
+          isFragile,
+          isColdChain,
+        }
+      : {
+          needHelpers,
+          helpersCount: needHelpers ? helpersCount : 0,
+          needDisassembly,
+          needReassembly,
+          needPacking,
+        };
 
     navigation.navigate('TransportRequestStep4', { step1Data, step2Data, step3Data });
   };
@@ -141,147 +161,196 @@ export const TransportRequestStep3Screen = ({ route, navigation }: Props) => {
       </Text>
 
       <Text variant="bodyMedium" style={styles.subtitle}>
-        {t('transport.services_subtitle')}
+        {isCourierMode ? t('transport.courier_services_subtitle') : t('transport.services_subtitle')}
       </Text>
 
-      {/* Aide pour porter */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.serviceHeader}>
-            <View style={styles.serviceInfo}>
-              <Text variant="titleMedium" style={styles.serviceTitle}>
-                🤝 {t('transport.helpers_title')}
-              </Text>
-              <Text variant="bodySmall" style={styles.serviceDescription}>
-                {t('transport.helpers_desc')}
-              </Text>
-            </View>
-            <Switch
-              value={needHelpers}
-              onValueChange={setNeedHelpers}
-              color={tokens.primary}
-            />
-          </View>
-
-          {needHelpers && (
-            <View style={styles.helperCounter}>
-              <Text variant="bodyMedium">{t('transport.helpers_count_label')}</Text>
-              <View style={styles.stepper}>
-                <IconButton
-                  icon="minus"
-                  size={20}
-                  disabled={helpersCount <= 1}
-                  onPress={() => setHelpersCount(Math.max(1, helpersCount - 1))}
-                />
-                <Text variant="titleLarge" style={styles.stepperValue}>
-                  {helpersCount}
-                </Text>
-                <IconButton
-                  icon="plus"
-                  size={20}
-                  disabled={helpersCount >= 5}
-                  onPress={() => setHelpersCount(Math.min(5, helpersCount + 1))}
-                />
+      {isCourierMode ? (
+        <>
+          {/* Express */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.serviceHeader}>
+                <View style={styles.serviceInfo}>
+                  <Text variant="titleMedium" style={styles.serviceTitle}>
+                    ⚡ {t('transport.express_service')}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.serviceDescription}>
+                    {t('transport.express_desc')}
+                  </Text>
+                  {expressSurchargePct > 0 && (
+                    <Text variant="bodySmall" style={styles.servicePrice}>
+                      {t('transport.express_surcharge_label', { pct: expressSurchargePct })}
+                    </Text>
+                  )}
+                </View>
+                <Switch value={isExpress} onValueChange={setIsExpress} color={tokens.primary} />
               </View>
-              {pricing && (
-                <Text variant="bodySmall" style={styles.servicePrice}>
-                  +{helpersCount * pricing.helperRatePerPerson} {cur}
-                </Text>
-              )}
-            </View>
+            </Card.Content>
+          </Card>
+
+          {/* Signature requise */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.serviceRow}>
+                <Checkbox
+                  status={requiresSignature ? 'checked' : 'unchecked'}
+                  onPress={() => setRequiresSignature(!requiresSignature)}
+                  color={tokens.primary}
+                />
+                <View style={styles.serviceInfo}>
+                  <Text variant="titleMedium" style={styles.serviceTitle}>
+                    ✍️ {t('transport.signature_service')}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.serviceDescription}>
+                    {t('transport.signature_desc')}
+                  </Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+
+          {/* Fragile */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.serviceRow}>
+                <Checkbox
+                  status={isFragile ? 'checked' : 'unchecked'}
+                  onPress={() => setIsFragile(!isFragile)}
+                  color={tokens.primary}
+                />
+                <View style={styles.serviceInfo}>
+                  <Text variant="titleMedium" style={styles.serviceTitle}>
+                    🫧 {t('transport.fragile_service')}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.serviceDescription}>
+                    {t('transport.fragile_desc')}
+                  </Text>
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+
+          {/* Chaîne du froid — uniquement si food dans les types */}
+          {(step1Data.objectTypes?.includes('food') || step1Data.objectType === 'food') && (
+            <Card style={styles.card}>
+              <Card.Content>
+                <View style={styles.serviceRow}>
+                  <Checkbox
+                    status={isColdChain ? 'checked' : 'unchecked'}
+                    onPress={() => setIsColdChain(!isColdChain)}
+                    color={tokens.primary}
+                  />
+                  <View style={styles.serviceInfo}>
+                    <Text variant="titleMedium" style={styles.serviceTitle}>
+                      🧊 {t('transport.cold_chain_service')}
+                    </Text>
+                    <Text variant="bodySmall" style={styles.serviceDescription}>
+                      {t('transport.cold_chain_desc')}
+                    </Text>
+                  </View>
+                </View>
+              </Card.Content>
+            </Card>
           )}
-        </Card.Content>
-      </Card>
 
-      {/* Démontage */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.serviceRow}>
-            <Checkbox
-              status={needDisassembly ? 'checked' : 'unchecked'}
-              onPress={() => setNeedDisassembly(!needDisassembly)}
-              color={tokens.primary}
-            />
-            <View style={styles.serviceInfo}>
-              <Text variant="titleMedium" style={styles.serviceTitle}>
-                🔧 {t('transport.disassembly_service')}
+          {/* Info courier */}
+          <Card style={styles.infoCard}>
+            <Card.Content>
+              <View style={styles.infoIcon}>
+                <Text variant="headlineSmall">📋</Text>
+              </View>
+              <Text variant="bodyMedium" style={styles.infoText}>
+                {t('transport.courier_services_info')}
               </Text>
-              <Text variant="bodySmall" style={styles.serviceDescription}>
-                {t('transport.disassembly_desc')}
-              </Text>
-              {needDisassembly && pricing && (
-                <Text variant="bodySmall" style={styles.servicePrice}>
-                  +{pricing.disassemblyRate} {cur}
-                </Text>
+            </Card.Content>
+          </Card>
+        </>
+      ) : (
+        <>
+          {/* Aide pour porter */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.serviceHeader}>
+                <View style={styles.serviceInfo}>
+                  <Text variant="titleMedium" style={styles.serviceTitle}>
+                    🤝 {t('transport.helpers_title')}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.serviceDescription}>
+                    {t('transport.helpers_desc')}
+                  </Text>
+                </View>
+                <Switch value={needHelpers} onValueChange={setNeedHelpers} color={tokens.primary} />
+              </View>
+
+              {needHelpers && (
+                <View style={styles.helperCounter}>
+                  <Text variant="bodyMedium">{t('transport.helpers_count_label')}</Text>
+                  <View style={styles.stepper}>
+                    <IconButton icon="minus" size={20} disabled={helpersCount <= 1} onPress={() => setHelpersCount(Math.max(1, helpersCount - 1))} />
+                    <Text variant="titleLarge" style={styles.stepperValue}>{helpersCount}</Text>
+                    <IconButton icon="plus" size={20} disabled={helpersCount >= 5} onPress={() => setHelpersCount(Math.min(5, helpersCount + 1))} />
+                  </View>
+                  {pricing && <Text variant="bodySmall" style={styles.servicePrice}>+{helpersCount * pricing.helperRatePerPerson} {cur}</Text>}
+                </View>
               )}
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
+            </Card.Content>
+          </Card>
 
-      {/* Remontage */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.serviceRow}>
-            <Checkbox
-              status={needReassembly ? 'checked' : 'unchecked'}
-              onPress={() => setNeedReassembly(!needReassembly)}
-              color={tokens.primary}
-            />
-            <View style={styles.serviceInfo}>
-              <Text variant="titleMedium" style={styles.serviceTitle}>
-                🔨 {t('transport.reassembly_service')}
-              </Text>
-              <Text variant="bodySmall" style={styles.serviceDescription}>
-                {t('transport.reassembly_desc')}
-              </Text>
-              {needReassembly && pricing && (
-                <Text variant="bodySmall" style={styles.servicePrice}>
-                  +{pricing.reassemblyRate} {cur}
-                </Text>
-              )}
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
+          {/* Démontage */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.serviceRow}>
+                <Checkbox status={needDisassembly ? 'checked' : 'unchecked'} onPress={() => setNeedDisassembly(!needDisassembly)} color={tokens.primary} />
+                <View style={styles.serviceInfo}>
+                  <Text variant="titleMedium" style={styles.serviceTitle}>🔧 {t('transport.disassembly_service')}</Text>
+                  <Text variant="bodySmall" style={styles.serviceDescription}>{t('transport.disassembly_desc')}</Text>
+                  {needDisassembly && pricing && <Text variant="bodySmall" style={styles.servicePrice}>+{pricing.disassemblyRate} {cur}</Text>}
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
 
-      {/* Emballage */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <View style={styles.serviceRow}>
-            <Checkbox
-              status={needPacking ? 'checked' : 'unchecked'}
-              onPress={() => setNeedPacking(!needPacking)}
-              color={tokens.primary}
-            />
-            <View style={styles.serviceInfo}>
-              <Text variant="titleMedium" style={styles.serviceTitle}>
-                📦 {t('transport.packing_service')}
-              </Text>
-              <Text variant="bodySmall" style={styles.serviceDescription}>
-                {t('transport.packing_desc')}
-              </Text>
-              {needPacking && pricing && (
-                <Text variant="bodySmall" style={styles.servicePrice}>
-                  +{pricing.packingRate} {cur}
-                </Text>
-              )}
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
+          {/* Remontage */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.serviceRow}>
+                <Checkbox status={needReassembly ? 'checked' : 'unchecked'} onPress={() => setNeedReassembly(!needReassembly)} color={tokens.primary} />
+                <View style={styles.serviceInfo}>
+                  <Text variant="titleMedium" style={styles.serviceTitle}>🔨 {t('transport.reassembly_service')}</Text>
+                  <Text variant="bodySmall" style={styles.serviceDescription}>{t('transport.reassembly_desc')}</Text>
+                  {needReassembly && pricing && <Text variant="bodySmall" style={styles.servicePrice}>+{pricing.reassemblyRate} {cur}</Text>}
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
 
-      {/* Info */}
-      <Card style={styles.infoCard}>
-        <Card.Content>
-          <View style={styles.infoIcon}>
-            <Text variant="headlineSmall">💡</Text>
-          </View>
-          <Text variant="bodyMedium" style={styles.infoText}>
-            {t('transport.services_info')}
-          </Text>
-        </Card.Content>
-      </Card>
+          {/* Emballage */}
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.serviceRow}>
+                <Checkbox status={needPacking ? 'checked' : 'unchecked'} onPress={() => setNeedPacking(!needPacking)} color={tokens.primary} />
+                <View style={styles.serviceInfo}>
+                  <Text variant="titleMedium" style={styles.serviceTitle}>📦 {t('transport.packing_service')}</Text>
+                  <Text variant="bodySmall" style={styles.serviceDescription}>{t('transport.packing_desc')}</Text>
+                  {needPacking && pricing && <Text variant="bodySmall" style={styles.servicePrice}>+{pricing.packingRate} {cur}</Text>}
+                </View>
+              </View>
+            </Card.Content>
+          </Card>
+
+          {/* Info */}
+          <Card style={styles.infoCard}>
+            <Card.Content>
+              <View style={styles.infoIcon}>
+                <Text variant="headlineSmall">💡</Text>
+              </View>
+              <Text variant="bodyMedium" style={styles.infoText}>
+                {t('transport.services_info')}
+              </Text>
+            </Card.Content>
+          </Card>
+        </>
+      )}
 
       <StepNavButtons
         onBack={handleBack}

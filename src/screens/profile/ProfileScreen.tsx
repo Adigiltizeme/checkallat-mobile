@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, Switch, Image, Linking } from 'react-native';
+import { View, StyleSheet, ScrollView, Switch, Image, Linking, Alert } from 'react-native';
 import { List, Divider, Text } from 'react-native-paper';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { useSelector, useDispatch } from 'react-redux';
@@ -9,7 +9,10 @@ import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootState } from '../../store';
 import { logout, setActiveRole, clearDefaultRole } from '../../store/slices/authSlice';
-import { useLogoutApiMutation } from '../../store/api/authApi';
+import { useLogoutApiMutation, useDeleteAccountMutation } from '../../store/api/authApi';
+import { LEGAL_URLS } from '../../config/api';
+import { useAnalyticsConsent } from '../../hooks/useAnalytics';
+import { EmailVerificationCard } from '../../components/shared/EmailVerificationCard';
 import { ProfileStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -29,6 +32,7 @@ const THEME_LABEL_KEYS: Record<string, string> = {
 
 export const ProfileScreen = () => {
   const { tokens, mode } = useAppTheme();
+  const { consent: analyticsConsent, setConsent: setAnalyticsConsent } = useAnalyticsConsent();
 
   const styles = useMemo(() => StyleSheet.create({
   container: {
@@ -102,6 +106,7 @@ export const ProfileScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileNavProp>();
   const [logoutApi] = useLogoutApiMutation();
+  const [deleteAccount, { isLoading: isDeletingAccount }] = useDeleteAccountMutation();
   const user = useSelector((state: RootState) => state.auth.user);
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
   const availableRoles = useSelector((state: RootState) => state.auth.availableRoles);
@@ -130,6 +135,37 @@ export const ProfileScreen = () => {
       // On déconnecte quand même localement même si l'API échoue
     }
     dispatch(logout());
+  };
+
+  const DELETE_ERROR_KEYS: Record<string, string> = {
+    ACCOUNT_DELETE_ACTIVE_ACTIVITY: 'profile.delete_account_error_active',
+    ACCOUNT_DELETE_PENDING_PAYOUT: 'profile.delete_account_error_payout',
+    ACCOUNT_DELETE_UNPAID_BALANCE: 'profile.delete_account_error_balance',
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      await deleteAccount().unwrap();
+      Alert.alert(t('profile.delete_account_done_title'), t('profile.delete_account_done_msg'));
+      dispatch(logout());
+    } catch (err: any) {
+      const code: string | undefined = err?.data?.code;
+      Alert.alert(
+        t('common.error'),
+        code && DELETE_ERROR_KEYS[code] ? t(DELETE_ERROR_KEYS[code]) : t('profile.delete_account_error_generic'),
+      );
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      t('profile.delete_account_confirm_title'),
+      t('profile.delete_account_confirm_msg'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('profile.delete_account_confirm_btn'), style: 'destructive', onPress: confirmDeleteAccount },
+      ],
+    );
   };
 
   const avatarSource = user?.profilePicture ? { uri: user.profilePicture } : null;
@@ -164,6 +200,11 @@ export const ProfileScreen = () => {
             <Text style={[styles.driverBadgeText, { color: '#10B981' }]}>💼 {t('profile.pro_badge')}</Text>
           </View>
         )}
+      </View>
+
+      {/* E-mail non vérifié : rappel (obligatoire pour candidater dans certains pays) */}
+      <View style={{ paddingHorizontal: spacing.md }}>
+        <EmailVerificationCard />
       </View>
 
       {/* Switcher de rôle — visible uniquement si plusieurs rôles */}
@@ -312,6 +353,21 @@ export const ProfileScreen = () => {
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
           onPress={() => navigation.navigate('Appearance')}
         />
+        <Divider />
+        <List.Item
+          title={t('analytics.profile_title')}
+          description={t(analyticsConsent === 'granted' ? 'analytics.profile_on' : 'analytics.profile_off')}
+          descriptionNumberOfLines={3}
+          left={(props) => <List.Icon {...props} icon="chart-line" color={tokens.primary} />}
+          right={() => (
+            <Switch
+              value={analyticsConsent === 'granted'}
+              onValueChange={(granted) => setAnalyticsConsent(granted)}
+              trackColor={{ false: tokens.border, true: tokens.primary + '80' }}
+              thumbColor={analyticsConsent === 'granted' ? tokens.primary : tokens.text.secondary}
+            />
+          )}
+        />
       </View>
 
       {/* Support */}
@@ -327,14 +383,22 @@ export const ProfileScreen = () => {
           title={t('profile.terms')}
           left={(props) => <List.Icon {...props} icon="file-document" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => Linking.openURL('https://checkallat-web-admin.vercel.app/terms')}
+          onPress={() => Linking.openURL(LEGAL_URLS.terms)}
         />
         <Divider />
         <List.Item
           title={t('profile.privacy')}
           left={(props) => <List.Icon {...props} icon="shield-lock" color={tokens.primary} />}
           right={(props) => <List.Icon {...props} icon="chevron-right" />}
-          onPress={() => Linking.openURL('https://checkallat-web-admin.vercel.app/privacy')}
+          onPress={() => Linking.openURL(LEGAL_URLS.privacy)}
+        />
+        <Divider />
+        <List.Item
+          title={t('profile.delete_account')}
+          titleStyle={{ color: colors.error }}
+          left={(props) => <List.Icon {...props} icon="account-remove" color={colors.error} />}
+          onPress={handleDeleteAccount}
+          disabled={isDeletingAccount}
         />
       </View>
 

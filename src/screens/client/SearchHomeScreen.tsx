@@ -7,6 +7,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -17,39 +18,15 @@ import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
-import { useGetCategoriesQuery } from '../../store/api/servicesApi';
 import { getLocalizedName } from '../../utils/localize';
+import { useServiceCategories, ServiceCategoryItem } from '../../hooks/useServiceCategories';
+import { CategoryIcon } from '../../components/shared/CategoryIcon';
+import { getCountryInfo } from '../../config/countries';
 
-const SLUG_TO_ICON: Record<string, string> = {
-  electricity:   'lightning-bolt',
-  plumbing:      'pipe-wrench',
-  painting:      'palette',
-  cleaning:      'broom',
-  handyman:      'hammer',
-  carpentry:     'toolbox-outline',
-  air_condition: 'snowflake',
-  gardening:     'flower-outline',
-  moving:        'truck-outline',
-  security:      'shield-check-outline',
-  pest_control:  'bug-outline',
-};
+const COLUMNS = 3;
 
-const CATEGORY_COLORS: Record<string, string> = {
-  electricity:   '#FFD700',
-  plumbing:      '#3498DB',
-  painting:      '#E74C3C',
-  cleaning:      '#27AE60',
-  handyman:      '#FF9500',
-  carpentry:     '#8B4513',
-  air_condition: '#00BCD4',
-  gardening:     '#4CAF50',
-  moving:        '#9C27B0',
-  security:      '#607D8B',
-  pest_control:  '#795548',
-};
-const COLOR_PALETTE = ['#FF5733', '#3498DB', '#27AE60', '#9B59B6', '#F39C12', '#1ABC9C', '#E74C3C'];
-const getCategoryColor = (slug: string, index: number) =>
-  CATEGORY_COLORS[slug] ?? COLOR_PALETTE[index % COLOR_PALETTE.length];
+/** Comparaison sans accents ni majuscules (ex. « electricite » trouve « Électricité ») */
+const normalize = (v: string) => v.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 export const SearchHomeScreen = () => {
   const { t, i18n } = useTranslation();
@@ -71,39 +48,44 @@ export const SearchHomeScreen = () => {
       letterSpacing: 0.5, marginHorizontal: spacing.md, marginBottom: spacing.sm,
     },
     grid: { paddingHorizontal: spacing.md, paddingBottom: spacing.xxl },
-    row: { justifyContent: 'space-between', marginBottom: spacing.sm },
+    // Cartes alignées à gauche : une dernière ligne incomplète ne laisse pas de trou au milieu
+    row: { justifyContent: 'flex-start', gap: spacing.sm, marginBottom: spacing.sm },
     card: {
-      flex: 1, maxWidth: '31%', backgroundColor: tokens.card, borderRadius: 14,
+      width: '31.5%', backgroundColor: tokens.card, borderRadius: 14,
       paddingVertical: spacing.md, paddingHorizontal: 6, alignItems: 'center',
       borderWidth: 1, borderColor: tokens.border, gap: 8,
     },
-    iconWrap: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
     label: { fontSize: 11, fontWeight: '600', color: tokens.text.primary, textAlign: 'center' },
+    empty: { alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xl, gap: spacing.sm },
+    emptyText: { color: tokens.text.secondary, textAlign: 'center', lineHeight: 20 },
   }), [tokens]);
 
-  const { data: apiCategories = [], isLoading: catLoading } = useGetCategoriesQuery({ activeOnly: true });
+  // Catégories réglées dans le web-admin et proposées dans le pays de l'utilisateur
+  const { categories, isLoading, isFetching, refetch, countryCode } = useServiceCategories();
 
-  const handleCategory = (slug: string) => {
+  const handleCategory = (item: ServiceCategoryItem) => {
     const proSlugs: string[] = user?.pro?.serviceCategorySlugs ?? [];
-    if (user?.pro?.status === 'active' && proSlugs.includes(slug)) {
+    if (user?.pro?.status === 'active' && proSlugs.includes(item.slug)) {
       Alert.alert(t('common.access_denied'), t('home.pro_cannot_book_own_category'));
       return;
     }
-    navigation.navigate('SearchPros', { category: slug });
+    navigation.navigate('SearchPros', { category: item.slug });
   };
 
+  const filtered = useMemo(() => {
+    const q = normalize(query.trim());
+    if (!q) return categories;
+    return categories.filter((c) =>
+      [c.nameFr, c.nameEn, c.nameAr, c.slug].some((v) => v && normalize(v).includes(q)),
+    );
+  }, [categories, query]);
+
+  // Validation du clavier : ouvre la catégorie si une seule correspond
   const handleSearch = () => {
-    if (query.trim()) {
-      navigation.navigate('SearchPros', { category: query.trim() });
-    }
+    if (filtered.length === 1) handleCategory(filtered[0]);
   };
 
-  const filtered = query.trim()
-    ? apiCategories.filter((c: any) =>
-        getLocalizedName(c, i18n.language).toLowerCase().includes(query.toLowerCase()) ||
-        c.slug.includes(query.toLowerCase()),
-      )
-    : apiCategories;
+  const countryName = countryCode ? t(`country.${getCountryInfo(countryCode)?.nameKey ?? ''}`, { defaultValue: countryCode }) : '';
 
   return (
     <View style={styles.container}>
@@ -128,44 +110,36 @@ export const SearchHomeScreen = () => {
 
       <Text style={styles.sectionTitle}>{t('search.categories')}</Text>
 
-      {catLoading ? (
+      {isLoading ? (
         <ActivityIndicator style={{ marginTop: spacing.xl }} color={colors.primary} />
       ) : (
         <FlatList
           data={filtered}
-          keyExtractor={(item: any) => item.slug}
-          numColumns={3}
+          keyExtractor={(item) => item.slug}
+          numColumns={COLUMNS}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.grid}
-          renderItem={({ item, index }: { item: any; index: number }) => {
-            const color = getCategoryColor(item.slug, index);
-            return (
-              <TouchableOpacity
-                style={styles.card}
-                activeOpacity={0.8}
-                onPress={() => handleCategory(item.slug)}
-              >
-                <View style={[styles.iconWrap, { backgroundColor: color + '20' }]}>
-                  {/* item.icon peut être un emoji (catégories seedées) ou un nom MaterialCommunityIcons (catégories créées via proposition) */}
-                  {SLUG_TO_ICON[item.slug] ? (
-                    <Icon name={SLUG_TO_ICON[item.slug]} size={28} color={color} />
-                  ) : item.icon && /^[a-z]/.test(item.icon) ? (
-                    <Icon name={item.icon} size={28} color={color} />
-                  ) : item.icon ? (
-                    <Text style={{ fontSize: 24 }}>{item.icon}</Text>
-                  ) : (
-                    <Icon name="briefcase" size={28} color={color} />
-                  )}
-                </View>
-                <Text style={styles.label} numberOfLines={2}>
-                  {getLocalizedName(item, i18n.language)}
-                </Text>
-              </TouchableOpacity>
-            );
-          }}
+          refreshControl={<RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} tintColor={colors.primary} />}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Icon name={query.trim() ? 'text-search' : 'map-marker-off-outline'} size={40} color={tokens.text.secondary} />
+              <Text style={styles.emptyText}>
+                {query.trim()
+                  ? t('search.no_result', { query: query.trim() })
+                  : t('search.no_category_in_country', { country: countryName })}
+              </Text>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => handleCategory(item)}>
+              <CategoryIcon category={item} />
+              <Text style={styles.label} numberOfLines={2}>
+                {getLocalizedName(item, i18n.language)}
+              </Text>
+            </TouchableOpacity>
+          )}
         />
       )}
     </View>
   );
 };
-

@@ -17,6 +17,7 @@ import {
 import { useCreateTransportRequestMutation, useCalculatePriceMutation, usePrepareTransportPaymentMutation } from '../../store/api/transportApi';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import { useCancellationPolicy } from '../../hooks/useCancellationPolicy';
 
 type Props = StackScreenProps<any, 'TransportRequestStep5'>;
 
@@ -220,6 +221,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
   };
 
   const { t, i18n } = useTranslation();
+  const cancellationPolicy = useCancellationPolicy();
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cash'>('cash');
   const [createRequest, { isLoading }] = useCreateTransportRequestMutation();
   const [preparePayment, { isLoading: prepareLoading }] = usePrepareTransportPaymentMutation();
@@ -239,6 +241,8 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  const isCourierMode = step1Data.vehicleCategory === 'courier';
+
   const fetchPrice = useCallback(async () => {
     setPriceError(false);
     try {
@@ -257,6 +261,8 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
         pickupLat: step2Data.pickup.lat,
         pickupLng: step2Data.pickup.lng,
         countryCode,
+        vehicleCategory: step1Data.vehicleCategory,
+        courierOptions: isCourierMode ? { isExpress: step3Data.isExpress ?? false } : undefined,
       }).unwrap();
       setPriceBreakdown(result);
     } catch (err) {
@@ -305,20 +311,19 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
 
     // Formater les données selon le DTO backend
     const densityByType: Record<string, number> = {
-      furniture: 55,
-      appliances: 100,
-      boxes: 80,
-      vehicle: 140,
-      other: 65,
+      furniture: 55, appliances: 100, boxes: 80, vehicle: 140, other: 65,
     };
     const density = densityByType[step1Data.objectType] ?? 65;
+    const computedWeight = isCourierMode && step1Data.estimatedWeight
+      ? step1Data.estimatedWeight
+      : Math.round(step1Data.estimatedVolume * density);
     const requestData = {
       transportType: step1Data.objectType,
       transportTypes: step1Data.objectTypes || [step1Data.objectType],
       itemDescription: step1Data.description,
       itemPhotos: step1Data.photos,
       estimatedVolume: step1Data.estimatedVolume,
-      estimatedWeight: Math.round(step1Data.estimatedVolume * density),
+      estimatedWeight: computedWeight,
       pickupAddress: step2Data.pickup.address,
       pickupLat: step2Data.pickup.lat!,
       pickupLng: step2Data.pickup.lng!,
@@ -342,6 +347,13 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
       paymentMethod: paymentMethod === 'stripe' ? 'in_app' : 'cash',
       isImmediate: step4Data.isImmediate ?? false,
       countryCode,
+      vehicleCategory: step1Data.vehicleCategory ?? 'standard',
+      courierOptions: isCourierMode ? {
+        isExpress: step3Data.isExpress ?? false,
+        requiresSignature: step3Data.requiresSignature ?? false,
+        isFragile: step3Data.isFragile ?? false,
+        isColdChain: step3Data.isColdChain ?? false,
+      } : undefined,
     };
 
     if (paymentMethod === 'stripe') {
@@ -422,7 +434,9 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
             {step1Data.description}
           </Text>
           <Text variant="bodySmall" style={styles.detail}>
-            {t('transport.volume_label', { volume: step1Data.estimatedVolume })}
+            {isCourierMode
+              ? t('transport.weight_label_val', { weight: step1Data.estimatedWeight ?? 0 })
+              : t('transport.volume_label', { volume: step1Data.estimatedVolume })}
           </Text>
 
           {/* Galerie de photos */}
@@ -493,37 +507,34 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
       </Card>
 
       {/* Services */}
-      {(step3Data.needHelpers ||
-        step3Data.needDisassembly ||
-        step3Data.needReassembly ||
-        step3Data.needPacking) && (
-        <Card style={styles.card}>
-          <Card.Content>
-            <Text variant="labelLarge" style={styles.sectionTitle}>
-              🛠️ {t('transport.additional_services')}
-            </Text>
-            {step3Data.needHelpers && (
-              <Text variant="bodyMedium" style={styles.service}>
-                • {t('transport.helpers_service', { count: step3Data.helpersCount })}
+      {isCourierMode ? (
+        (step3Data.isExpress || step3Data.requiresSignature || step3Data.isFragile || step3Data.isColdChain) && (
+          <Card style={styles.card}>
+            <Card.Content>
+              <Text variant="labelLarge" style={styles.sectionTitle}>
+                📋 {t('transport.courier_options_section')}
               </Text>
-            )}
-            {step3Data.needDisassembly && (
-              <Text variant="bodyMedium" style={styles.service}>
-                • {t('transport.disassembly_service')}
+              {step3Data.isExpress && <Text variant="bodyMedium" style={styles.service}>⚡ {t('transport.courier_opt_express')}</Text>}
+              {step3Data.requiresSignature && <Text variant="bodyMedium" style={styles.service}>✍️ {t('transport.courier_opt_signature')}</Text>}
+              {step3Data.isFragile && <Text variant="bodyMedium" style={styles.service}>🫧 {t('transport.courier_opt_fragile')}</Text>}
+              {step3Data.isColdChain && <Text variant="bodyMedium" style={styles.service}>🧊 {t('transport.courier_opt_cold_chain')}</Text>}
+            </Card.Content>
+          </Card>
+        )
+      ) : (
+        (step3Data.needHelpers || step3Data.needDisassembly || step3Data.needReassembly || step3Data.needPacking) && (
+          <Card style={styles.card}>
+            <Card.Content>
+              <Text variant="labelLarge" style={styles.sectionTitle}>
+                🛠️ {t('transport.additional_services')}
               </Text>
-            )}
-            {step3Data.needReassembly && (
-              <Text variant="bodyMedium" style={styles.service}>
-                • {t('transport.reassembly_service')}
-              </Text>
-            )}
-            {step3Data.needPacking && (
-              <Text variant="bodyMedium" style={styles.service}>
-                • {t('transport.packing_service')}
-              </Text>
-            )}
-          </Card.Content>
-        </Card>
+              {step3Data.needHelpers && <Text variant="bodyMedium" style={styles.service}>• {t('transport.helpers_service', { count: step3Data.helpersCount })}</Text>}
+              {step3Data.needDisassembly && <Text variant="bodyMedium" style={styles.service}>• {t('transport.disassembly_service')}</Text>}
+              {step3Data.needReassembly && <Text variant="bodyMedium" style={styles.service}>• {t('transport.reassembly_service')}</Text>}
+              {step3Data.needPacking && <Text variant="bodyMedium" style={styles.service}>• {t('transport.packing_service')}</Text>}
+            </Card.Content>
+          </Card>
+        )
       )}
 
       {/* Planning */}
@@ -611,10 +622,17 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
                 </View>
               )}
 
-              {priceBreakdown.servicesFare > 0 && (
+              {priceBreakdown.servicesFare - (priceBreakdown.expressFare ?? 0) > 0 && (
                 <View style={styles.priceRow}>
                   <Text variant="bodyMedium">{t('transport.services_fare')}</Text>
-                  <Text variant="bodyMedium">{priceBreakdown.servicesFare} {priceBreakdown.currency || CURRENCY_CONFIG.code}</Text>
+                  <Text variant="bodyMedium">{priceBreakdown.servicesFare - (priceBreakdown.expressFare ?? 0)} {priceBreakdown.currency || CURRENCY_CONFIG.code}</Text>
+                </View>
+              )}
+
+              {(priceBreakdown.expressFare ?? 0) > 0 && (
+                <View style={styles.priceRow}>
+                  <Text variant="bodyMedium">⚡ {t('transport.express_fare')}</Text>
+                  <Text variant="bodyMedium">{priceBreakdown.expressFare} {priceBreakdown.currency || CURRENCY_CONFIG.code}</Text>
                 </View>
               )}
 
@@ -658,7 +676,7 @@ export const TransportRequestStep5Screen = ({ route, navigation }: Props) => {
       <Card style={styles.infoCard}>
         <Card.Content>
           <Text variant="bodySmall" style={styles.conditions}>
-            {t('transport.cancellation_info')}
+            {t('transport.cancellation_info', { hours: cancellationPolicy.transport.freeCancelHoursBeforeSlot })}
           </Text>
         </Card.Content>
       </Card>

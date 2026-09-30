@@ -1,22 +1,25 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import SignatureCanvas from 'react-native-signature-canvas';
-import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { DriverStackParamList } from '../../navigation/types';
-import { useSaveSignatureMutation } from '../../store/api/transportApi';
+import { useSaveSignatureMutation, useUpdateTransportStatusMutation } from '../../store/api/transportApi';
 
 type Props = StackScreenProps<DriverStackParamList, 'DriverSignature'>;
 
 export const DriverSignatureScreen = ({ navigation, route }: Props) => {
   const { tokens } = useAppTheme();
-  const { requestId } = route.params;
+  const { t } = useTranslation();
+  const { requestId, completeAfter } = route.params;
   const [signature, setSignature] = useState<string | null>(null);
-  const [saveSignature, { isLoading }] = useSaveSignatureMutation();
+  const [saveSignature, { isLoading: isSaving }] = useSaveSignatureMutation();
+  const [updateStatus, { isLoading: isCompleting }] = useUpdateTransportStatusMutation();
+  const isLoading = isSaving || isCompleting;
   const signatureRef = useRef<any>(null);
 
   const styles = useMemo(() => StyleSheet.create({
@@ -51,10 +54,6 @@ export const DriverSignatureScreen = ({ navigation, route }: Props) => {
     submitButton: { flex: 2 },
   }), [tokens]);
 
-  const handleSignature = (sig: string) => {
-    setSignature(sig);
-  };
-
   const handleClear = () => {
     signatureRef.current?.clearSignature();
     setSignature(null);
@@ -62,25 +61,26 @@ export const DriverSignatureScreen = ({ navigation, route }: Props) => {
 
   const handleSubmit = async () => {
     if (!signature) {
-      Alert.alert('Attention', 'Veuillez faire signer le client');
+      Alert.alert(t('common.error'), t('driver.signature_required_msg'));
       return;
     }
 
     try {
       await saveSignature({ requestId, signature }).unwrap();
-      Alert.alert('Succès', 'Signature enregistrée avec succès', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      if (completeAfter) {
+        await updateStatus({ requestId, status: 'completed' }).unwrap();
+      }
+      Alert.alert(
+        t('common.success'),
+        t(completeAfter ? 'driver.signature_saved_delivery_done' : 'driver.signature_saved'),
+        [{ text: t('common.ok'), onPress: () => navigation.goBack() }],
+      );
     } catch (error: any) {
-      console.error('Error saving signature:', error);
-      Alert.alert('Erreur', error?.data?.message || 'Impossible d\'enregistrer la signature');
+      Alert.alert(t('common.error'), error?.data?.message || t('driver.signature_save_error'));
     }
   };
 
-  const style = `.m-signature-pad {
+  const webStyle = `.m-signature-pad {
     box-shadow: none;
     border: none;
   }
@@ -99,21 +99,21 @@ export const DriverSignatureScreen = ({ navigation, route }: Props) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text variant="titleLarge" style={styles.title}>
-          ✍️ Signature du client
+          ✍️ {t('driver.client_signature')}
         </Text>
         <Text variant="bodyMedium" style={styles.subtitle}>
-          Demandez au client de signer pour confirmer la livraison
+          {t('driver.signature_instructions')}
         </Text>
       </View>
 
       <View style={styles.signatureContainer}>
         <SignatureCanvas
           ref={signatureRef}
-          onOK={handleSignature}
+          onOK={setSignature}
           descriptionText=""
-          clearText="Effacer"
-          confirmText="Confirmer"
-          webStyle={style}
+          clearText={t('common.clear')}
+          confirmText={t('common.confirm')}
+          webStyle={webStyle}
           backgroundColor={tokens.card}
           penColor={tokens.text.primary}
         />
@@ -126,7 +126,7 @@ export const DriverSignatureScreen = ({ navigation, route }: Props) => {
           disabled={isLoading}
           style={styles.clearButton}
         >
-          Effacer
+          {t('common.clear')}
         </ChocolateButton>
         <ChocolateButton
           onPress={handleSubmit}
@@ -134,10 +134,9 @@ export const DriverSignatureScreen = ({ navigation, route }: Props) => {
           disabled={isLoading || !signature}
           style={styles.submitButton}
         >
-          Enregistrer
+          {completeAfter ? t('driver.signature_confirm_delivery') : t('common.save')}
         </ChocolateButton>
       </View>
     </View>
   );
 };
-

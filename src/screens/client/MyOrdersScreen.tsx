@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetMyTransportRequestsQuery } from '../../store/api/transportApi';
@@ -20,6 +20,9 @@ import { getLocalizedName } from '../../utils/localize';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadges';
+import { OrderStatusChip } from '../../components/marketplace/OrderStatusChip';
+import type { MarketplaceOrder } from '../../types/marketplace';
 
 type Tab = 'transport' | 'services' | 'marketplace';
 
@@ -49,10 +52,20 @@ export const MyOrdersScreen = () => {
   const { t, i18n } = useTranslation();
   const { tokens } = useAppTheme();
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const { format: formatCurrencyDefault, formatWithCurrency } = useCurrencyFormatter();
   const formatCurrency = (amount: number, currency?: string) =>
     currency ? formatWithCurrency(amount, currency) : formatCurrencyDefault(amount);
   const [activeTab, setActiveTab] = useState<Tab>('transport');
+
+  // Arrivée après un paiement marketplace : ouvrir directement l'onglet correspondant
+  const requestedTab = route.params?.initialTab as Tab | undefined;
+  useEffect(() => {
+    if (!requestedTab) return;
+    setActiveTab(requestedTab);
+    // Consommer le paramètre pour qu'une prochaine redirection identique soit bien prise en compte
+    navigation.setParams({ initialTab: undefined });
+  }, [requestedTab, navigation]);
   const [refreshing, setRefreshing] = useState(false);
 
   const styles = useMemo(() => StyleSheet.create({
@@ -164,6 +177,7 @@ export const MyOrdersScreen = () => {
             </Text>
           </View>
         </View>
+        <CourierOptionsBadges vehicleCategory={item.vehicleCategory} courierOptions={item.courierOptions} />
         {item.deliveryAddress && (
           <View style={styles.cardRow}>
             <Icon name="flag-checkered" size={14} color={tokens.text.secondary} />
@@ -240,30 +254,38 @@ export const MyOrdersScreen = () => {
     );
   };
 
-  const renderOrderItem = ({ item }: { item: any }) => {
-    const product = item.items?.[0]?.product;
+  const renderOrderItem = ({ item }: { item: MarketplaceOrder }) => {
+    const itemsCount = item.items.reduce((sum, i) => sum + i.quantity, 0);
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate('MarketplaceOrderDetails', { orderId: item.id })}
+      >
+        <View style={styles.cardRow}>
+          <Icon name="storefront-outline" size={14} color={tokens.text.secondary} />
+          <Text style={styles.cardTitle} numberOfLines={1}>{item.seller.businessName}</Text>
+          <OrderStatusChip status={item.status} />
+        </View>
         <View style={styles.cardRow}>
           <Icon name="package-variant" size={14} color={tokens.text.secondary} />
-          <Text style={styles.cardTitle} numberOfLines={1}>
-            {product?.name ?? t('commandes.order_label')}
+          <Text style={styles.cardMeta} numberOfLines={1}>
+            {t('seller.items_count', { count: itemsCount })} · {t(`marketplace.fulfillment_${item.fulfillmentType}`)}
           </Text>
-          <View style={[styles.badge, { backgroundColor: '#F3E8FF' }]}>
-            <Text style={[styles.badgeText, { color: '#6B21A8' }]}>
-              {t(`order_status.${item.status}`, { defaultValue: item.status })}
-            </Text>
-          </View>
         </View>
-        {item.totalPrice != null && (
-          <View style={styles.cardRow}>
-            <Icon name="cash" size={14} color={colors.primary} />
-            <Text style={[styles.cardMeta, { color: colors.primary, fontWeight: '700' }]}>
-              {formatCurrency(item.totalPrice, item.currency)}
-            </Text>
-          </View>
-        )}
-      </View>
+        <View style={styles.cardRow}>
+          <Icon name="cash" size={14} color={colors.primary} />
+          <Text style={[styles.cardMeta, { color: colors.primary, fontWeight: '700' }]}>
+            {formatCurrency(item.totalAmount, item.currency)}
+          </Text>
+        </View>
+        <View style={styles.cardRow}>
+          <Icon name="calendar" size={14} color={tokens.text.secondary} />
+          <Text style={styles.cardMeta}>
+            {new Date(item.createdAt).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          </Text>
+        </View>
+      </TouchableOpacity>
     );
   };
 

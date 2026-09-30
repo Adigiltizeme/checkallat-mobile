@@ -1,6 +1,9 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 // StatusBar is now managed by ThemeProvider
-import { I18nManager } from 'react-native';
+import { I18nManager, LogBox } from 'react-native';
+
+// Suppress React Native framework deprecation warnings from third-party dependencies
+LogBox.ignoreLogs(['InteractionManager has been deprecated']);
 import { Provider as ReduxProvider } from 'react-redux';
 import { Provider as PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,6 +14,8 @@ import * as Sentry from '@sentry/react-native';
 import { store } from './store';
 import { setCredentials, restoreAuth, logout, restoreLanguage, LANGUAGE_STORAGE_KEY } from './store/slices/authSlice';
 import { RootNavigator } from './navigation/RootNavigator';
+// Définit la tâche de suivi de mission en arrière-plan (doit être chargée au démarrage)
+import './services/missionTracking';
 import { colors } from './theme/colors';
 import { ThemeProvider, useAppTheme } from './theme/ThemeProvider';
 import { API_CONFIG } from './config/api';
@@ -26,7 +31,7 @@ import {
   selectCountry,
   setActiveCurrency,
 } from './store/slices/locationSlice';
-import { identifyAnalyticsUser } from './hooks/useAnalytics';
+import { initAnalytics } from './services/analytics';
 import i18n, { isRTL } from './i18n';
 import { I18nextProvider } from 'react-i18next';
 
@@ -161,6 +166,8 @@ const ThemedPaperProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 function AppContent() {
+  const [isInitializing, setIsInitializing] = useState(true);
+
   useEffect(() => {
     const applyLanguage = async (lang: string) => {
       store.dispatch(restoreLanguage(lang));
@@ -173,6 +180,9 @@ function AppContent() {
     };
 
     const initialize = async () => {
+      // 0. Mesure d'usage : choix de la personne et identifiant d'installation
+      initAnalytics();
+
       // 1. Restore local language
       try {
         const saved = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -203,13 +213,8 @@ function AppContent() {
                 store.dispatch(selectCountry(user.activeCountryId.toLowerCase()));
               }
 
-              // Identifier dans Sentry et Analytics
+              // Identifier dans Sentry (la mesure d'usage se synchronise sur setCredentials)
               sentryIdentifyUser(user.id, user.email);
-              identifyAnalyticsUser(user.id, {
-                isDriver: !!user.driver,
-                isPro: !!user.pro,
-                isSeller: !!user.marketplaceSeller,
-              });
 
               if (user.driver) registerDriverPushToken(accessToken);
               registerClientPushToken(accessToken);
@@ -229,9 +234,9 @@ function AppContent() {
               } catch {}
               store.dispatch(logout());
             }
-          } catch (error) {
-            // Erreur réseau → on garde la session pour le mode hors-ligne
-            console.error('Failed to fetch user profile:', error);
+          } catch {
+            // Erreur réseau (backend injoignable, hors-ligne, timeout) → mode hors-ligne
+            // On garde la session cached pour ne pas déconnecter un utilisateur sans réseau.
           }
         }
       } catch (error) {
@@ -262,10 +267,13 @@ function AppContent() {
           .catch(() => store.dispatch(setDetectionError()));
       }
 
-      // 4. Platform settings (non-blocking)
-      fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`)
+      // 4. Platform settings (non-blocking, timeout 8s)
+      const settingsController = new AbortController();
+      const settingsTimeout = setTimeout(() => settingsController.abort(), 8000);
+      fetch(`${API_CONFIG.BASE_URL}/admin/settings/public`, { signal: settingsController.signal })
         .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
         .then((settings) => {
+          clearTimeout(settingsTimeout);
           const locationState = store.getState().location;
           const activeCountryCode = locationState.selectedCountryCode ?? locationState.detectedCountryCode;
           const zones: Array<{ countryCode?: string; currency: string; enabled: boolean }> =
@@ -279,12 +287,15 @@ function AppContent() {
             store.dispatch(setActiveCurrency(resolvedCurrency));
           }
         })
-        .catch((error) => console.error('Failed to load platform settings:', error));
+        .catch(() => {
+          clearTimeout(settingsTimeout);
+        });
     };
 
-    initialize();
+    initialize().finally(() => setIsInitializing(false));
   }, []);
 
+  if (isInitializing) return null;
   return <RootNavigator />;
 }
 

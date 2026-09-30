@@ -14,6 +14,7 @@ import {
   useGetPayoutMethodsQuery,
   useCreateDriverAccountMutation,
   useCreateProAccountMutation,
+  useCreateSellerAccountMutation,
 } from '../../store/api/payoutAccountsApi';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
@@ -112,6 +113,7 @@ export const PayoutAccountFormScreen = () => {
 const navigation = useNavigation();
   const activeRole = useSelector((state: RootState) => state.auth.activeRole);
   const isDriver = activeRole === 'driver';
+  const isSeller = activeRole === 'seller';
 
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedType, setSelectedType] = useState('');
@@ -126,7 +128,8 @@ const navigation = useNavigation();
 
   const [createDriver, { isLoading: savingDriver }] = useCreateDriverAccountMutation();
   const [createPro, { isLoading: savingPro }] = useCreateProAccountMutation();
-  const isSaving = savingDriver || savingPro;
+  const [createSeller, { isLoading: savingSeller }] = useCreateSellerAccountMutation();
+  const isSaving = savingDriver || savingPro || savingSeller;
 
   const selectedMethod: PayoutMethodDef | undefined = methods.find((m) => m.type === selectedType);
 
@@ -174,6 +177,7 @@ const navigation = useNavigation();
     };
     try {
       if (isDriver) await createDriver(payload).unwrap();
+      else if (isSeller) await createSeller(payload).unwrap();
       else await createPro(payload).unwrap();
       navigation.goBack();
     } catch {

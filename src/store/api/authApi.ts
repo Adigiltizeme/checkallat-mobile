@@ -27,6 +27,22 @@ export const authApi = createApi({
         body: { phone },
       }),
     }),
+    /** Mot de passe oublié : envoie un code par SMS (réponse identique que le compte existe ou non) */
+    forgotPassword: builder.mutation<{ message: string; expiresIn: number }, { phone: string }>({
+      query: (body) => ({
+        url: '/auth/forgot-password',
+        method: 'POST',
+        body,
+      }),
+    }),
+    /** Nouveau mot de passe avec le code SMS — toutes les sessions ouvertes sont déconnectées */
+    resetPassword: builder.mutation<{ message: string }, { phone: string; code: string; newPassword: string }>({
+      query: (body) => ({
+        url: '/auth/reset-password',
+        method: 'POST',
+        body,
+      }),
+    }),
     refreshToken: builder.mutation({
       query: ({ refreshToken }: { refreshToken: string }) => ({
         url: '/auth/refresh-token',
@@ -124,10 +140,39 @@ export const authApi = createApi({
         body,
       }),
     }),
+    /** Code de vérification envoyé à l'adresse e-mail du compte */
+    sendEmailCode: builder.mutation<{ alreadyVerified: boolean; expiresIn: number }, void>({
+      query: () => ({
+        url: '/auth/email/send-code',
+        method: 'POST',
+      }),
+    }),
+    /** Confirmation de l'adresse e-mail avec le code reçu */
+    verifyEmail: builder.mutation<{ emailVerified: boolean }, { code: string }>({
+      query: (body) => ({
+        url: '/auth/email/verify',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
     logoutApi: builder.mutation<{ success: boolean }, void>({
       query: () => ({
         url: '/auth/logout',
         method: 'POST',
+      }),
+    }),
+    /** Acceptation de la version en vigueur des CGU (après une mise à jour des conditions) */
+    acceptTerms: builder.mutation<{ termsAcceptedAt: string; termsVersion: string }, void>({
+      query: () => ({
+        url: '/auth/accept-terms',
+        method: 'POST',
+      }),
+    }),
+    deleteAccount: builder.mutation<{ success: boolean }, void>({
+      query: () => ({
+        url: '/auth/me',
+        method: 'DELETE',
       }),
     }),
   }),
@@ -150,4 +195,10 @@ export const {
   useChangePasswordMutation,
   useChangePhoneMutation,
   useLogoutApiMutation,
+  useSendEmailCodeMutation,
+  useVerifyEmailMutation,
+  useDeleteAccountMutation,
+  useAcceptTermsMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
 } = authApi;

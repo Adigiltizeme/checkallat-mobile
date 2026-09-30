@@ -625,9 +625,18 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
                   </TouchableOpacity>
                 )}
                 {booking.status === 'arrived' && (
-                  <TouchableOpacity style={styles.actionBtn} onPress={handleStartWork}>
-                    <Text style={styles.actionBtnText}>{t('booking_tracking.btn_start_work')}</Text>
-                  </TouchableOpacity>
+                  /* Bloquer si paiement in_app non finalisé par le client */
+                  (booking as any).paymentMethod === 'in_app' && !(booking as any).paymentId ? (
+                    <View style={[styles.waitingBadge, { backgroundColor: '#FEE2E2' }]}>
+                      <Text style={[styles.waitingText, { color: '#991B1B' }]}>
+                        ⚠️ {t('booking.payment_not_initialized_pro')}
+                      </Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity style={styles.actionBtn} onPress={handleStartWork}>
+                      <Text style={styles.actionBtnText}>{t('booking_tracking.btn_start_work')}</Text>
+                    </TouchableOpacity>
+                  )
                 )}
                 {booking.status === 'in_progress' && !proConfirmed && (
                   <TouchableOpacity style={styles.actionBtn} onPress={handleProComplete}>
@@ -642,10 +651,15 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
               </View>
             )}
 
-            {/* Bouton confirmation client */}
+            {/* Bouton confirmation client — UNIQUEMENT quand le pro a déclaré avoir terminé */}
             {role === 'client' && booking.status === 'in_progress' && (
               <View style={styles.actionRow}>
-                {clientConfirmed ? (
+                {!proConfirmed ? (
+                  /* Le pro travaille encore — pas de bouton de confirmation prématuré */
+                  <View style={styles.waitingBadge}>
+                    <Text style={styles.waitingText}>🔧 {t('booking.pro_still_working')}</Text>
+                  </View>
+                ) : clientConfirmed ? (
                   <View style={styles.waitingBadge}>
                     <Text style={styles.waitingText}>⏳ {t('booking.waiting_pro_confirm')}</Text>
                   </View>

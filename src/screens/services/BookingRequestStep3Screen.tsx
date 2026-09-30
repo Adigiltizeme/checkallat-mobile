@@ -26,6 +26,7 @@ const SLOT_END_HOUR: Record<BookingTimeSlot, number> = {
   morning: 12,
   afternoon: 17,
   evening: 20,
+  flexible: 20,
 };
 
 function isSameDay(a: Date, b: Date): boolean {

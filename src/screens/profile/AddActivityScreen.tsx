@@ -15,6 +15,7 @@ import { RootState } from '../../store';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { useAppTheme } from '../../theme/ThemeProvider';
+import { useActiveSectors } from '../../hooks/useActiveSectors';
 
 type Props = StackScreenProps<ProfileStackParamList, 'AddActivity'>;
 
@@ -44,7 +45,7 @@ const ACTIVITIES = [
     titleKey: 'activity.seller_title',
     descKey: 'activity.seller_desc',
     statusField: 'marketplaceSeller',
-    screen: null, // à implémenter
+    screen: 'SellerApplication' as const,
   },
 ] as const;
 
@@ -59,6 +60,8 @@ export const AddActivityScreen = ({ navigation }: Props) => {
   const { tokens } = useAppTheme();
   const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.auth.user);
+  // Secteurs activés dans le web-admin pour le pays de l'utilisateur
+  const { isSectorVisible } = useActiveSectors();
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: tokens.background },
@@ -100,14 +103,20 @@ export const AddActivityScreen = ({ navigation }: Props) => {
       <Text style={styles.pageTitle}>{t('activity.page_title')}</Text>
       <Text style={styles.pageSubtitle}>{t('activity.page_subtitle')}</Text>
 
-      {ACTIVITIES.map((activity) => {
+      {ACTIVITIES.filter((activity) => {
+        // Activité déjà commencée : toujours visible (statut, suivi)
+        if (user?.[activity.statusField]) return true;
+        if (activity.key === 'driver') return isSectorVisible('transport') || isSectorVisible('checkallpack');
+        if (activity.key === 'pro') return isSectorVisible('services');
+        return isSectorVisible('marketplace');
+      }).map((activity) => {
         const record = user?.[activity.statusField];
         const status = record?.status ?? null;
         const isActive = status === 'active';
         const badge = status ? STATUS_BADGE[status] : null;
 
         // Pour les prestataires actifs : permettre d'ajouter d'autres catégories
-        const canNavigateWhenActive = activity.key === 'pro';
+        const canNavigateWhenActive = activity.key === 'pro' || activity.key === 'seller';
         const isDisabled = !activity.screen || (isActive && !canNavigateWhenActive);
 
         return (
@@ -139,9 +148,14 @@ export const AddActivityScreen = ({ navigation }: Props) => {
                 </View>
               )}
 
-              {isActive && canNavigateWhenActive && (
+              {isActive && activity.key === 'pro' && (
                 <Text style={[styles.addMoreText, { color: activity.color }]}>
                   {t('activity.add_more_categories')}
+                </Text>
+              )}
+              {isActive && activity.key === 'seller' && (
+                <Text style={[styles.addMoreText, { color: activity.color }]}>
+                  {t('seller.open_seller_space')}
                 </Text>
               )}
 

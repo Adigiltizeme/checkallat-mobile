@@ -18,6 +18,12 @@ export const API_CONFIG = {
 // URL publique de l'app web (pages de suivi partagées avec les clients)
 export const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL || 'https://checkallat-web-admin.vercel.app';
 
+// Documents légaux (mêmes URLs que celles déclarées sur l'App Store et Google Play)
+export const LEGAL_URLS = {
+  terms: `${WEB_URL}/terms`,
+  privacy: `${WEB_URL}/privacy`,
+};
+
 /**
  * Configuration réutilisable pour tous les APIs RTK Query
  * Ajoute automatiquement le token JWT
