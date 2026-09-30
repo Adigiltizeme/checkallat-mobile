@@ -56,3 +56,8 @@ DerivedData
 *.ipa
 
 .env.local
+
+# Clés des stores (compte de service Google Play, clé API App Store Connect) : jamais dans git
+secrets/
+*service-account*.json
+*.p8

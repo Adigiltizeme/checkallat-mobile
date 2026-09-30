@@ -20,7 +20,7 @@
     ],
     "ios": {
       "googleServicesFile": "./GoogleService-Info.plist",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.digiltizeme.checkallat",
       "buildNumber": "3",
       "icon": "./assets/icon.png",
@@ -45,17 +45,24 @@
         "ACCESS_FINE_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "plugins": [
       [
         "expo-build-properties",
         {
-          "android": { "newArchEnabled": false },
-          "ios": { "newArchEnabled": false }
+          "android": {
+            "newArchEnabled": false
+          },
+          "ios": {
+            "newArchEnabled": false
+          }
         }
       ],
       [
@@ -80,7 +87,8 @@
         "expo-image-picker",
         {
           "photosPermission": "CheckAll@t accesses your photos to upload profile pictures and proof photos.",
-          "cameraPermission": "CheckAll@t uses your camera to take before/after photos for service orders."
+          "cameraPermission": "CheckAll@t uses your camera to take before/after photos for service orders.",
+          "microphonePermission": false
         }
       ],
       "expo-localization",

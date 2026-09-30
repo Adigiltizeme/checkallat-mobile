@@ -13,7 +13,9 @@ module.exports = ({ config }) => ({
   plugins: [
     ...(config.plugins ?? []),
     '@rnmapbox/maps',
-    'expo-audio',
+    // Sons courts joués application ouverte : ni micro, ni lecture en arrière-plan (évite des permissions
+    // et déclarations inutiles sur les stores)
+    ['expo-audio', { microphonePermission: false, recordAudioAndroid: false, enableBackgroundPlayback: false }],
     'expo-font'
   ],
 });

@@ -1,0 +1,39 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 CheckAll@t",
+    "categories": ["LIFESTYLE", "SHOPPING"],
+    "info": {
+      "fr-FR": {
+        "title": "CheckAll@t",
+        "subtitle": "Transport, services et achats",
+        "promoText": "Déménagement, livraison express ou artisan à domicile en quelques minutes : prix affiché à l'avance, suivi en temps réel et paiement sécurisé.",
+        "keywords": ["déménagement", "transport", "livraison", "coursier", "plombier", "électricien", "ménage", "bricolage", "artisan"],
+        "description": "CheckAll@t réunit dans une seule application ce dont vous avez besoin au quotidien : déménagement et transport, livraison express, services à domicile et achats auprès de commerçants proches.\n\nTRANSPORT & DÉMÉNAGEMENT\n• Prix calculé à l'avance selon la distance, le volume, les étages et les options (démontage, emballage, aide au chargement)\n• Chauffeurs dont l'identité est vérifiée, suivi du trajet en temps réel\n• Photos avant/après et signature électronique à la livraison\n\nCHECKALLPACK — LIVRAISON EXPRESS\n• Colis légers, documents et petits objets livrés à moto ou à vélo\n• Options : express, signature du destinataire, colis fragile, chaîne du froid\n\nSERVICES À DOMICILE\n• Plomberie, électricité, peinture, ménage, bricolage, menuiserie, climatisation…\n• Prestataires dont l'identité est vérifiée\n• Tarif affiché avant de réserver, au forfait ou à l'heure, avec le détail : déplacement, durée, suppléments\n• À l'heure, vous ne payez que le temps réellement passé, et aucun dépassement sans votre accord\n• Suivez l'arrivée du prestataire sur la carte\n\nMARKETPLACE\n• Produits de commerçants et vendeurs locaux, en retrait ou en livraison\n\nPAIEMENT ET SÉCURITÉ\n• Paiement par carte sécurisé : le montant est réservé et n'est encaissé qu'à la fin de la prestation. Paiement en espèces également possible.\n• Messagerie intégrée et appels masqués : votre numéro reste privé\n• Avis après chaque prestation, litiges suivis par notre équipe\n\nDEVENEZ PARTENAIRE\nChauffeur, livreur, artisan ou commerçant ? Proposez vos services depuis l'application, recevez des demandes près de chez vous et suivez vos revenus.\n\nDisponible en français, en anglais et en arabe.",
+        "marketingUrl": "https://checkallat-web-admin.vercel.app/contact",
+        "supportUrl": "https://checkallat-web-admin.vercel.app/contact",
+        "privacyPolicyUrl": "https://checkallat-web-admin.vercel.app/privacy"
+      },
+      "en-US": {
+        "title": "CheckAll@t",
+        "subtitle": "Moving, services & marketplace",
+        "promoText": "Book a move, an express delivery or a professional at home in minutes: price shown upfront, real-time tracking and secure payment.",
+        "keywords": ["moving", "removal", "delivery", "courier", "plumber", "electrician", "cleaning", "handyman", "services"],
+        "description": "CheckAll@t brings together in a single app what you need every day: moving and transport, express delivery, home services and shopping from nearby merchants.\n\nTRANSPORT & MOVING\n• Price calculated upfront from distance, volume, floors and options (dismantling, packing, loading help)\n• Identity-verified drivers, real-time trip tracking\n• Before/after photos and electronic signature on delivery\n\nCHECKALLPACK — EXPRESS DELIVERY\n• Small parcels, documents and small items delivered by motorbike or bicycle\n• Options: express, recipient signature, fragile parcel, cold chain\n\nHOME SERVICES\n• Plumbing, electrical work, painting, cleaning, handyman, carpentry, air conditioning…\n• Identity-verified professionals\n• Price shown before you book, flat rate or hourly, with the breakdown: call-out, duration, extras\n• For hourly jobs you only pay for the time actually spent, and never extra time without your approval\n• Follow the professional's arrival on the map\n\nMARKETPLACE\n• Products from local merchants and sellers, for pickup or delivery\n\nPAYMENT & SAFETY\n• Secure card payment: the amount is held and only charged when the job is done. Cash payment also available.\n• In-app messaging and masked calls: your number stays private\n• Reviews after every job, disputes handled by our team\n\nBECOME A PARTNER\nDriver, courier, tradesperson or merchant? Offer your services from the app, receive requests near you and track your earnings.\n\nAvailable in French, English and Arabic.",
+        "marketingUrl": "https://checkallat-web-admin.vercel.app/contact",
+        "supportUrl": "https://checkallat-web-admin.vercel.app/contact",
+        "privacyPolicyUrl": "https://checkallat-web-admin.vercel.app/privacy"
+      },
+      "ar-SA": {
+        "title": "CheckAll@t",
+        "subtitle": "نقل وخدمات وتسوق",
+        "promoText": "احجز نقلاً أو توصيلاً سريعاً أو حرفياً في منزلك خلال دقائق: السعر معروض مسبقاً، وتتبع مباشر، ودفع آمن.",
+        "keywords": ["نقل", "عفش", "توصيل", "سباك", "كهربائي", "تنظيف", "صيانة", "حرفي"],
+        "description": "يجمع CheckAll@t في تطبيق واحد ما تحتاجه يومياً: النقل والانتقال، والتوصيل السريع، والخدمات المنزلية، والتسوق من التجار القريبين.\n\nالنقل والانتقال\n• سعر محسوب مسبقاً حسب المسافة والحجم والطوابق والخيارات (الفك، التغليف، المساعدة في التحميل)\n• سائقون تم التحقق من هويتهم، وتتبع الرحلة مباشرة\n• صور قبل وبعد، وتوقيع إلكتروني عند التسليم\n\nCheckAllPack — توصيل سريع\n• طرود خفيفة ووثائق وأغراض صغيرة تُوصَّل بالدراجة النارية أو الهوائية\n• خيارات: توصيل عاجل، توقيع المستلم، طرد قابل للكسر، سلسلة تبريد\n\nالخدمات المنزلية\n• سباكة، كهرباء، دهان، تنظيف، أعمال يدوية، نجارة، تكييف…\n• محترفون تم التحقق من هويتهم\n• السعر معروض قبل الحجز، ثابت أو بالساعة، مع التفاصيل: التنقل، المدة، الإضافات\n• في الخدمات بالساعة تدفع فقط مقابل الوقت الفعلي، ولا وقت إضافي دون موافقتك\n• تابع وصول المحترف على الخريطة\n\nالسوق\n• منتجات من تجار وبائعين محليين، بالاستلام أو التوصيل\n\nالدفع والأمان\n• دفع آمن بالبطاقة: يُحجز المبلغ ولا يُخصم إلا عند انتهاء الخدمة. الدفع نقداً متاح أيضاً.\n• مراسلة داخل التطبيق ومكالمات مقنّعة: رقمك يبقى خاصاً\n• تقييمات بعد كل خدمة، ونزاعات يتابعها فريقنا\n\nكن شريكاً\nسائق أو موصّل أو حرفي أو تاجر؟ اعرض خدماتك من التطبيق، واستقبل الطلبات القريبة منك، وتابع أرباحك.\n\nمتوفر بالعربية والفرنسية والإنجليزية.",
+        "marketingUrl": "https://checkallat-web-admin.vercel.app/contact",
+        "supportUrl": "https://checkallat-web-admin.vercel.app/contact",
+        "privacyPolicyUrl": "https://checkallat-web-admin.vercel.app/privacy"
+      }
+    }
+  }
+}
