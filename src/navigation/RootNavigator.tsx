@@ -65,7 +65,6 @@ const AuthenticatedRoot = () => {
   useAccountStatusSync();
   // Toucher une notification ouvre l'écran concerné
   useNotificationRouting();
-  useForceUpdateCheck();
   const needsRoleSelection = useSelector((state: RootState) => state.auth.needsRoleSelection);
   return (
     <>
@@ -78,6 +77,8 @@ const AuthenticatedRoot = () => {
 
 export const RootNavigator = () => {
   const { tokens, isDark } = useAppTheme();
+  // Version minimale exigée par le serveur : vérifiée dès l'ouverture, connecté ou non
+  useForceUpdateCheck();
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 

@@ -12,13 +12,13 @@ import { secureStorage } from './utils/secureStorage';
 import Constants from 'expo-constants';
 import * as Sentry from '@sentry/react-native';
 import { store } from './store';
-import { setCredentials, restoreAuth, logout, restoreLanguage, LANGUAGE_STORAGE_KEY } from './store/slices/authSlice';
+import { setCredentials, restoreAuth, accessTokenRefreshed, logout, restoreLanguage, LANGUAGE_STORAGE_KEY } from './store/slices/authSlice';
 import { RootNavigator } from './navigation/RootNavigator';
 // Définit la tâche de suivi de mission en arrière-plan (doit être chargée au démarrage)
 import './services/missionTracking';
 import { colors } from './theme/colors';
 import { ThemeProvider, useAppTheme } from './theme/ThemeProvider';
-import { API_CONFIG } from './config/api';
+import { API_CONFIG, requestAccessTokenRefresh } from './config/api';
 import { setCurrencyConfig } from './config/currency';
 import { identifyUser as sentryIdentifyUser } from './config/sentry';
 import { CountryDetectionService } from './services/countryDetection.service';
@@ -191,18 +191,27 @@ function AppContent() {
 
       // 2. Restore auth
       try {
-        const accessToken = await secureStorage.getToken();
+        let accessToken = await secureStorage.getToken();
         const refreshToken = await secureStorage.getRefreshToken();
 
         if (accessToken && refreshToken) {
           store.dispatch(restoreAuth({ accessToken, refreshToken }));
 
           try {
-            const response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
+            let response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, {
               headers: {
                 Authorization: `Bearer ${accessToken}`,
               },
             });
+            // Jeton d'accès expiré : renouvellement de la session avant de conclure à une déconnexion
+            if (response.status === 401) {
+              const renewed = await requestAccessTokenRefresh(refreshToken).catch(() => null);
+              if (renewed) {
+                store.dispatch(accessTokenRefreshed(renewed));
+                response = await fetch(`${API_CONFIG.BASE_URL}/auth/me`, { headers: { Authorization: `Bearer ${renewed}` } });
+                accessToken = renewed;
+              }
+            }
 
             if (response.ok) {
               const user = await response.json();

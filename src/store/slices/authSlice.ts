@@ -57,6 +57,8 @@ const authSlice = createSlice({
       }>,
     ) => {
       const { user, accessToken, refreshToken, defaultRole } = action.payload;
+      // Réponse sans session (ex. code SMS à confirmer) : rien à enregistrer
+      if (!accessToken) return;
       state.user = user;
       state.token = accessToken;
       state.refreshToken = refreshToken;
@@ -87,7 +89,14 @@ const authSlice = createSlice({
       }
 
       secureStorage.setToken(accessToken);
-      secureStorage.setRefreshToken(refreshToken);
+      if (refreshToken) secureStorage.setRefreshToken(refreshToken);
+    },
+
+    /** Jeton d'accès renouvelé automatiquement (le jeton de renouvellement reste le même) */
+    accessTokenRefreshed: (state, action: PayloadAction<string>) => {
+      if (!action.payload) return;
+      state.token = action.payload;
+      secureStorage.setToken(action.payload);
     },
 
     setActiveRole: (
@@ -199,6 +208,7 @@ export const {
   setLanguage,
   logout,
   restoreAuth,
+  accessTokenRefreshed,
   restoreLanguage,
   restoreDefaultRole,
 } = authSlice.actions;
