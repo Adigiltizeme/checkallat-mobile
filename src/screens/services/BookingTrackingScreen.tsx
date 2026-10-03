@@ -28,6 +28,7 @@ import {
 } from '../../store/api/bookingsApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { isAwaitingClientPayment } from '../../utils/servicePricing';
+import { WaitingNotice } from '../../components/shared/WaitingNotice';
 import { WEB_URL } from '../../config/api';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { entityCurrencyCode } from '../../config/currency';
@@ -613,9 +614,7 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
             {role === 'pro' && (
               <View style={styles.actionRow}>
                 {booking.status === 'accepted' && isAwaitingClientPayment(booking as any) && (
-                  <Text style={{ flex: 1, textAlign: 'center', color: tokens.text.secondary, fontSize: 13 }}>
-                    {t('pro_space.awaiting_client_payment')}
-                  </Text>
+                  <WaitingNotice message={t('pro_space.awaiting_client_payment')} style={{ flex: 1, marginBottom: 0 }} />
                 )}
                 {booking.status === 'accepted' && !isAwaitingClientPayment(booking as any) && (
                   <TouchableOpacity

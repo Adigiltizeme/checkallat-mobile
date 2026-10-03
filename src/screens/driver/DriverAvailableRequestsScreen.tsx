@@ -138,19 +138,11 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
     return (
       <Card style={styles.card}>
         <Card.Content>
-          {/* Header: price + payment method */}
+          {/* Prix — le moyen de paiement n'est communiqué qu'après acceptation */}
           <View style={styles.cardHeader}>
             <Text variant="titleLarge" style={styles.price}>
               {formatWithCurrency(item.price || (item as any).totalPrice || 0, (item as any).currency || '')}
             </Text>
-            <Chip
-              icon={item.paymentMethod === 'cash' ? 'cash' : 'credit-card'}
-              mode="flat"
-              style={{ backgroundColor: item.paymentMethod === 'cash' ? '#FFF3E0' : '#E8F5F3' }}
-              textStyle={{ fontSize: 12, includeFontPadding: false, lineHeight: 15 }}
-            >
-              {t('driver.payment_' + item.paymentMethod + '_text')}
-            </Chip>
           </View>
 
           {/* Route */}

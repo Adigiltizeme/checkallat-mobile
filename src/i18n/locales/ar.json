@@ -1457,7 +1457,7 @@
     "category_cleaning": "التنظيف",
     "category_carpentry": "النجارة",
     "category_air_condition": "تكييف الهواء",
-    "awaiting_client_payment": "في انتظار دفع العميل: يمكنك بدء الرحلة فور إتمامه للدفع. سيتم إشعارك."
+    "awaiting_client_payment": "في انتظار تأكيد العميل. يمكنك بدء الرحلة فور وصوله، وسيتم إشعارك."
   },
   "activity": {
     "page_title": "أنشطتي",

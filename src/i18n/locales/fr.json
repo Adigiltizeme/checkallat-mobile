@@ -1457,7 +1457,7 @@
     "category_cleaning": "Ménage",
     "category_carpentry": "Menuiserie",
     "category_air_condition": "Climatisation",
-    "awaiting_client_payment": "En attente du paiement du client : vous pourrez démarrer le trajet dès qu'il aura payé. Vous serez prévenu."
+    "awaiting_client_payment": "En attente de la confirmation du client. Vous pourrez démarrer le trajet dès qu'elle sera reçue : vous serez prévenu."
   },
   "activity": {
     "page_title": "Mes activités",

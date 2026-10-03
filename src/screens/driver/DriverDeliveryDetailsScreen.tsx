@@ -322,9 +322,12 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
             <Text variant="bodyLarge" style={styles.paymentLabel}>{t('driver.total_amount')}:</Text>
             <Text variant="headlineSmall" style={styles.paymentAmount}>{formatWithCurrency((request as any).price || 0, (request as any).currency || '')}</Text>
           </View>
-          <Text variant="bodySmall" style={styles.paymentMethod}>
-            {t('driver.payment_method_label')}: {request.paymentMethod === 'cash' ? t('transport.pay_cash') : t('driver.payment_card')}
-          </Text>
+          {/* Communiqué seulement après acceptation */}
+          {!!request.paymentMethod && (
+            <Text variant="bodySmall" style={styles.paymentMethod}>
+              {t('driver.payment_method_label')}: {request.paymentMethod === 'cash' ? t('transport.pay_cash') : t('driver.payment_card')}
+            </Text>
+          )}
         </Card.Content>
       </Card>
 

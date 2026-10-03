@@ -25,6 +25,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
 import { isAwaitingClientPayment } from '../../utils/servicePricing';
+import { WaitingNotice } from '../../components/shared/WaitingNotice';
 
 import RNMapView, { Marker, Polyline } from 'react-native-maps';
 
@@ -490,9 +491,7 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
 
         {/* Paiement in-app pas encore confirmé : départ impossible */}
         {!enRouteAt && isAwaitingClientPayment(booking as any) && (
-          <Text style={{ color: tokens.text.primary, textAlign: 'center', fontSize: 13, paddingVertical: 8 }}>
-            {t('pro_space.awaiting_client_payment')}
-          </Text>
+          <WaitingNotice message={t('pro_space.awaiting_client_payment')} />
         )}
 
         {/* Démarrer le trajet (avant markEnRoute) */}

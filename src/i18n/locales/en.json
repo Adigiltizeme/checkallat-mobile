@@ -1457,7 +1457,7 @@
     "category_cleaning": "Cleaning",
     "category_carpentry": "Carpentry",
     "category_air_condition": "Air Conditioning",
-    "awaiting_client_payment": "Waiting for the client's payment: you can start the trip as soon as they have paid. You will be notified."
+    "awaiting_client_payment": "Waiting for the client's confirmation. You can start the trip as soon as it arrives: you will be notified."
   },
   "activity": {
     "page_title": "My activities",

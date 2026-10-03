@@ -36,6 +36,7 @@ import { HourlyWorkPanel } from '../../components/shared/HourlyWorkPanel';
 import { CompletionConfirmationCard } from '../../components/shared/CompletionConfirmationCard';
 import { EarningsBreakdownCard } from '../../components/shared/earnings/EarningsBreakdownCard';
 import { bidPriceLabel, isAwaitingClientPayment } from '../../utils/servicePricing';
+import { WaitingNotice } from '../../components/shared/WaitingNotice';
 import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { spacing } from '../../theme/spacing';
 import { entityCurrencyCode } from '../../config/currency';
@@ -1053,12 +1054,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
 
       {/* Accepted, paiement in-app pas encore confirmé : pas de départ possible */}
       {isAccepted && isAwaitingClientPayment(booking as any) && (
-        <View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderColor: colors.warning }]}>
-          <Icon name="credit-card-clock-outline" size={22} color={colors.warning} />
-          <Text style={{ color: tokens.text.primary, fontSize: 14, flex: 1, lineHeight: 20 }}>
-            {t('pro_space.awaiting_client_payment')}
-          </Text>
-        </View>
+        <WaitingNotice message={t('pro_space.awaiting_client_payment')} />
       )}
 
       {/* Accepted — start navigation */}
