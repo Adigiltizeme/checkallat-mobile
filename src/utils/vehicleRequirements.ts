@@ -12,8 +12,8 @@ export const COURIER_FIXED_CAPACITY: Record<string, number> = { bicycle: 0.04, m
 export interface VehicleRequirements {
   plate: boolean;
   license: 'required' | 'optional' | 'none';
-  /** registration = carte grise ; bike_proof = facture / assurance du vélo */
-  vehicleDocument: 'registration' | 'bike_proof';
+  /** registration = carte grise exigée ; none = aucun document (vélo) */
+  vehicleDocument: 'registration' | 'none';
   fixedCapacity: number | null;
 }
 
@@ -28,7 +28,7 @@ export function vehicleRequirements(
   countryCode?: string | null,
 ): VehicleRequirements {
   if (vehicleType === 'bicycle') {
-    return { plate: false, license: 'none', vehicleDocument: 'bike_proof', fixedCapacity: COURIER_FIXED_CAPACITY.bicycle };
+    return { plate: false, license: 'none', vehicleDocument: 'none', fixedCapacity: COURIER_FIXED_CAPACITY.bicycle };
   }
   if (vehicleType === 'motorbike') {
     const mopedNeedsLicense = settings.mopedLicenseRequiredCountries.includes((countryCode ?? '').toUpperCase());

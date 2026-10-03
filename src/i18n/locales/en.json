@@ -1152,8 +1152,6 @@
     "vehicle_photos_hint_bicycle": "1st photo: you standing next to your bike, face visible. 2nd photo: the whole bike, side view.",
     "vehicle_photos_hint_motorbike": "1st photo: the rear with a readable licence plate. 2nd photo: the two-wheeler, side view.",
     "bike_proof_label": "Proof of bicycle",
-    "bike_proof_hint": "Purchase invoice, insurance certificate or rental contract of the bicycle.",
-    "bike_proof_required": "A proof of bicycle is required",
     "declaration_label": "I certify that I carry out my deliveries only with the vehicle declared above. Using another vehicle will lead to the suspension of my account.",
     "declaration_required": "You must certify that you only use the declared vehicle."
   },

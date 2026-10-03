@@ -1152,8 +1152,6 @@
     "vehicle_photos_hint_bicycle": "1ère photo : vous à côté de votre vélo, visage visible. 2ème photo : le vélo en entier, de profil.",
     "vehicle_photos_hint_motorbike": "1ère photo : l'arrière avec la plaque lisible. 2ème photo : le deux-roues de profil.",
     "bike_proof_label": "Justificatif du vélo",
-    "bike_proof_hint": "Facture d'achat, attestation d'assurance ou contrat de location du vélo.",
-    "bike_proof_required": "Le justificatif du vélo est obligatoire",
     "declaration_label": "Je certifie effectuer mes livraisons uniquement avec le véhicule déclaré ci-dessus. L'utilisation d'un autre véhicule entraîne la suspension de mon compte.",
     "declaration_required": "Vous devez certifier n'utiliser que le véhicule déclaré."
   },

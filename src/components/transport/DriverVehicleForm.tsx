@@ -55,7 +55,7 @@ export const useDriverVehicleForm = (initial: Partial<DriverVehicleFormState> = 
     (requirements.fixedCapacity != null || (!isNaN(capacity) && capacity > 0)) &&
     state.vehiclePhotos.length >= 2 &&
     (requirements.license !== 'required' || state.licensePhotos.length === 1) &&
-    state.vehicleDocPhotos.length === 1;
+    (requirements.vehicleDocument === 'none' || state.vehicleDocPhotos.length === 1);
 
   const set = (patch: Partial<DriverVehicleFormState>) => setState((prev) => ({ ...prev, ...patch }));
   const effectiveCapacity = requirements.fixedCapacity ?? capacity;
@@ -119,7 +119,7 @@ export const DriverVehicleForm = ({ state, onChange, requirements, insulatedBag 
   const photosHintKey = isBicycle
     ? 'driver_apply.vehicle_photos_hint_bicycle'
     : isMotorbike ? 'driver_apply.vehicle_photos_hint_motorbike' : 'driver_apply.vehicle_photos_hint';
-  const isBikeProof = requirements.vehicleDocument === 'bike_proof';
+  const needsVehicleDoc = requirements.vehicleDocument === 'registration';
 
   return (
     <View>
@@ -244,18 +244,22 @@ export const DriverVehicleForm = ({ state, onChange, requirements, insulatedBag 
         </>
       )}
 
-      {/* Document du véhicule : carte grise, ou justificatif du vélo */}
-      <Text variant="labelLarge" style={styles.sectionLabel}>
-        {t(isBikeProof ? 'driver_apply.bike_proof_label' : 'driver_apply.insurance_label')} *
-      </Text>
-      <Text variant="bodySmall" style={styles.hint}>
-        {t(isBikeProof ? 'driver_apply.bike_proof_hint' : 'driver_apply.insurance_hint')}
-      </Text>
-      <PhotoPickerGrid photos={state.vehicleDocPhotos} onPhotosChange={(p) => onChange({ vehicleDocPhotos: p })} maxPhotos={1} />
-      {state.vehicleDocPhotos.length === 0 && (
-        <Text variant="bodySmall" style={styles.errorHint}>
-          {t(isBikeProof ? 'driver_apply.bike_proof_required' : 'driver_apply.insurance_required')}
-        </Text>
+      {/* Document du véhicule (carte grise) : véhicules motorisés uniquement — rien n'est exigé pour un vélo */}
+      {needsVehicleDoc && (
+        <>
+          <Text variant="labelLarge" style={styles.sectionLabel}>
+            {t('driver_apply.insurance_label')} *
+          </Text>
+          <Text variant="bodySmall" style={styles.hint}>
+            {t('driver_apply.insurance_hint')}
+          </Text>
+          <PhotoPickerGrid photos={state.vehicleDocPhotos} onPhotosChange={(p) => onChange({ vehicleDocPhotos: p })} maxPhotos={1} />
+          {state.vehicleDocPhotos.length === 0 && (
+            <Text variant="bodySmall" style={styles.errorHint}>
+              {t('driver_apply.insurance_required')}
+            </Text>
+          )}
+        </>
       )}
     </View>
   );

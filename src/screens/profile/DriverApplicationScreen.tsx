@@ -277,7 +277,7 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
 
     let uploadedVehiclePhotos: string[];
     let uploadedLicense: string | undefined;
-    let uploadedVehicleDoc: string;
+    let uploadedVehicleDoc: string | undefined;
     let uploadedIdFront: string;
     let uploadedIdBack: string | undefined;
     let uploadedSelfie: string;
@@ -287,7 +287,10 @@ const ApplicationForm = ({ navigation }: { navigation: any }) => {
       setUploading(true);
       uploadedVehiclePhotos = await uploadMultipleImages(v.vehiclePhotos, token);
       if (sendLicense) uploadedLicense = (await uploadMultipleImages(v.licensePhotos, token))[0];
-      uploadedVehicleDoc = (await uploadMultipleImages(v.vehicleDocPhotos, token))[0];
+      // Vélo : aucun document du véhicule n'est demandé
+      if (requirements.vehicleDocument === 'registration' && v.vehicleDocPhotos.length > 0) {
+        uploadedVehicleDoc = (await uploadMultipleImages(v.vehicleDocPhotos, token))[0];
+      }
       uploadedIdFront = (await uploadMultipleImages(idFrontPhotos, token))[0];
       if (!isPassport && idBackPhotos.length > 0) {
         uploadedIdBack = (await uploadMultipleImages(idBackPhotos, token))[0];

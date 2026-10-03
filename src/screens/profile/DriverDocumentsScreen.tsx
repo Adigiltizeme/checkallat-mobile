@@ -148,7 +148,7 @@ export const DriverDocumentsScreen = ({ navigation }: any) => {
       const [vehiclePhotos, licenseUris, docUris, idFront, idBack, selfie] = await Promise.all([
         resolveUris(v.vehiclePhotos),
         resolveUris(requirements.license === 'none' ? [] : v.licensePhotos),
-        resolveUris(v.vehicleDocPhotos),
+        resolveUris(requirements.vehicleDocument === 'registration' ? v.vehicleDocPhotos : []),
         resolveUris(idFrontPhotos),
         resolveUris(isPassport ? [] : idBackPhotos),
         resolveUris(selfiePhotos),

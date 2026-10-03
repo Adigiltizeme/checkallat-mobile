@@ -343,7 +343,8 @@ export const transportApi = createApi({
         vehiclePlate: string;
         vehiclePhotos: string[];
         drivingLicense?: string;
-        vehicleInsurance: string;
+        /** Document du véhicule (carte grise) — absent pour un vélo */
+        vehicleInsurance?: string;
         idDocumentType: string;
         idDocumentFront: string;
         idDocumentBack?: string;
