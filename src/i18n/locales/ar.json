@@ -1736,7 +1736,8 @@
     "type_etisalat_wallet": "محفظة اتصالات",
     "type_paypal": "باي بال",
     "type_wise": "وايز (ترانسفيروايز)",
-    "type_lydia": "سوميريا (ليديا سابقاً)"
+    "type_lydia": "سوميريا (ليديا سابقاً)",
+    "type_expresso": "إي-موني (إكسبريسو)"
   },
   "onboarding": {
     "slide1_title": "مرحباً في CheckAll@t",

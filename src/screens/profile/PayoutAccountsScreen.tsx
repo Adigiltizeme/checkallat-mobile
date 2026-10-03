@@ -47,6 +47,7 @@ const ACCOUNT_TYPE_ICONS: Record<string, string> = {
   wave: '🌊',
   free_money: '📱',
   mtn_momo: '🟡',
+  expresso: '🟣',
   moov_money: '📱',
   stc_pay: '🔵',
   sadad: '💳',

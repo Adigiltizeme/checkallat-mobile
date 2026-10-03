@@ -1736,7 +1736,8 @@
     "type_etisalat_wallet": "Etisalat Wallet",
     "type_paypal": "PayPal",
     "type_wise": "Wise (TransferWise)",
-    "type_lydia": "Sumeria (ex-Lydia)"
+    "type_lydia": "Sumeria (ex-Lydia)",
+    "type_expresso": "E-Money (Expresso)"
   },
   "onboarding": {
     "slide1_title": "Bienvenue sur CheckAll@t",
