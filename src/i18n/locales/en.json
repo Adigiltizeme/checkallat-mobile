@@ -140,7 +140,9 @@
     "default": "Default",
     "save_as_default": "Set as default space",
     "clear_default": "Remove default space",
-    "confirm": "Continue"
+    "confirm": "Continue",
+    "role_courier": "Courier space",
+    "desc_courier": "Accept CheckAllPack deliveries"
   },
   "nav": {
     "home": "Home",
@@ -226,7 +228,8 @@
     "delete_account_error_active": "You still have orders or services in progress. Complete or cancel them before deleting your account.",
     "delete_account_error_payout": "A payout is pending on your account. It must be completed before deletion.",
     "delete_account_error_balance": "You have an unpaid balance (commission or cancellation fee). Please settle it before deleting your account.",
-    "delete_account_error_generic": "Your account could not be deleted. Please try again or contact support."
+    "delete_account_error_generic": "Your account could not be deleted. Please try again or contact support.",
+    "courier_badge": "Courier"
   },
   "addresses": {
     "title": "My addresses",
@@ -791,7 +794,8 @@
     "signature_saved_delivery_done": "Signature saved — delivery completed",
     "signature_save_error": "Unable to save the signature",
     "signature_instructions": "Ask the recipient to sign to confirm the delivery",
-    "signature_confirm_delivery": "Save & complete delivery"
+    "signature_confirm_delivery": "Save & complete delivery",
+    "no_available_requests_hint_courier": "New delivery requests will appear here as soon as a client places one."
   },
   "support": {
     "title": "Contact support",
@@ -901,7 +905,7 @@
     "title": "Home",
     "welcome": "Hello, {{name}}!",
     "hi": "Hello",
-    "greeting_label": "Welcome to",
+    "greeting_label": "Welcome to CheckAll@t",
     "services": "Our Services",
     "new_services": "New Services",
     "services_home": "Home Services",
@@ -953,7 +957,7 @@
     "cta_title": "Need a move?",
     "cta_sub": "Drivers available now near you",
     "cta_btn": "Book now",
-    "driver_cannot_book_transport": "As an active driver, you cannot place a transport request as a client.",
+    "driver_cannot_book_transport": "As an active driver, you cannot place a transport request as a client. CheckAllPack deliveries remain available.",
     "pro_cannot_book_own_category": "You cannot book a service in a category in which you are registered as a provider.",
     "become_provider_title": "Become a provider",
     "sectors_title": "Our sectors",
@@ -972,7 +976,8 @@
     "carousel_go_to": "Show sector {{number}}: {{title}}",
     "stat_providers": "Active providers",
     "stat_jobs": "Jobs done",
-    "stat_countries": "Countries"
+    "stat_countries": "Countries",
+    "courier_cannot_book_checkallpack": "As an active CheckAllPack courier, you cannot order a CheckAllPack delivery as a client. Transport and moving remain available."
   },
   "payment": {
     "title": "Payment",
@@ -1280,7 +1285,9 @@
     "extras_total_label": "Extras total",
     "pro_still_working": "The pro is still working — please wait",
     "payment_not_initialized_pro": "⚠️ Client has not completed payment — you cannot start until payment is finalized",
-    "cancel_confirm_no_fee": "The professional is already on the way or at your address. Do you still want to cancel?"
+    "cancel_confirm_no_fee": "The professional is already on the way or at your address. Do you still want to cancel?",
+    "pay_after_acceptance_notice": "In-app payment: you will pay as soon as a professional accepts your request. They will only set off after your payment.",
+    "pay_to_start_notice": "The professional has accepted your request. Pay now so they can set off: the amount stays on hold until the service is completed."
   },
   "chat": {
     "empty": "No messages yet. Start the conversation!",
@@ -1449,7 +1456,8 @@
     "category_handyman": "Handyman",
     "category_cleaning": "Cleaning",
     "category_carpentry": "Carpentry",
-    "category_air_condition": "Air Conditioning"
+    "category_air_condition": "Air Conditioning",
+    "awaiting_client_payment": "Waiting for the client's payment: you can start the trip as soon as they have paid. You will be notified."
   },
   "activity": {
     "page_title": "My activities",
@@ -2200,7 +2208,25 @@
     "status_processing": "Being paid",
     "status_paid": "Paid",
     "status_failed": "Failed",
-    "status_cancelled": "Cancelled (refunded)"
+    "status_cancelled": "Cancelled (refunded)",
+    "amounts_title": "Amounts",
+    "net_amount": "Net earnings",
+    "gross_amount": "Paid by the client",
+    "commission": "Platform commission ({{rate}}%)",
+    "payment_method": "Payment method",
+    "method_cash": "Cash",
+    "method_in_app": "In-app payment",
+    "estimate_note": "Estimate at the current commission rate: the amount becomes final once both parties have confirmed the payment.",
+    "net_caption": "net",
+    "net_estimated_caption": "estimated net",
+    "net_total": "Total net earnings",
+    "net_period": "Net earnings for the period",
+    "after_commission": "After platform commission",
+    "after_commission_with_estimate": "After platform commission · includes estimated amounts",
+    "acceptance": "Acceptance",
+    "no_rating": "No reviews yet",
+    "previous_period": "Previous period",
+    "next_period": "Next period"
   },
   "account_status": {
     "approved_title": "Application approved 🎉",
@@ -2298,5 +2324,19 @@
     "released_note": "{{amount}} held on your card will not be charged.",
     "cash_computed_pro": "Hourly job: the amount to collect is calculated automatically from the time spent and shown to the client.",
     "pro_hourly_hint": "Rate set by the platform. Duration planned by the client: {{hours}} h — ask for extra time if needed."
+  },
+  "completion_card": {
+    "title_pending": "Completion confirmation",
+    "title_done": "Completion confirmed",
+    "party_client": "Client",
+    "party_pro": "Professional",
+    "party_driver": "Driver",
+    "party_courier": "Courier",
+    "confirmed": "Confirmed",
+    "waiting": "Waiting",
+    "cash_title": "Declared cash amount",
+    "cash_match": "Both amounts match: payment validated.",
+    "cash_mismatch": "The declared amounts differ: our team is reviewing the situation.",
+    "cash_waiting": "Waiting for the other party's declaration."
   }
 }

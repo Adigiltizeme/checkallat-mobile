@@ -33,6 +33,10 @@ import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { HourlyWorkPanel } from '../../components/shared/HourlyWorkPanel';
+import { CompletionConfirmationCard } from '../../components/shared/CompletionConfirmationCard';
+import { EarningsBreakdownCard } from '../../components/shared/earnings/EarningsBreakdownCard';
+import { bidPriceLabel, isAwaitingClientPayment } from '../../utils/servicePricing';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 import { spacing } from '../../theme/spacing';
 import { entityCurrencyCode } from '../../config/currency';
 import { RootState } from '../../store';
@@ -206,6 +210,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const { formatWithCurrency } = useCurrencyFormatter();
   const { bookingId } = route.params;
 
   const { data: booking, isLoading, refetch } = useGetBookingByIdQuery(bookingId, {
@@ -405,8 +410,11 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
   const handleEnRoute = async () => {
     try {
       await markEnRoute(bookingId).unwrap();
-    } catch {
-      Alert.alert(t('common.error'), t('pro_space.error_update'));
+    } catch (err: any) {
+      Alert.alert(
+        t('common.error'),
+        t(err?.data?.code === 'BOOKING_PAYMENT_REQUIRED' ? 'pro_space.awaiting_client_payment' : 'pro_space.error_update'),
+      );
     }
   };
 
@@ -687,74 +695,39 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
         </View>
       )}
 
-      {/* Earnings / escrow section */}
+      {/* Gains nets du prestataire (calculés par le serveur) — même présentation que pour les chauffeurs */}
+      {(booking as any).earnings && !isPending && status !== 'cancelled' && status !== 'rejected' && (
+        <EarningsBreakdownCard earnings={(booking as any).earnings} />
+      )}
+
+      {/* Séquestre du paiement in-app */}
       {payment && (
         <View style={[styles.card, styles.escrowCard]}>
           <Text style={styles.cardTitle}>{t('payment.escrow_status_title')}</Text>
           {(() => {
             const info = ESCROW_MAP[payment.escrowStatus] ?? ESCROW_MAP.pending;
             return (
-              <View>
-                <Text style={[styles.escrowStatus, { color: info.color }]}>
-                  {info.icon}  {t(info.key)}
-                </Text>
-                {payment.proNetAmount && (
-                  <View style={[styles.detailRow, { marginTop: spacing.xs }]}>
-                    <Icon name="cash" size={18} color={colors.success} />
-                    <Text style={[styles.detailText, { color: colors.success, fontWeight: '700' }]}>
-                      {t('driver.net_amount_label')}: {payment.proNetAmount} {bookingCurrency}
-                    </Text>
-                  </View>
-                )}
-              </View>
+              <Text style={[styles.escrowStatus, { color: info.color }]}>
+                {info.icon}  {t(info.key)}
+              </Text>
             );
           })()}
         </View>
       )}
 
-      {/* Completion confirmations — visible dès in_progress */}
+      {/* Double confirmation de fin — visible dès in_progress */}
       {(isInProgress || status === 'completed') && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t('booking.confirm_completion_title')}</Text>
-          <View style={styles.detailRow}>
-            <Icon
-              name={(booking as any).proConfirmedCompletion ? 'check-circle' : 'clock-outline'}
-              size={18}
-              color={(booking as any).proConfirmedCompletion ? colors.success : tokens.text.secondary}
-            />
-            <Text style={styles.detailText}>
-              {t('booking.pro_confirmed')}{' '}
-              {(booking as any).proConfirmedCompletion ? '✓' : '—'}
-            </Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Icon
-              name={(booking as any).clientConfirmedCompletion ? 'check-circle' : 'clock-outline'}
-              size={18}
-              color={(booking as any).clientConfirmedCompletion ? colors.success : tokens.text.secondary}
-            />
-            <Text style={styles.detailText}>
-              {t('booking.client_confirmed')}{' '}
-              {(booking as any).clientConfirmedCompletion ? '✓' : '—'}
-            </Text>
-          </View>
-          {/* Cash anti-fraud amounts */}
-          {isCash && (booking as any).cashAmountDeclaredByPro != null && (
-            <View style={[styles.detailRow, { marginTop: spacing.xs }]}>
-              <Icon name="cash" size={18} color={
-                (booking as any).cashPaymentStatus === 'disputed' ? colors.error :
-                (booking as any).cashPaymentStatus === 'confirmed' ? colors.success : tokens.text.secondary
-              } />
-              <Text style={[styles.detailText, { fontSize: 12 }]}>
-                {t('booking.cash_declared_pro')}: {(booking as any).cashAmountDeclaredByPro} {bookingCurrency}
-                {(booking as any).cashAmountDeclaredByClient != null &&
-                  `  •  ${t('booking.cash_declared_client')}: ${(booking as any).cashAmountDeclaredByClient} ${bookingCurrency}`}
-                {(booking as any).cashPaymentStatus === 'disputed' && '  ⚠️'}
-                {(booking as any).cashPaymentStatus === 'confirmed' && '  ✓'}
-              </Text>
-            </View>
-          )}
-        </View>
+        <CompletionConfirmationCard
+          providerRole="pro"
+          viewer="provider"
+          clientConfirmed={!!(booking as any).clientConfirmedCompletion}
+          providerConfirmed={!!(booking as any).proConfirmedCompletion}
+          isCash={isCash}
+          declaredByClient={(booking as any).cashAmountDeclaredByClient}
+          declaredByProvider={(booking as any).cashAmountDeclaredByPro}
+          cashStatus={(booking as any).cashPaymentStatus}
+          currency={bookingCurrency}
+        />
       )}
 
       {/* Cancel form — raisons préétablies */}
@@ -861,7 +834,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
               ) : (
                 <Text style={{ color: tokens.text.secondary, fontSize: 13 }}>
                   {t('pro_space.bid_submitted_waiting', {
-                    price: `${myExistingBid.proposedPrice} ${bookingCurrency}`,
+                    price: bidPriceLabel(myExistingBid, booking as any, (n) => formatWithCurrency(n, bookingCurrency), t),
                   })}
                 </Text>
               )}
@@ -977,7 +950,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
                 ) : (
                   <Text style={{ color: tokens.text.secondary, fontSize: 13 }}>
                     {t('pro_space.bid_submitted_waiting', {
-                      price: `${myExistingBid.proposedPrice} ${bookingCurrency}`,
+                      price: bidPriceLabel(myExistingBid, booking as any, (n) => formatWithCurrency(n, bookingCurrency), t),
                     })}
                   </Text>
                 )}
@@ -1078,9 +1051,20 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
         </>
       )}
 
+      {/* Accepted, paiement in-app pas encore confirmé : pas de départ possible */}
+      {isAccepted && isAwaitingClientPayment(booking as any) && (
+        <View style={[styles.card, { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderColor: colors.warning }]}>
+          <Icon name="credit-card-clock-outline" size={22} color={colors.warning} />
+          <Text style={{ color: tokens.text.primary, fontSize: 14, flex: 1, lineHeight: 20 }}>
+            {t('pro_space.awaiting_client_payment')}
+          </Text>
+        </View>
+      )}
+
       {/* Accepted — start navigation */}
       {isAccepted && (
         <View>
+          {!isAwaitingClientPayment(booking as any) && (
           <TouchableOpacity
             style={[styles.actionBtnNavigation, { marginBottom: spacing.sm }, isEnRouteLoading && { opacity: 0.5 }]}
             onPress={handleEnRoute}
@@ -1091,6 +1075,7 @@ export const ProBookingDetailsScreen = ({ route, navigation }: Props) => {
               {isEnRouteLoading ? t('common.loading') : t('pro_navigation.start_route')}
             </Text>
           </TouchableOpacity>
+          )}
           <View style={styles.actionsRow}>
             <TouchableOpacity
               style={[styles.actionBtnSecondary, { flex: 1 }, isCancelling && { opacity: 0.5 }]}

@@ -38,6 +38,9 @@ import { spacing } from '../../theme/spacing';
 import { useCancellationPolicy } from '../../hooks/useCancellationPolicy';
 import { AutoConfirmNotice } from '../../components/shared/AutoConfirmNotice';
 import { HourlyWorkPanel } from '../../components/shared/HourlyWorkPanel';
+import { CompletionConfirmationCard } from '../../components/shared/CompletionConfirmationCard';
+import { bidPriceLabel } from '../../utils/servicePricing';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
 
 type Props = StackScreenProps<HomeStackParamList, 'BookingDetails'>;
 
@@ -288,6 +291,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const { formatWithCurrency } = useCurrencyFormatter();
   const cancellationPolicy = useCancellationPolicy();
   const { bookingId } = route.params;
 
@@ -554,6 +558,9 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
     );
   };
 
+  const bidPrice = (bid: any) =>
+    bidPriceLabel(bid, booking as any, (n) => (bookingCurrency ? formatWithCurrency(n, bookingCurrency) : `${n}`), t);
+
   const handleAcceptBid = (bid: any) => {
     const proName = bid.pro?.user
       ? `${bid.pro.user.firstName} ${bid.pro.user.lastName}`
@@ -562,7 +569,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
       t('booking.confirm_accept_bid_title'),
       t('booking.confirm_accept_bid_msg', {
         proName,
-        price: `${bid.proposedPrice} ${bookingCurrency}`,
+        price: bidPrice(bid),
       }),
       [
         { text: t('common.cancel'), style: 'cancel' },
@@ -890,15 +897,20 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
         </View>
       )}
 
-      {/* Pending in-app payment notice */}
+      {/* Paiement in-app : quand payer, et pourquoi */}
       {(booking as any).paymentMethod === 'in_app' && !payment && status === 'pending' && (
         <View style={[styles.card, styles.warningCard]}>
-          <Text style={styles.warningText}>⚠️ {t('payment.pending_payment_notice')}</Text>
+          <Text style={styles.warningText}>{t('booking.pay_after_acceptance_notice')}</Text>
+        </View>
+      )}
+      {(booking as any).paymentMethod === 'in_app' && !payment && ['accepted', 'en_route', 'arrived'].includes(status) && (
+        <View style={[styles.card, styles.warningCard]}>
+          <Text style={styles.warningText}>{t('booking.pay_to_start_notice')}</Text>
         </View>
       )}
 
       {/* Bouton Payer maintenant — visible quand le pro est assigné et le prix validé */}
-      {(booking as any).paymentMethod === 'in_app' && !payment && status === 'accepted' && (
+      {(booking as any).paymentMethod === 'in_app' && !payment && ['accepted', 'en_route', 'arrived'].includes(status) && (
         <TouchableOpacity
           style={[styles.payNowBtn, isPreparingPayment && { opacity: 0.6 }]}
           onPress={handlePayNow}
@@ -914,45 +926,17 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
 
       {/* Completion confirmations — visible dès in_progress */}
       {(isInProgress || status === 'completed') && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{t('booking.confirm_completion_title')}</Text>
-          <View style={styles.detailRow}>
-            <Icon
-              name={clientConfirmed ? 'check-circle' : 'clock-outline'}
-              size={18}
-              color={clientConfirmed ? colors.success : tokens.text.secondary}
-            />
-            <Text style={styles.detailText}>
-              {t('booking.client_confirmed')}{' '}{clientConfirmed ? '✓' : '—'}
-            </Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Icon
-              name={proConfirmed ? 'check-circle' : 'clock-outline'}
-              size={18}
-              color={proConfirmed ? colors.success : tokens.text.secondary}
-            />
-            <Text style={styles.detailText}>
-              {t('booking.pro_confirmed')}{' '}{proConfirmed ? '✓' : '—'}
-            </Text>
-          </View>
-          {/* Cash anti-fraud amounts */}
-          {isCash && (booking as any).cashAmountDeclaredByClient != null && (
-            <View style={[styles.detailRow, { marginTop: spacing.xs }]}>
-              <Icon name="cash" size={18} color={
-                (booking as any).cashPaymentStatus === 'disputed' ? colors.error :
-                (booking as any).cashPaymentStatus === 'confirmed' ? colors.success : tokens.text.secondary
-              } />
-              <Text style={[styles.detailText, { fontSize: 12 }]}>
-                {t('booking.cash_declared_client')}: {(booking as any).cashAmountDeclaredByClient} {bookingCurrency}
-                {(booking as any).cashAmountDeclaredByPro != null &&
-                  `  •  ${t('booking.cash_declared_pro')}: ${(booking as any).cashAmountDeclaredByPro} ${bookingCurrency}`}
-                {(booking as any).cashPaymentStatus === 'disputed' && '  ⚠️'}
-                {(booking as any).cashPaymentStatus === 'confirmed' && '  ✓'}
-              </Text>
-            </View>
-          )}
-        </View>
+        <CompletionConfirmationCard
+          providerRole="pro"
+          viewer="client"
+          clientConfirmed={clientConfirmed}
+          providerConfirmed={proConfirmed}
+          isCash={isCash}
+          declaredByClient={(booking as any).cashAmountDeclaredByClient}
+          declaredByProvider={(booking as any).cashAmountDeclaredByPro}
+          cashStatus={(booking as any).cashPaymentStatus}
+          currency={bookingCurrency}
+        />
       )}
 
       {/* Cancel form */}
@@ -1038,8 +1022,7 @@ export const BookingDetailsScreen = ({ route, navigation }: Props) => {
                     ) : null}
                   </View>
                   <View style={{ alignItems: 'flex-end', gap: 6 }}>
-                    <Text style={styles.bidPrice}>{bid.proposedPrice}</Text>
-                    <Text style={styles.bidCurrency}>{bookingCurrency}</Text>
+                    <Text style={[styles.bidPrice, bid.proposedPrice == null && { fontSize: 14 }]}>{bidPrice(bid)}</Text>
                     <TouchableOpacity
                       style={[styles.bidAcceptBtn, isAcceptingBid && { opacity: 0.5 }]}
                       onPress={() => handleAcceptBid(bid)}

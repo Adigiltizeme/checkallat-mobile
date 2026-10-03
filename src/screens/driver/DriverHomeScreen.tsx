@@ -35,6 +35,7 @@ import { CountrySelectorRow } from '../../components/shared/CountrySelectorRow';
 import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadges';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useBeatSound } from '../../hooks/useBeatSound';
+import { useDriverIdentity } from '../../hooks/useDriverIdentity';
 import { TransportRequest, STATUS_COLORS, TransportStatus } from '../../types/transport';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, {
@@ -179,6 +180,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
   }), [tokens]);
 
   const { t, i18n } = useTranslation();
+  const { icon: vehicleIcon } = useDriverIdentity();
   const { format: formatCurrency } = useCurrencyFormatter();
   const { data: deliveries, isLoading, isFetching, refetch } = useGetMyDeliveriesQuery(undefined, {
     pollingInterval: 8000,
@@ -668,7 +670,7 @@ export const DriverHomeScreen = ({ navigation }: Props) => {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="truck-fast-outline" size={80} color={tokens.text.secondary} />
+            <Icon name={vehicleIcon} size={80} color={tokens.text.secondary} />
             <Text variant="titleMedium" style={styles.emptyText}>{t('driver.no_deliveries')}</Text>
             <Text variant="bodyMedium" style={styles.emptySubtext}>
               {t('driver.no_deliveries_hint')}

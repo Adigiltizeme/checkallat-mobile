@@ -1,6 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
+import { NotificationBell } from '../components/shared/NotificationBell';
 import { DriverStackParamList } from './types';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { defaultStackScreenOptions } from './stackOptions';
@@ -35,8 +37,9 @@ export const DriverStack = () => {
       <Stack.Screen
         name="DriverHome"
         component={DriverHomeScreen}
-        options={{ title: t('driver.home_title') }}
+        options={{ title: t('driver.home_title'), headerRight: () => <NotificationBell /> }}
       />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: t('notifications.title') }} />
       <Stack.Screen
         name="DriverAvailableRequests"
         component={DriverAvailableRequestsScreen}

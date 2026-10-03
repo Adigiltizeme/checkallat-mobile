@@ -1,6 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
+import { NotificationBell } from '../components/shared/NotificationBell';
 import { ProStackParamList } from './types';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { proStackScreenOptions } from './stackOptions';
@@ -30,8 +32,9 @@ export const ProStack = () => {
       <Stack.Screen
         name="ProHome"
         component={ProHomeScreen}
-        options={{ title: t('pro_space.title') }}
+        options={{ title: t('pro_space.title'), headerRight: () => <NotificationBell /> }}
       />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: t('notifications.title') }} />
       <Stack.Screen
         name="ProBookingDetails"
         component={ProBookingDetailsScreen}

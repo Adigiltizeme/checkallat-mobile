@@ -27,6 +27,7 @@ import {
   useConfirmBookingCompletionMutation,
 } from '../../store/api/bookingsApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { isAwaitingClientPayment } from '../../utils/servicePricing';
 import { WEB_URL } from '../../config/api';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { entityCurrencyCode } from '../../config/currency';
@@ -272,7 +273,15 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
   };
 
   const handleEnRoute = async () => {
-    await markEnRoute(bookingId);
+    try {
+      await markEnRoute(bookingId).unwrap();
+    } catch (err: any) {
+      Alert.alert(
+        t('common.error'),
+        t(err?.data?.code === 'BOOKING_PAYMENT_REQUIRED' ? 'pro_space.awaiting_client_payment' : 'pro_space.error_update'),
+      );
+      return;
+    }
     startLocationSharing();
     refetch();
   };
@@ -603,7 +612,12 @@ export const BookingTrackingScreen = ({ route, navigation }: Props) => {
             {/* Boutons action pro */}
             {role === 'pro' && (
               <View style={styles.actionRow}>
-                {booking.status === 'accepted' && (
+                {booking.status === 'accepted' && isAwaitingClientPayment(booking as any) && (
+                  <Text style={{ flex: 1, textAlign: 'center', color: tokens.text.secondary, fontSize: 13 }}>
+                    {t('pro_space.awaiting_client_payment')}
+                  </Text>
+                )}
+                {booking.status === 'accepted' && !isAwaitingClientPayment(booking as any) && (
                   <TouchableOpacity
                     style={styles.actionBtn}
                     onPress={handleEnRoute}

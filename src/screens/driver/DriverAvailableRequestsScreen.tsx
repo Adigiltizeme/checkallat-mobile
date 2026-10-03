@@ -19,6 +19,7 @@ import {
   useRejectRequestMutation,
 } from '../../store/api/transportApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { useDriverIdentity } from '../../hooks/useDriverIdentity';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -29,6 +30,7 @@ type Props = StackScreenProps<DriverStackParamList, 'DriverAvailableRequests'>;
 
 export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
   const { t, i18n } = useTranslation();
+  const { icon: vehicleIcon, isCourier } = useDriverIdentity();
   const { formatWithCurrency } = useCurrencyFormatter();
   const { tokens } = useAppTheme();
 
@@ -321,9 +323,11 @@ export const DriverAvailableRequestsScreen = ({ navigation }: Props) => {
       }
       ListEmptyComponent={
         <View style={styles.emptyContainer}>
-          <Icon name="truck-check-outline" size={80} color={tokens.text.secondary} />
+          <Icon name={vehicleIcon} size={80} color={tokens.text.secondary} />
           <Text variant="titleMedium" style={styles.emptyTitle}>{t('driver.no_available_requests')}</Text>
-          <Text variant="bodyMedium" style={styles.emptySubtext}>{t('driver.no_available_requests_hint')}</Text>
+          <Text variant="bodyMedium" style={styles.emptySubtext}>
+            {t(isCourier ? 'driver.no_available_requests_hint_courier' : 'driver.no_available_requests_hint')}
+          </Text>
         </View>
       }
     />

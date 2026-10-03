@@ -82,6 +82,30 @@ export function computeServicePrice(
   };
 }
 
+/**
+ * Prix d'une offre de prestataire tel qu'affiché au client et au prestataire :
+ * prix proposé, sinon tarif horaire de la plateforme (à l'heure), sinon prix affiché à la réservation.
+ */
+export function bidPriceLabel(
+  bid: { proposedPrice?: number | null } | null | undefined,
+  booking: { pricingMode?: string | null; hourlyRate?: number | null; callOutFee?: number | null; currency?: string | null; estimatedPrice?: number | null } | null | undefined,
+  money: (amount: number) => string,
+  t: (k: string, o?: any) => string,
+): string {
+  if (bid?.proposedPrice != null) return money(bid.proposedPrice);
+  if (booking?.pricingMode === 'hourly' && booking.hourlyRate) {
+    const rate = t('service_pricing.rate_badge', { rate: booking.hourlyRate, currency: booking.currency ?? '' });
+    return booking.callOutFee
+      ? `${rate} + ${t('service_pricing.call_out_short', { amount: money(booking.callOutFee) })}`
+      : rate;
+  }
+  return money(booking?.estimatedPrice ?? 0);
+}
+
+/** Paiement in-app pas encore confirmé : le prestataire ne peut ni partir ni commencer */
+export const isAwaitingClientPayment = (booking: { paymentMethod?: string | null; paymentId?: string | null } | null | undefined): boolean =>
+  booking?.paymentMethod === 'in_app' && !booking?.paymentId;
+
 /** « 1 h 30 » / « 45 min » */
 export function formatDuration(minutes: number, t: (k: string, o?: any) => string): string {
   const h = Math.floor(minutes / 60);

@@ -11,16 +11,19 @@ import { setActiveRole, UserRole } from '../../store/slices/authSlice';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
+import { useDriverIdentity } from '../../hooks/useDriverIdentity';
 
 export const RoleSelectorScreen = () => {
   const { t } = useTranslation();
   const { tokens } = useAppTheme();
+  const driverIdentity = useDriverIdentity();
 
-  const ROLE_CONFIG: Record<UserRole, { icon: string; color: string }> = {
-    client:  { icon: 'account',        color: tokens.primary },
-    driver:  { icon: 'truck-delivery', color: '#F59E0B' },
-    pro:     { icon: 'briefcase',      color: '#10B981' },
-    seller:  { icon: 'store',          color: '#8B5CF6' },
+  // Un livreur CheckAllPack (moto, vélo) voit « Espace Livreur » et son véhicule
+  const ROLE_CONFIG: Record<UserRole, { icon: string; color: string; key: string }> = {
+    client:  { icon: 'account',            color: tokens.primary, key: 'client' },
+    driver:  { icon: driverIdentity.icon,  color: '#F59E0B',      key: driverIdentity.roleKey },
+    pro:     { icon: 'briefcase',          color: '#10B981',      key: 'pro' },
+    seller:  { icon: 'store',              color: '#8B5CF6',      key: 'seller' },
   };
 
   const styles = useMemo(() => StyleSheet.create({
@@ -61,17 +64,16 @@ export const RoleSelectorScreen = () => {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  roleText: {
+    flex: 1,
+    gap: 2,
+  },
   roleLabel: {
     fontWeight: '600',
-    flex: 1,
     color: tokens.text.primary,
   },
   roleDesc: {
     color: tokens.text.secondary,
-    flex: 1,
-    position: 'absolute',
-    bottom: spacing.sm,
-    left: 92,
   },
   defaultBadge: {
     backgroundColor: tokens.primary + '20',
@@ -139,12 +141,14 @@ const dispatch = useDispatch();
               <View style={[styles.iconCircle, { backgroundColor: cfg.color + '20' }]}>
                 <Icon name={cfg.icon} size={36} color={cfg.color} />
               </View>
-              <Text variant="titleMedium" style={styles.roleLabel}>
-                {t(`role_selector.role_${role}`)}
-              </Text>
-              <Text variant="bodySmall" style={styles.roleDesc}>
-                {t(`role_selector.desc_${role}`)}
-              </Text>
+              <View style={styles.roleText}>
+                <Text variant="titleMedium" style={styles.roleLabel}>
+                  {t(`role_selector.role_${cfg.key}`)}
+                </Text>
+                <Text variant="bodySmall" style={styles.roleDesc}>
+                  {t(`role_selector.desc_${cfg.key}`)}
+                </Text>
+              </View>
               {isDefault && (
                 <View style={styles.defaultBadge}>
                   <Text style={styles.defaultBadgeText}>{t('role_selector.default')}</Text>

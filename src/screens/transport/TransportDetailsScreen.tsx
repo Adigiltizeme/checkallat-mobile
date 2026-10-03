@@ -28,6 +28,9 @@ import {
 } from '../../types/transport';
 import { useCancellationPolicy } from '../../hooks/useCancellationPolicy';
 import { AutoConfirmNotice } from '../../components/shared/AutoConfirmNotice';
+import { CompletionConfirmationCard } from '../../components/shared/CompletionConfirmationCard';
+import { TRANSPORT_CONTACT_STATUSES } from '../../types/transport-status';
+import { isCourierVehicle, vehicleEmoji } from '../../utils/driverIdentity';
 
 type Props = StackScreenProps<any, 'TransportDetails'>;
 
@@ -390,8 +393,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
   const [cancelRequest, { isLoading: isCancelling }] = useCancelTransportMutation();
   const isDriver = useSelector((state: RootState) => state.auth.isDriver);
 
-  const CONTACT_STATUSES = ['accepted', 'heading_to_pickup', 'arrived_at_pickup', 'loading', 'in_transit', 'arrived_at_delivery', 'unloading'];
-  const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && (request as any).driver);
+  const canContact = !!(request && TRANSPORT_CONTACT_STATUSES.includes(request.status as any) && (request as any).driver);
   const driverName = (request as any)?.driver?.user
     ? `${(request as any).driver.user.firstName} ${(request as any).driver.user.lastName}`
     : '';
@@ -676,7 +678,7 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
                   </View>
                 )}
                 <Text variant="bodySmall" style={styles.driverDetail}>
-                  {['motorbike', 'bicycle'].includes((request as any).driver.vehicleType) ? '🛵' : '🚛'}{' '}
+                  {vehicleEmoji((request as any).driver.vehicleType)}{' '}
                   {t('transport.vehicle_' + (request as any).driver.vehicleType)}
                   {(request as any).driver.vehiclePlate ? `  ·  🔖 ${(request as any).driver.vehiclePlate}` : ''}
                 </Text>
@@ -967,6 +969,22 @@ export const TransportDetailsScreen = ({ route, navigation }: Props) => {
             </Text>
           </Card.Content>
         </Card>
+      )}
+
+      {/* Double confirmation de fin (client + chauffeur / livreur) */}
+      {request.status === 'completed' && (
+        <CompletionConfirmationCard
+          providerRole={(request as any).vehicleCategory === 'courier' || isCourierVehicle((request as any).driver?.vehicleType) ? 'courier' : 'driver'}
+          viewer={isDriver ? 'provider' : 'client'}
+          clientConfirmed={!!request.clientConfirmedCompletion}
+          providerConfirmed={!!request.driverConfirmedCompletion}
+          isCash={request.paymentMethod === 'cash'}
+          declaredByClient={(request as any).cashAmountDeclaredByClient}
+          declaredByProvider={(request as any).cashAmountDeclaredByDriver}
+          cashStatus={(request as any).cashPaymentStatus}
+          currency={(request as any).currency}
+          style={{ marginHorizontal: 0 }}
+        />
       )}
 
       {/* Confirmation notes */}

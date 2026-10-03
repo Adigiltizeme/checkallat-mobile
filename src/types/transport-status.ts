@@ -14,6 +14,11 @@ export type TransportStatus =
   | 'completed'         // Livraison terminée
   | 'cancelled';        // Annulé
 
+/** Course en cours : client et chauffeur / livreur peuvent s'appeler et s'écrire (même liste que le serveur) */
+export const TRANSPORT_CONTACT_STATUSES: TransportStatus[] = [
+  'accepted', 'heading_to_pickup', 'arrived_at_pickup', 'loading', 'in_transit', 'arrived_at_delivery', 'unloading',
+];
+
 export interface StatusInfo {
   status: TransportStatus;
   label: string;

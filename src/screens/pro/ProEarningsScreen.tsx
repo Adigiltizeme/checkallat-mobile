@@ -1,134 +1,33 @@
-import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Text, Card, ActivityIndicator } from 'react-native-paper';
+import React, { useMemo } from 'react';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import { TFunction } from 'i18next';
 import { useSelector } from 'react-redux';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useStripe } from '@stripe/stripe-react-native';
-import { isExpoGo } from '../../utils/environment';
 import { colors } from '../../theme/colors';
-import { useAppTheme } from '../../theme/ThemeProvider';
 import { getLocalizedName } from '../../utils/localize';
-import { spacing } from '../../theme/spacing';
 import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
-import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { ProStackParamList } from '../../navigation/types';
 import { useGetProBookingsQuery } from '../../store/api/bookingsApi';
-import { useGetProStatsQuery, usePayProCommissionMutation, useConfirmProCommissionPaymentMutation } from '../../store/api/prosApi';
+import { useGetProStatsQuery } from '../../store/api/prosApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { RootState } from '../../store';
-import { PayoutBalanceCard } from '../../components/shared/PayoutBalanceCard';
-import { payoutsApi } from '../../store/api/payoutsApi';
-import { useDispatch } from 'react-redux';
+import { EarningsDashboard } from '../../components/shared/earnings/EarningsDashboard';
+import { EarningsStatCard } from '../../components/shared/earnings/EarningsStatCard';
+import { EarningListItem } from '../../components/shared/earnings/EarningListItem';
+import type { Earnings } from '../../types/earnings';
 
-type PeriodMode = 'daily' | 'weekly' | 'monthly' | 'all';
 type Props = StackScreenProps<ProStackParamList, 'ProEarnings'>;
 
-interface PeriodRange { start: Date; end: Date; label: string; sublabel?: string }
-
-
-const getPeriodRange = (mode: PeriodMode, offset: number, t: TFunction, locale: string): PeriodRange => {
-  const now = new Date();
-  if (mode === 'daily') {
-    const d = new Date(now); d.setDate(d.getDate() + offset);
-    const start = new Date(d); start.setHours(0, 0, 0, 0);
-    const end = new Date(d); end.setHours(23, 59, 59, 999);
-    const label = offset === 0 ? t('driver.earnings_today') : offset === -1 ? t('driver.earnings_yesterday') : d.toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'short' });
-    return { start, end, label, sublabel: d.toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' }) };
-  }
-  if (mode === 'weekly') {
-    const day = now.getDay();
-    const diffToMon = day === 0 ? -6 : 1 - day;
-    const mon = new Date(now); mon.setDate(now.getDate() + diffToMon + offset * 7); mon.setHours(0, 0, 0, 0);
-    const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23, 59, 59, 999);
-    const label = offset === 0 ? t('driver.earnings_this_week') : offset === -1 ? t('driver.earnings_last_week') : t('driver.earnings_week_of', { date: mon.toLocaleDateString(locale, { day: '2-digit', month: 'short' }) });
-    const sublabel = `${mon.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })} → ${sun.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}`;
-    return { start: mon, end: sun, label, sublabel };
-  }
-  if (mode === 'monthly') {
-    const start = new Date(now.getFullYear(), now.getMonth() + offset, 1); start.setHours(0, 0, 0, 0);
-    const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0); end.setHours(23, 59, 59, 999);
-    const raw = start.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
-    const label = raw.charAt(0).toUpperCase() + raw.slice(1);
-    const sublabel = `${start.toLocaleDateString(locale, { day: '2-digit', month: 'short' })} → ${end.toLocaleDateString(locale, { day: '2-digit', month: 'short' })}`;
-    return { start, end, label, sublabel: offset === 0 ? t('driver.earnings_this_month') : sublabel };
-  }
-  return { start: new Date(0), end: new Date(9999, 11, 31), label: t('common.all'), sublabel: t('driver.earnings_since_start') };
-};
+interface BookingItem {
+  id: string;
+  date: string | null;
+  earnings?: Earnings;
+  raw: any;
+}
 
 export const ProEarningsScreen = ({ navigation }: Props) => {
-  const { tokens } = useAppTheme();
-
-  const styles = useMemo(() => StyleSheet.create({
-  container: { flex: 1, backgroundColor: tokens.background },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-
-  tabsContainer: { flexDirection: 'row', backgroundColor: tokens.backgroundAlt, borderRadius: 10, padding: 4, marginBottom: spacing.md },
-  tab: { flex: 1, paddingVertical: spacing.xs, paddingHorizontal: 4, borderRadius: 8, alignItems: 'center' },
-  tabActive: { backgroundColor: tokens.card, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
-  tabText: { fontSize: 11, color: tokens.text.secondary, fontWeight: '500', textAlign: 'center' },
-  tabTextActive: { color: tokens.primary, fontWeight: '700' },
-
-  periodNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: tokens.card, borderRadius: 10, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, marginBottom: spacing.md, elevation: 2 },
-  navArrow: { padding: 4 },
-  navArrowDisabled: { opacity: 0.3 },
-  periodLabelContainer: { flex: 1, alignItems: 'center' },
-  periodLabel: { fontSize: 15, fontWeight: '700', color: tokens.text.primary, textAlign: 'center' },
-  periodSublabel: { fontSize: 12, color: tokens.text.secondary, marginTop: 2, textAlign: 'center' },
-
-  totalCard: { marginBottom: spacing.md, backgroundColor: tokens.primary, elevation: 4 },
-  totalLabel: { color: colors.white, marginBottom: spacing.xs },
-  totalAmount: { color: colors.white, fontWeight: 'bold', marginBottom: spacing.xs },
-  totalSubtext: { color: 'rgba(255,255,255,0.8)' },
-
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
-  statCard: { width: '48%', backgroundColor: tokens.card, elevation: 2 },
-  clickableCard: { backgroundColor: 'transparent', elevation: 0 },
-  statContent: { alignItems: 'center', paddingVertical: spacing.md },
-  statNumber: { fontWeight: 'bold', marginTop: spacing.xs },
-  statLabel: { color: tokens.text.secondary, marginTop: spacing.xs, textAlign: 'center' },
-  viewReviewsText: { color: tokens.primary, marginTop: spacing.xs, textAlign: 'center', fontSize: 12 },
-
-  recentSection: { marginTop: spacing.md },
-  sectionTitle: { fontWeight: 'bold', marginBottom: spacing.md },
-  emptyCard: { backgroundColor: tokens.card, elevation: 2 },
-  emptyContent: { alignItems: 'center', paddingVertical: spacing.xl },
-  emptyText: { color: tokens.text.secondary, marginTop: spacing.md },
-  earningCard: { marginBottom: spacing.sm, backgroundColor: tokens.card, elevation: 2 },
-  earningHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm },
-  earningInfo: { flex: 1 },
-  earningTitle: { fontWeight: 'bold', marginBottom: 2 },
-  earningDate: { color: tokens.text.secondary, fontSize: 12 },
-  earningAmount: { fontWeight: 'bold', color: colors.success },
-  earningMeta: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: 6 },
-  earningDetail: { flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 },
-  earningDetailText: { color: tokens.text.secondary, fontSize: 12, flexShrink: 1 },
-
-  commissionAlert: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    backgroundColor: '#FFF8E1',
-    borderRadius: 10,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.warning,
-  },
-  commissionAlertTitle: { fontSize: 14, fontWeight: '700', color: '#7B5800', marginBottom: 2 },
-  commissionAlertText: { fontSize: 13, color: '#7B5800', lineHeight: 18 },
-  commissionPayButton: { marginTop: spacing.sm, alignSelf: 'flex-start' },
-}), [tokens]);
-
   const { t, i18n } = useTranslation();
-  const dispatch = useDispatch();
-  const { format: formatCurrencyDefault, formatWithCurrency, currencyCode: activeCurrencyCode } = useCurrencyFormatter();
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const pro = useSelector((state: RootState) => (state.auth.user as any)?.pro);
-  const proId: string = pro?.id ?? '';
+  const { currencyCode: activeCurrencyCode } = useCurrencyFormatter();
+  const proId: string = useSelector((state: RootState) => (state.auth.user as any)?.pro?.id ?? '');
 
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useGetProStatsQuery(proId, {
     pollingInterval: 30_000,
@@ -142,311 +41,79 @@ export const ProEarningsScreen = ({ navigation }: Props) => {
   });
   useRefetchOnFocus(refetch);
   useRefetchOnFocus(refetchStats);
-  const [payProCommission, { isLoading: payingCommission }] = usePayProCommissionMutation();
-  const [confirmProCommissionPayment] = useConfirmProCommissionPaymentMutation();
-  const [commissionPaid, setCommissionPaid] = useState(false);
-
-  const handlePayCommissionOnline = async () => {
-    if (isExpoGo) {
-      Alert.alert(t('common.error'), t('payment.dev_build_required'));
-      return;
-    }
-    try {
-      const result = await payProCommission().unwrap();
-      const { error: initError } = await initPaymentSheet({
-        merchantDisplayName: 'CheckAll@t',
-        paymentIntentClientSecret: result.clientSecret,
-        allowsDelayedPaymentMethods: false,
-      });
-      if (initError) { Alert.alert(t('common.error'), initError.message); return; }
-      const { error: payError } = await presentPaymentSheet();
-      if (payError) {
-        if (payError.code !== 'Canceled') Alert.alert(t('common.error'), payError.message);
-        return;
-      }
-      // Confirmation immédiate côté backend (sans attendre le webhook Stripe)
-      await confirmProCommissionPayment({ paymentIntentId: result.paymentIntentId }).unwrap();
-      setCommissionPaid(true);
-      dispatch(payoutsApi.util.invalidateTags(['Earnings']));
-      refetchStats();
-      Alert.alert(t('payment.success_title'), t('pro_space.commission_paid_success_msg'), [{ text: t('common.ok') }]);
-    } catch (error: any) {
-      Alert.alert(t('common.error'), error?.data?.message || t('pro_space.commission_payment_error'));
-    }
-  };
-
-  const [periodMode, setPeriodMode] = useState<PeriodMode>('monthly');
-  const [periodOffset, setPeriodOffset] = useState(0);
 
   const allBookings: any[] = Array.isArray(bookingsData) ? bookingsData : ((bookingsData as any)?.bookings ?? []);
-
-  const statsCurrency: string | undefined = (stats as any)?.currency;
-
-  const formatAmount = (amount: number, bookingCurrency?: string) => {
-    const currencyCode = bookingCurrency ?? statsCurrency;
-    if (!currencyCode) return formatCurrencyDefault(amount);
-    return formatWithCurrency(amount, currencyCode);
-  };
-
-  const pendingCashBookings = useMemo(
-    () => allBookings.filter((b) => b.paymentMethod === 'cash' && b.status === 'completed' && !b.cashCommissionCollectedAt),
+  const items = useMemo<BookingItem[]>(
+    () => allBookings
+      .filter((b) => b.status === 'completed')
+      .map((b) => ({ id: b.id, date: b.completedAt ?? b.updatedAt ?? null, earnings: b.earnings, raw: b })),
     [allBookings],
   );
-  const commissionCurrency: string =
-    pendingCashBookings.length > 0
-      ? (pendingCashBookings[0].currency ?? statsCurrency ?? activeCurrencyCode)
-      : (statsCurrency ?? activeCurrencyCode);
+  const cancelledCount = useMemo(() => allBookings.filter((b) => b.status === 'cancelled').length, [allBookings]);
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short', year: 'numeric' });
-
-  const period = useMemo(() => getPeriodRange(periodMode, periodOffset, t, i18n.language), [periodMode, periodOffset, t, i18n.language]);
-
-  const periodBookings = useMemo(() => {
-    return allBookings.filter((b) => {
-      if (b.status !== 'completed') return false;
-      if (periodMode === 'all') return true;
-      const date = new Date(b.completedAt ?? b.updatedAt);
-      return date >= period.start && date <= period.end;
-    });
-  }, [allBookings, period, periodMode]);
-
-  const getBookingAmount = (b: any): number => {
-    if (b.paymentMethod === 'cash') {
-      // Pour le cash, le pro reçoit le net (après déduction de la commission plateforme)
-      return b.cashNetAmount ?? b.finalPrice ?? b.cashAmountDeclaredByPro ?? b.estimatedPrice ?? 0;
-    }
-    return b.finalPrice ?? b.estimatedPrice ?? 0;
-  };
-
-  const periodEarningsByCurrency = useMemo(() => {
-    const map: Record<string, number> = {};
-    periodBookings.forEach((b) => {
-      const cur = b.currency ?? statsCurrency ?? '';
-      if (cur) map[cur] = (map[cur] ?? 0) + getBookingAmount(b);
-    });
-    return map;
-  }, [periodBookings, statsCurrency]);
-
-  const totalEarningsByCurrency = useMemo(() => {
-    const map: Record<string, number> = {};
-    allBookings.filter((b) => b.status === 'completed').forEach((b) => {
-      const cur = b.currency ?? statsCurrency ?? '';
-      if (cur) map[cur] = (map[cur] ?? 0) + getBookingAmount(b);
-    });
-    return map;
-  }, [allBookings, statsCurrency]);
-
-  const activeEarnings = periodMode === 'all' ? totalEarningsByCurrency : periodEarningsByCurrency;
-
-  if (statsLoading || bookingsLoading) {
-    return <View style={styles.centerContainer}><ActivityIndicator size="large" color={tokens.primary} /></View>;
-  }
-
-  const PERIOD_TABS: { key: PeriodMode; label: string }[] = [
-    { key: 'daily', label: t('driver.earnings_period_daily') },
-    { key: 'weekly', label: t('driver.earnings_period_weekly') },
-    { key: 'monthly', label: t('driver.earnings_period_monthly') },
-    { key: 'all', label: t('common.all') },
-  ];
-
-  const displayRating = (stats as any)?.averageRating > 0 ? ((stats as any).averageRating as number).toFixed(1) : '5.0';
+  const s = stats as any;
+  const formatDate = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString(i18n.language, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-
-      {/* Alerte commission cash pendante */}
-      {(stats as any)?.pendingCashCommission > 0 && !commissionPaid && (
-        <View style={styles.commissionAlert}>
-          <Icon name="alert-circle" size={20} color={colors.warning} style={{ marginTop: 2 }} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.commissionAlertTitle}>
-              {t('pro_space.cash_commission_due_title')}
-            </Text>
-            <Text style={styles.commissionAlertText}>
-              {t('pro_space.cash_commission_due_msg', {
-                amount: formatWithCurrency((stats as any).pendingCashCommission, commissionCurrency),
-              })}
-            </Text>
-            <ChocolateButton
-              onPress={handlePayCommissionOnline}
-              loading={payingCommission}
-              disabled={payingCommission}
-              style={styles.commissionPayButton}
-              size="sm"
-            >
-              {t('pro_space.pay_commission_online')}
-            </ChocolateButton>
-          </View>
-        </View>
+    <EarningsDashboard<BookingItem>
+      role="pro"
+      loading={statsLoading || bookingsLoading}
+      items={items}
+      fallbackCurrency={s?.currency ?? activeCurrencyCode}
+      pendingCommission={s?.pendingCashCommission ?? 0}
+      onCommissionPaid={refetchStats}
+      countLabel={(count) => t('pro_space.earnings_bookings_count', { count })}
+      listTitle={(label) => (label ? `${t('pro_space.bookings_period_label')} — ${label}` : t('pro_space.full_history'))}
+      emptyLabel={t('pro_space.no_bookings_period')}
+      renderStats={(periodItems, mode) => (
+        <>
+          <EarningsStatCard
+            icon="briefcase-check-outline"
+            iconColor={colors.success}
+            value={mode === 'all' ? (s?.completedBookings ?? 0) : periodItems.length}
+            label={t('pro_space.stats_completed')}
+          />
+          <EarningsStatCard
+            icon="star"
+            iconColor={colors.warning}
+            value={s?.averageRating > 0 ? (s.averageRating as number).toFixed(1) : '—'}
+            label={s?.averageRating > 0 ? t('driver.stats_rating') : t('earnings.no_rating')}
+            onPress={() => navigation.navigate('ProReviews', {})}
+            actionLabel={t('driver.view_reviews')}
+          />
+          <EarningsStatCard
+            icon="check-circle-outline"
+            iconColor={colors.info}
+            value={`${Math.round(s?.acceptanceRate ?? 0)}%`}
+            label={t('earnings.acceptance')}
+          />
+          <EarningsStatCard
+            icon="cancel"
+            iconColor={colors.error}
+            value={cancelledCount}
+            label={t('driver.cancellations')}
+          />
+        </>
       )}
-
-      {/* Gains gardés de côté par la plateforme jusqu'au versement */}
-      <PayoutBalanceCard role="pro" fallbackCurrency={commissionCurrency} />
-
-      {/* Onglets de période */}
-      <View style={styles.tabsContainer}>
-        {PERIOD_TABS.map(({ key, label }) => (
-          <TouchableOpacity key={key} onPress={() => { setPeriodMode(key); setPeriodOffset(0); }} style={[styles.tab, periodMode === key && styles.tabActive]}>
-            <Text style={[styles.tabText, periodMode === key && styles.tabTextActive]}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Navigateur de période */}
-      {periodMode !== 'all' && (
-        <View style={styles.periodNav}>
-          <TouchableOpacity onPress={() => setPeriodOffset(o => o - 1)} style={styles.navArrow}>
-            <Icon name="chevron-left" size={28} color={tokens.primary} />
-          </TouchableOpacity>
-          <View style={styles.periodLabelContainer}>
-            <Text style={styles.periodLabel}>{period.label}</Text>
-            {period.sublabel && period.sublabel !== period.label && (
-              <Text style={styles.periodSublabel}>{period.sublabel}</Text>
-            )}
-          </View>
-          <TouchableOpacity onPress={() => setPeriodOffset(o => Math.min(o + 1, 0))} style={[styles.navArrow, periodOffset >= 0 && styles.navArrowDisabled]} disabled={periodOffset >= 0}>
-            <Icon name="chevron-right" size={28} color={periodOffset >= 0 ? tokens.text.secondary : tokens.primary} />
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Carte gains */}
-      <Card style={styles.totalCard}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.totalLabel}>
-            💰 {periodMode === 'all' ? t('driver.earnings_total') : t('driver.earnings_period')}
-          </Text>
-          {Object.entries(activeEarnings).length > 0
-            ? Object.entries(activeEarnings).map(([cur, amount]) => (
-                <Text key={cur} variant="displayMedium" style={styles.totalAmount}>
-                  {formatWithCurrency(amount, cur)}
-                </Text>
-              ))
-            : <Text variant="displayMedium" style={styles.totalAmount}>—</Text>
-          }
-          <Text variant="bodySmall" style={styles.totalSubtext}>
-            {periodMode === 'all'
-              ? t('driver.earnings_since_start')
-              : t('pro_space.earnings_bookings_count', { count: periodBookings.length })}
-          </Text>
-        </Card.Content>
-      </Card>
-
-      {/* Grille stats */}
-      <View style={styles.statsGrid}>
-        <Card style={styles.statCard}>
-          <Card.Content style={styles.statContent}>
-            <Icon name="briefcase-check-outline" size={32} color={colors.success} />
-            <Text variant="headlineSmall" style={styles.statNumber}>
-              {periodMode === 'all' ? ((stats as any)?.completedBookings ?? 0) : periodBookings.length}
-            </Text>
-            <Text variant="bodySmall" style={styles.statLabel}>{t('pro_space.stats_completed')}</Text>
-          </Card.Content>
-        </Card>
-
-        <TouchableOpacity style={styles.statCard} onPress={() => navigation.navigate('ProReviews', {})}>
-          <Card style={styles.clickableCard}>
-            <Card.Content style={styles.statContent}>
-              <Icon name="star" size={32} color={colors.warning} />
-              <Text variant="headlineSmall" style={styles.statNumber}>{displayRating}</Text>
-              <Text variant="bodySmall" style={styles.statLabel}>{t('driver.stats_rating')}</Text>
-              <Text variant="bodySmall" style={styles.viewReviewsText}>👁️ {t('driver.view_reviews')}</Text>
-            </Card.Content>
-          </Card>
-        </TouchableOpacity>
-
-        <Card style={styles.statCard}>
-          <Card.Content style={styles.statContent}>
-            <Icon name="check-circle-outline" size={32} color={colors.info} />
-            <Text variant="headlineSmall" style={styles.statNumber}>
-              {Math.round((stats as any)?.acceptanceRate ?? 0)}%
-            </Text>
-            <Text variant="bodySmall" style={styles.statLabel}>{t('pros.acceptance_rate', { rate: Math.round((stats as any)?.acceptanceRate ?? 0) })}</Text>
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.statCard}>
-          <Card.Content style={styles.statContent}>
-            <Icon name="cancel" size={32} color={colors.error} />
-            <Text variant="headlineSmall" style={styles.statNumber}>
-              {allBookings.filter((b) => b.status === 'cancelled').length}
-            </Text>
-            <Text variant="bodySmall" style={styles.statLabel}>{t('driver.cancellations')}</Text>
-          </Card.Content>
-        </Card>
-      </View>
-
-      {/* Liste missions de la période */}
-      <View style={styles.recentSection}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>
-          📊 {periodMode === 'all' ? t('pro_space.full_history') : `${t('pro_space.bookings_period_label')} — ${period.label}`}
-        </Text>
-        {periodBookings.length === 0 ? (
-          <Card style={styles.emptyCard}>
-            <Card.Content style={styles.emptyContent}>
-              <Icon name="cash-remove" size={48} color={tokens.text.secondary} />
-              <Text variant="bodyMedium" style={styles.emptyText}>{t('pro_space.no_bookings_period')}</Text>
-            </Card.Content>
-          </Card>
-        ) : (
-          periodBookings.map((booking) => {
-            const serviceName =
-              (booking.serviceOffering?.category
-                ? getLocalizedName(booking.serviceOffering.category, i18n.language)
-                : null) ||
-              ((booking as any).category
-                ? getLocalizedName((booking as any).category, i18n.language)
-                : null) ||
-              '—';
-            const clientName = booking.client ? `${booking.client.firstName} ${booking.client.lastName}` : '—';
-            const amount = getBookingAmount(booking);
-            const isCash = booking.paymentMethod === 'cash';
-            return (
-              <TouchableOpacity key={booking.id} onPress={() => navigation.navigate('ProBookingDetails', { bookingId: booking.id })}>
-                <Card style={styles.earningCard}>
-                  <Card.Content>
-                    <View style={styles.earningHeader}>
-                      <View style={styles.earningInfo}>
-                        <Text variant="titleSmall" style={styles.earningTitle}>{serviceName}</Text>
-                        <Text variant="bodySmall" style={styles.earningDate}>{clientName}</Text>
-                        <Text variant="bodySmall" style={styles.earningDate}>{formatDate(booking.completedAt ?? booking.updatedAt)}</Text>
-                      </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <Text variant="titleMedium" style={styles.earningAmount}>{formatAmount(amount, booking.currency ?? undefined)}</Text>
-                        {booking.finalPrice && <Text variant="bodySmall" style={{ color: tokens.text.secondary, fontSize: 10 }}>{t('pro_space.final')}</Text>}
-                      </View>
-                    </View>
-                    <View style={styles.earningMeta}>
-                      <View style={styles.earningDetail}>
-                        <Icon name={isCash ? 'cash' : 'credit-card-outline'} size={14} color={tokens.text.secondary} />
-                        <Text variant="bodySmall" style={styles.earningDetailText}>
-                          {isCash ? t('payment.cash') : t('payment.card')}
-                        </Text>
-                      </View>
-                      {booking.address && (
-                        <View style={styles.earningDetail}>
-                          <Icon name="map-marker-outline" size={14} color={tokens.text.secondary} />
-                          <Text variant="bodySmall" style={styles.earningDetailText} numberOfLines={1}>
-                            {booking.address}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Icon name="chevron-right" size={14} color={tokens.primary} />
-                        <Text variant="bodySmall" style={{ color: tokens.primary, fontSize: 11 }}>{t('common.details')}</Text>
-                      </View>
-                    </View>
-                  </Card.Content>
-                </Card>
-              </TouchableOpacity>
-            );
-          })
-        )}
-      </View>
-    </ScrollView>
+      renderItem={(item) => {
+        const b = item.raw;
+        const category = b.serviceOffering?.category ?? b.category;
+        const isCash = b.paymentMethod === 'cash';
+        return (
+          <EarningListItem
+            title={(category ? getLocalizedName(category, i18n.language) : null) || '—'}
+            lines={[b.client ? `${b.client.firstName} ${b.client.lastName}` : '—', formatDate(item.date)]}
+            earnings={item.earnings}
+            fallbackCurrency={b.currency}
+            meta={[
+              { icon: isCash ? 'cash' : 'credit-card-outline', label: t(isCash ? 'earnings.method_cash' : 'earnings.method_in_app') },
+              ...(b.address ? [{ icon: 'map-marker-outline', label: b.address as string }] : []),
+            ]}
+            onPress={() => navigation.navigate('ProBookingDetails', { bookingId: item.id })}
+          />
+        );
+      }}
+    />
   );
 };
-

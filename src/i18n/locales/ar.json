@@ -140,7 +140,9 @@
     "default": "افتراضي",
     "save_as_default": "تعيين كفضاء افتراضي",
     "clear_default": "إزالة الفضاء الافتراضي",
-    "confirm": "متابعة"
+    "confirm": "متابعة",
+    "role_courier": "مساحة المندوب",
+    "desc_courier": "قبول توصيلات CheckAllPack"
   },
   "nav": {
     "home": "الرئيسية",
@@ -226,7 +228,8 @@
     "delete_account_error_active": "لديك طلبات أو خدمات جارية. أكملها أو ألغها قبل حذف حسابك.",
     "delete_account_error_payout": "يوجد تحويل مالي معلّق على حسابك. يجب إتمامه قبل الحذف.",
     "delete_account_error_balance": "لديك رصيد غير مدفوع (عمولة أو رسوم إلغاء). يرجى تسويته قبل حذف حسابك.",
-    "delete_account_error_generic": "تعذّر حذف حسابك. حاول مرة أخرى أو تواصل مع الدعم."
+    "delete_account_error_generic": "تعذّر حذف حسابك. حاول مرة أخرى أو تواصل مع الدعم.",
+    "courier_badge": "مندوب توصيل"
   },
   "addresses": {
     "title": "عناويني",
@@ -791,7 +794,8 @@
     "signature_saved_delivery_done": "تم حفظ التوقيع — اكتمل التوصيل",
     "signature_save_error": "تعذّر حفظ التوقيع",
     "signature_instructions": "اطلب من المستلم التوقيع لتأكيد التوصيل",
-    "signature_confirm_delivery": "حفظ وإنهاء التوصيل"
+    "signature_confirm_delivery": "حفظ وإنهاء التوصيل",
+    "no_available_requests_hint_courier": "ستظهر طلبات التوصيل الجديدة هنا فور تقديم أحد العملاء لطلب."
   },
   "support": {
     "title": "التواصل مع الدعم",
@@ -901,7 +905,7 @@
     "title": "الرئيسية",
     "welcome": "مرحباً، {{name}}!",
     "hi": "مرحباً",
-    "greeting_label": "أهلاً بك في",
+    "greeting_label": "أهلاً بك في CheckAll@t",
     "services": "خدماتنا",
     "new_services": "خدمات جديدة",
     "services_home": "الخدمات المنزلية",
@@ -953,7 +957,7 @@
     "cta_title": "تحتاج إلى نقل؟",
     "cta_sub": "سائقون متاحون الآن بالقرب منك",
     "cta_btn": "احجز الآن",
-    "driver_cannot_book_transport": "بصفتك سائقاً نشطاً، لا يمكنك تقديم طلب نقل كعميل.",
+    "driver_cannot_book_transport": "بصفتك سائقاً نشطاً، لا يمكنك تقديم طلب نقل كعميل. تظل توصيلات CheckAllPack متاحة.",
     "pro_cannot_book_own_category": "لا يمكنك حجز خدمة في فئة تعمل فيها كمزوّد خدمة.",
     "become_provider_title": "كن مزوّد خدمة",
     "sectors_title": "قطاعاتنا",
@@ -972,7 +976,8 @@
     "carousel_go_to": "عرض القطاع {{number}}: {{title}}",
     "stat_providers": "مقدمو خدمة نشطون",
     "stat_jobs": "مهام منجزة",
-    "stat_countries": "دول"
+    "stat_countries": "دول",
+    "courier_cannot_book_checkallpack": "بصفتك مندوب توصيل نشطًا في CheckAllPack، لا يمكنك طلب توصيل CheckAllPack كعميل. يظل النقل والانتقال متاحين."
   },
   "payment": {
     "title": "الدفع",
@@ -1280,7 +1285,9 @@
     "extras_total_label": "مجموع الإضافات",
     "pro_still_working": "المزود لا يزال يعمل — يُرجى الانتظار",
     "payment_not_initialized_pro": "⚠️ لم يُكمل العميل الدفع — لا يمكنك البدء حتى يتم تأكيد الدفع",
-    "cancel_confirm_no_fee": "المحترف في الطريق أو وصل إلى عنوانك. هل تريد الإلغاء على أي حال؟"
+    "cancel_confirm_no_fee": "المحترف في الطريق أو وصل إلى عنوانك. هل تريد الإلغاء على أي حال؟",
+    "pay_after_acceptance_notice": "الدفع عبر التطبيق: ستدفع فور قبول أحد مقدمي الخدمة لطلبك، ولن يتوجه إليك إلا بعد الدفع.",
+    "pay_to_start_notice": "قبل مقدم الخدمة طلبك. ادفع الآن ليتمكن من التوجه إليك: يبقى المبلغ محجوزاً حتى انتهاء الخدمة."
   },
   "chat": {
     "empty": "لا توجد رسائل بعد. ابدأ المحادثة!",
@@ -1449,7 +1456,8 @@
     "category_handyman": "الأعمال اليدوية",
     "category_cleaning": "التنظيف",
     "category_carpentry": "النجارة",
-    "category_air_condition": "تكييف الهواء"
+    "category_air_condition": "تكييف الهواء",
+    "awaiting_client_payment": "في انتظار دفع العميل: يمكنك بدء الرحلة فور إتمامه للدفع. سيتم إشعارك."
   },
   "activity": {
     "page_title": "أنشطتي",
@@ -2192,7 +2200,25 @@
     "status_processing": "قيد التحويل",
     "status_paid": "تم التحويل",
     "status_failed": "فشل",
-    "status_cancelled": "ملغى (مسترد)"
+    "status_cancelled": "ملغى (مسترد)",
+    "amounts_title": "المبالغ",
+    "net_amount": "صافي الأرباح",
+    "gross_amount": "المبلغ المدفوع من العميل",
+    "commission": "عمولة المنصة ({{rate}}٪)",
+    "payment_method": "طريقة الدفع",
+    "method_cash": "نقدًا",
+    "method_in_app": "الدفع عبر التطبيق",
+    "estimate_note": "تقدير بنسبة العمولة الحالية: يصبح المبلغ نهائيًا بعد تأكيد الدفع من الطرفين.",
+    "net_caption": "صافٍ",
+    "net_estimated_caption": "صافٍ تقديري",
+    "net_total": "إجمالي صافي الأرباح",
+    "net_period": "صافي أرباح الفترة",
+    "after_commission": "بعد خصم عمولة المنصة",
+    "after_commission_with_estimate": "بعد خصم عمولة المنصة · يشمل مبالغ تقديرية",
+    "acceptance": "نسبة القبول",
+    "no_rating": "لا توجد تقييمات بعد",
+    "previous_period": "الفترة السابقة",
+    "next_period": "الفترة التالية"
   },
   "account_status": {
     "approved_title": "تم قبول طلبك 🎉",
@@ -2290,5 +2316,19 @@
     "released_note": "لن يُخصم مبلغ {{amount}} المحجوز على بطاقتك.",
     "cash_computed_pro": "تدخل بالساعة: يُحسب المبلغ الواجب تحصيله تلقائياً حسب الوقت المستغرق ويُعرض على العميل.",
     "pro_hourly_hint": "السعر تحدده المنصة. المدة التي حددها العميل: {{hours}} ساعة — اطلب وقتاً إضافياً عند الحاجة."
+  },
+  "completion_card": {
+    "title_pending": "تأكيد إتمام الخدمة",
+    "title_done": "تم تأكيد إتمام الخدمة",
+    "party_client": "العميل",
+    "party_pro": "مقدم الخدمة",
+    "party_driver": "السائق",
+    "party_courier": "المندوب",
+    "confirmed": "تم التأكيد",
+    "waiting": "قيد الانتظار",
+    "cash_title": "المبلغ النقدي المصرّح به",
+    "cash_match": "المبلغان متطابقان: تم اعتماد الدفع.",
+    "cash_mismatch": "المبالغ المصرّح بها مختلفة: يقوم فريقنا بمراجعة الوضع.",
+    "cash_waiting": "في انتظار تصريح الطرف الآخر."
   }
 }

@@ -12,6 +12,9 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { entityCurrencyCode } from '../../config/currency';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { useCurrencyFormatter } from '../../hooks/useCurrencyFormatter';
+import { EarningsBreakdownCard } from '../../components/shared/earnings/EarningsBreakdownCard';
+import type { Earnings } from '../../types/earnings';
 
 const ESCROW_CONFIG: Record<string, { color: string; icon: string }> = {
   pending:  { color: '#FF9800', icon: 'clock-outline' },
@@ -63,7 +66,9 @@ export const PaymentDetailsScreen = ({ route }: Props) => {
 
   const { t, i18n } = useTranslation();
   const { paymentId, requestId } = route.params;
-  const isDriver = useSelector((state: RootState) => state.auth.isDriver);
+  // Vue du chauffeur / livreur uniquement dans son espace (un même compte peut aussi être client)
+  const isDriver = useSelector((state: RootState) => state.auth.activeRole === 'driver');
+  const { formatWithCurrency } = useCurrencyFormatter();
 
   // Mode payment entity (in-app / stripe)
   const { data: payment, isLoading: paymentLoading, refetch: refetchPayment } = useGetPaymentByIdQuery(paymentId!, {
@@ -88,7 +93,7 @@ export const PaymentDetailsScreen = ({ route }: Props) => {
       hour: '2-digit', minute: '2-digit',
     });
   const displayCurrency = entityCurrencyCode(payment ?? transportRequest);
-  const formatAmount = (val: number) => `${val?.toFixed(2)} ${displayCurrency}`;
+  const formatAmount = (val: number) => formatWithCurrency(val ?? 0, displayCurrency);
 
   if (isLoading) {
     return (
@@ -110,7 +115,7 @@ export const PaymentDetailsScreen = ({ route }: Props) => {
           <Card.Content style={styles.statusContent}>
             <Icon name="cash" size={40} color={colors.success} />
             <Text variant="headlineSmall" style={[styles.statusLabel, { color: colors.success }]}>
-              {t('transport.payment_cash_label')}
+              {t('earnings.method_cash')}
             </Text>
             <Text variant="bodySmall" style={styles.statusExplanation}>
               {isDriver ? t('cash_validation.driver_subtitle') : t('cash_validation.client_subtitle')}
@@ -118,52 +123,24 @@ export const PaymentDetailsScreen = ({ route }: Props) => {
           </Card.Content>
         </Card>
 
-        {/* Montant */}
-        <Card style={styles.card}>
-          <Card.Title title={`💰 ${t('payment.details_amounts')}`} titleStyle={styles.cardTitle} />
-          <Card.Content>
-            {isDriver ? (
-              <>
-                <View style={styles.row}>
-                  <Text variant="bodyMedium" style={styles.rowLabel}>{t('driver.net_amount_label')}</Text>
-                  <Text variant="titleMedium" style={styles.netAmount}>
-                    {formatAmount((transportRequest as any).cashNetAmount ?? price)}
-                  </Text>
-                </View>
-                <Divider style={styles.divider} />
-                <View style={styles.row}>
-                  <Text variant="bodySmall" style={styles.subLabel}>{t('driver.gross_amount_label')}</Text>
-                  <Text variant="bodySmall" style={styles.subValue}>{formatAmount(price)}</Text>
-                </View>
-                {(transportRequest as any).cashCommissionRate != null && (
-                  <View style={styles.row}>
-                    <Text variant="bodySmall" style={styles.subLabel}>
-                      {t('driver.commission_label')} ({(transportRequest as any).cashCommissionRate}%)
-                    </Text>
-                    <Text variant="bodySmall" style={[styles.subValue, { color: colors.error }]}>
-                      -{formatAmount((transportRequest as any).cashCommissionAmount ?? 0)}
-                    </Text>
-                  </View>
-                )}
-                <View style={styles.row}>
-                  <Text variant="bodySmall" style={styles.subLabel}>{t('transport.payment_method')}</Text>
-                  <Text variant="bodySmall" style={styles.subValue}>{t('transport.pay_cash')}</Text>
-                </View>
-              </>
-            ) : (
-              <>
-                <View style={styles.row}>
-                  <Text variant="bodyMedium" style={styles.rowLabel}>{t('payment.details_paid')}</Text>
-                  <Text variant="titleMedium" style={styles.netAmount}>{formatAmount(price)}</Text>
-                </View>
-                <View style={styles.row}>
-                  <Text variant="bodySmall" style={styles.subLabel}>{t('transport.payment_method')}</Text>
-                  <Text variant="bodySmall" style={styles.subValue}>{t('transport.pay_cash')}</Text>
-                </View>
-              </>
-            )}
-          </Card.Content>
-        </Card>
+        {/* Montants : gain net du chauffeur (calculé par le serveur), ou montant payé pour le client */}
+        {isDriver && (transportRequest as any).earnings ? (
+          <EarningsBreakdownCard earnings={(transportRequest as any).earnings as Earnings} />
+        ) : (
+          <Card style={styles.card}>
+            <Card.Title title={t('earnings.amounts_title')} titleStyle={styles.cardTitle} />
+            <Card.Content>
+              <View style={styles.row}>
+                <Text variant="bodyMedium" style={styles.rowLabel}>{t('payment.details_paid')}</Text>
+                <Text variant="titleMedium" style={styles.netAmount}>{formatAmount(price)}</Text>
+              </View>
+              <View style={styles.row}>
+                <Text variant="bodySmall" style={styles.subLabel}>{t('earnings.payment_method')}</Text>
+                <Text variant="bodySmall" style={styles.subValue}>{t('earnings.method_cash')}</Text>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
 
         {/* Référence service */}
         <Card style={styles.card}>
@@ -226,43 +203,31 @@ export const PaymentDetailsScreen = ({ route }: Props) => {
         </Card.Content>
       </Card>
 
-      {/* Montants */}
-      <Card style={styles.card}>
-        <Card.Title
-          title={`💰 ${t('payment.details_amounts')}`}
-          titleStyle={styles.cardTitle}
+      {/* Montants : même présentation que pour les espèces */}
+      {isDriver ? (
+        <EarningsBreakdownCard
+          earnings={{
+            // Montants figés par le serveur à l'encaissement
+            gross: (payment.proNetAmount ?? 0) + (payment.commissionAmount ?? 0),
+            commissionRate: payment.commissionRate ?? 0,
+            commission: payment.commissionAmount ?? 0,
+            net: payment.proNetAmount ?? 0,
+            settled: true,
+            paymentMethod: 'in_app',
+            currency: displayCurrency,
+          }}
         />
-        <Card.Content>
-          {isDriver ? (
-            <>
-              <View style={styles.row}>
-                <Text variant="bodyMedium" style={styles.rowLabel}>{t('driver.net_amount_label')}</Text>
-                <Text variant="titleMedium" style={styles.netAmount}>
-                  {formatAmount(payment.proNetAmount ?? payment.amount)}
-                </Text>
-              </View>
-              <Divider style={styles.divider} />
-              <View style={styles.row}>
-                <Text variant="bodySmall" style={styles.subLabel}>{t('driver.gross_amount_label')}</Text>
-                <Text variant="bodySmall" style={styles.subValue}>{formatAmount(payment.amount)}</Text>
-              </View>
-              <View style={styles.row}>
-                <Text variant="bodySmall" style={styles.subLabel}>
-                  {t('driver.commission_label')} ({payment.commissionRate ?? 0}%)
-                </Text>
-                <Text variant="bodySmall" style={[styles.subValue, { color: colors.error }]}>
-                  -{formatAmount(payment.commissionAmount ?? 0)}
-                </Text>
-              </View>
-            </>
-          ) : (
+      ) : (
+        <Card style={styles.card}>
+          <Card.Title title={t('earnings.amounts_title')} titleStyle={styles.cardTitle} />
+          <Card.Content>
             <View style={styles.row}>
               <Text variant="bodyMedium" style={styles.rowLabel}>{t('payment.details_paid')}</Text>
               <Text variant="titleMedium" style={styles.netAmount}>{formatAmount(payment.amount)}</Text>
             </View>
-          )}
-        </Card.Content>
-      </Card>
+          </Card.Content>
+        </Card>
+      )}
 
       {/* Détails transaction */}
       <Card style={styles.card}>

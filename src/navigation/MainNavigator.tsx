@@ -26,6 +26,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useGetMyConversationsListQuery } from '../store/api/communicationApi';
 import { useGetProDemandesQuery } from '../store/api/bookingsApi';
 import { useNotificationSound } from '../hooks/useNotificationSound';
+import { useDriverIdentity } from '../hooks/useDriverIdentity';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -47,6 +48,7 @@ export const MainNavigator = () => {
   const isDriver = activeRole === 'driver';
   const isPro = activeRole === 'pro';
   const isSeller = activeRole === 'seller';
+  const { icon: driverVehicleIcon } = useDriverIdentity();
 
   const { data: conversations } = useGetMyConversationsListQuery(undefined, {
     pollingInterval: 8000,
@@ -114,7 +116,7 @@ export const MainNavigator = () => {
             listeners={resetTo('DriverAvailables', 'DriverAvailablesHome')}
             options={{
               title: t('nav.disponibles'),
-              tabBarIcon: ({ color, size }) => <Icon name="truck-delivery" size={size} color={color} />,
+              tabBarIcon: ({ color, size }) => <Icon name={driverVehicleIcon} size={size} color={color} />,
             }}
           />
           <Tab.Screen

@@ -11,6 +11,7 @@ import { Text, Card, Chip, ActivityIndicator } from 'react-native-paper';
 import { ChocolateButton } from '../../components/shared/ChocolateButton';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
+import { TRANSPORT_CONTACT_STATUSES } from '../../types/transport-status';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { spacing } from '../../theme/spacing';
@@ -110,8 +111,7 @@ export const DriverDeliveryDetailsScreen = ({ navigation, route }: Props) => {
     }
   };
 
-  const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
-  const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && request.client);
+  const canContact = !!(request && TRANSPORT_CONTACT_STATUSES.includes(request.status as TransportStatus) && request.client);
   const clientName = request?.client ? `${request.client.firstName} ${request.client.lastName}` : '';
   const { data: callRelay } = useGetCallRelayNumberQuery(
     { entityType: 'transport', entityId: requestId },

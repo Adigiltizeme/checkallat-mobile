@@ -1,6 +1,8 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
+import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
+import { NotificationBell } from '../components/shared/NotificationBell';
 import { SellerStackParamList } from './types';
 import { useAppTheme } from '../theme/ThemeProvider';
 import { defaultStackScreenOptions } from './stackOptions';
@@ -25,7 +27,8 @@ const SellerStack = ({ initialRouteName }: { initialRouteName: keyof SellerStack
   const { tokens } = useAppTheme();
   return (
     <Stack.Navigator initialRouteName={initialRouteName} screenOptions={defaultStackScreenOptions(tokens)}>
-      <Stack.Screen name="SellerDashboard" component={SellerDashboardScreen} options={{ title: t('seller.dashboard_title') }} />
+      <Stack.Screen name="SellerDashboard" component={SellerDashboardScreen} options={{ title: t('seller.dashboard_title'), headerRight: () => <NotificationBell /> }} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: t('notifications.title') }} />
       <Stack.Screen name="SellerOrdersList" component={SellerOrdersScreen} options={{ title: t('seller.orders_title') }} />
       <Stack.Screen name="SellerOrderDetails" component={SellerOrderDetailsScreen} options={{ title: t('seller.order_details_title') }} />
       <Stack.Screen name="SellerProducts" component={SellerProductsScreen} options={{ title: t('seller.products_title') }} />

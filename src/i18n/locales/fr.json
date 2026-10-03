@@ -140,7 +140,9 @@
     "default": "Par défaut",
     "save_as_default": "Définir comme espace par défaut",
     "clear_default": "Supprimer l'espace par défaut",
-    "confirm": "Continuer"
+    "confirm": "Continuer",
+    "role_courier": "Espace Livreur",
+    "desc_courier": "Accepter des livraisons CheckAllPack"
   },
   "nav": {
     "home": "Accueil",
@@ -226,7 +228,8 @@
     "delete_account_error_active": "Des commandes ou prestations sont encore en cours. Terminez-les ou annulez-les avant de supprimer votre compte.",
     "delete_account_error_payout": "Un versement est en attente sur votre compte. Il doit être finalisé avant la suppression.",
     "delete_account_error_balance": "Vous avez un solde impayé (commission ou frais d'annulation). Réglez-le avant de supprimer votre compte.",
-    "delete_account_error_generic": "Votre compte n'a pas pu être supprimé. Réessayez ou contactez le support."
+    "delete_account_error_generic": "Votre compte n'a pas pu être supprimé. Réessayez ou contactez le support.",
+    "courier_badge": "Livreur"
   },
   "addresses": {
     "title": "Mes adresses",
@@ -791,7 +794,8 @@
     "signature_saved_delivery_done": "Signature enregistrée — livraison terminée",
     "signature_save_error": "Impossible d'enregistrer la signature",
     "signature_instructions": "Demandez au destinataire de signer pour confirmer la livraison",
-    "signature_confirm_delivery": "Valider et terminer la livraison"
+    "signature_confirm_delivery": "Valider et terminer la livraison",
+    "no_available_requests_hint_courier": "Les nouvelles demandes de livraison apparaîtront ici dès qu'un client en passera une."
   },
   "support": {
     "title": "Contacter le support",
@@ -901,7 +905,7 @@
     "title": "Accueil",
     "welcome": "Bonjour, {{name}} !",
     "hi": "Bonjour",
-    "greeting_label": "Bienvenue sur",
+    "greeting_label": "Bienvenue sur CheckAll@t",
     "services": "Nos Services",
     "new_services": "Nouveaux Services",
     "services_home": "Services à Domicile",
@@ -953,7 +957,7 @@
     "cta_title": "Besoin d'un déménagement ?",
     "cta_sub": "Des chauffeurs disponibles maintenant près de vous",
     "cta_btn": "Réserver maintenant",
-    "driver_cannot_book_transport": "En tant que chauffeur actif, vous ne pouvez pas passer une demande de transport en tant que client.",
+    "driver_cannot_book_transport": "En tant que chauffeur actif, vous ne pouvez pas passer une demande de transport en tant que client. Les livraisons CheckAllPack restent accessibles.",
     "pro_cannot_book_own_category": "Vous ne pouvez pas réserver un service dans une catégorie dans laquelle vous êtes prestataire.",
     "become_provider_title": "Devenez prestataire",
     "sectors_title": "Nos secteurs",
@@ -972,7 +976,8 @@
     "carousel_go_to": "Afficher le secteur {{number}} : {{title}}",
     "stat_providers": "Prestataires actifs",
     "stat_jobs": "Missions réalisées",
-    "stat_countries": "Pays"
+    "stat_countries": "Pays",
+    "courier_cannot_book_checkallpack": "En tant que livreur CheckAllPack actif, vous ne pouvez pas commander une livraison CheckAllPack en tant que client. Le transport et le déménagement restent accessibles."
   },
   "payment": {
     "title": "Paiement",
@@ -1280,7 +1285,9 @@
     "extras_total_label": "Total extras",
     "pro_still_working": "Le pro travaille encore — veuillez patienter",
     "payment_not_initialized_pro": "⚠️ Le client n'a pas finalisé le paiement — vous ne pouvez pas commencer tant que le paiement n'est pas validé",
-    "cancel_confirm_no_fee": "Le professionnel est déjà en route ou à votre adresse. Souhaitez-vous quand même annuler ?"
+    "cancel_confirm_no_fee": "Le professionnel est déjà en route ou à votre adresse. Souhaitez-vous quand même annuler ?",
+    "pay_after_acceptance_notice": "Paiement dans l'app : vous paierez dès qu'un prestataire aura accepté votre demande. Il ne se mettra en route qu'après votre paiement.",
+    "pay_to_start_notice": "Le prestataire a accepté votre demande. Payez maintenant pour qu'il puisse se mettre en route : le montant reste bloqué jusqu'à la fin de la prestation."
   },
   "chat": {
     "empty": "Aucun message. Lancez la conversation !",
@@ -1449,7 +1456,8 @@
     "category_handyman": "Bricolage",
     "category_cleaning": "Ménage",
     "category_carpentry": "Menuiserie",
-    "category_air_condition": "Climatisation"
+    "category_air_condition": "Climatisation",
+    "awaiting_client_payment": "En attente du paiement du client : vous pourrez démarrer le trajet dès qu'il aura payé. Vous serez prévenu."
   },
   "activity": {
     "page_title": "Mes activités",
@@ -2200,7 +2208,25 @@
     "status_processing": "En cours de versement",
     "status_paid": "Versé",
     "status_failed": "Échoué",
-    "status_cancelled": "Annulé (remboursé)"
+    "status_cancelled": "Annulé (remboursé)",
+    "amounts_title": "Montants",
+    "net_amount": "Gain net",
+    "gross_amount": "Payé par le client",
+    "commission": "Commission plateforme ({{rate}} %)",
+    "payment_method": "Moyen de paiement",
+    "method_cash": "Espèces",
+    "method_in_app": "Paiement dans l'app",
+    "estimate_note": "Estimation au taux de commission actuel : le montant sera définitif une fois le paiement confirmé par les deux parties.",
+    "net_caption": "net",
+    "net_estimated_caption": "net estimé",
+    "net_total": "Gains nets totaux",
+    "net_period": "Gains nets de la période",
+    "after_commission": "Après commission de la plateforme",
+    "after_commission_with_estimate": "Après commission de la plateforme · comprend des montants estimés",
+    "acceptance": "Acceptation",
+    "no_rating": "Pas encore d'avis",
+    "previous_period": "Période précédente",
+    "next_period": "Période suivante"
   },
   "account_status": {
     "approved_title": "Candidature acceptée 🎉",
@@ -2298,5 +2324,19 @@
     "released_note": "{{amount}} réservés sur votre carte ne seront pas débités.",
     "cash_computed_pro": "Prestation à l’heure : le montant à encaisser est calculé automatiquement d’après le temps passé et affiché au client.",
     "pro_hourly_hint": "Tarif fixé par la plateforme. Durée prévue par le client : {{hours}} h — demandez du temps supplémentaire si nécessaire."
+  },
+  "completion_card": {
+    "title_pending": "Confirmation de la réalisation",
+    "title_done": "Réalisation confirmée",
+    "party_client": "Client",
+    "party_pro": "Prestataire",
+    "party_driver": "Chauffeur",
+    "party_courier": "Livreur",
+    "confirmed": "Confirmé",
+    "waiting": "En attente",
+    "cash_title": "Montant en espèces déclaré",
+    "cash_match": "Les deux montants concordent : paiement validé.",
+    "cash_mismatch": "Les montants déclarés diffèrent : notre équipe examine la situation.",
+    "cash_waiting": "En attente de la déclaration de l'autre partie."
   }
 }

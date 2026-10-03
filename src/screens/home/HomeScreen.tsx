@@ -41,6 +41,7 @@ import { restoreSelectedCountry, setActiveCurrency } from '../../store/slices/lo
 import { getCountryInfo } from '../../config/countries';
 import { setCurrencyConfig } from '../../config/currency';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
+import { isCourierVehicle } from '../../utils/driverIdentity';
 import { getLocalizedName } from '../../utils/localize';
 import { useGetPublicStatsQuery } from '../../store/api/settingsApi';
 import { useGetUnreadNotificationsCountQuery } from '../../store/api/notificationsApi';
@@ -912,12 +913,14 @@ export const HomeScreen = ({ navigation }: any) => {
     transform: [{ translateY: headerY.value }],
   }));
 
+  // Conflit de rôle (même règle que le serveur) : un chauffeur actif ne commande pas de transport,
+  // un livreur CheckAllPack actif ne commande pas de livraison CheckAllPack ; l'autre activité reste ouverte.
+  const activeDriverIsCourier: boolean | null =
+    user?.driver?.status === 'active' ? isCourierVehicle(user.driver.vehicleType) : null;
+
   const handleTransportPress = () => {
-    if (user?.driver?.status === 'active') {
-      Alert.alert(
-        t('common.access_denied'),
-        t('home.driver_cannot_book_transport'),
-      );
+    if (activeDriverIsCourier === false) {
+      Alert.alert(t('common.access_denied'), t('home.driver_cannot_book_transport'));
       return;
     }
     navigation.navigate('TransportRequestStep1');
@@ -929,8 +932,8 @@ export const HomeScreen = ({ navigation }: any) => {
       return;
     }
     if (slug === 'checkallpack') {
-      if (user?.driver?.status === 'active') {
-        Alert.alert(t('common.access_denied'), t('home.driver_cannot_book_transport'));
+      if (activeDriverIsCourier === true) {
+        Alert.alert(t('common.access_denied'), t('home.courier_cannot_book_checkallpack'));
         return;
       }
       navigation.navigate('TransportRequestStep1', { vehicleCategory: 'courier' });

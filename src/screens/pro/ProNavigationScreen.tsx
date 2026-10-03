@@ -24,6 +24,7 @@ import {
 } from '../../store/api/bookingsApi';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
+import { isAwaitingClientPayment } from '../../utils/servicePricing';
 
 import RNMapView, { Marker, Polyline } from 'react-native-maps';
 
@@ -265,8 +266,11 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
     try {
       await markEnRoute(bookingId).unwrap();
       refetch();
-    } catch {
-      Alert.alert(t('common.error'), t('pro_space.error_update'));
+    } catch (err: any) {
+      Alert.alert(
+        t('common.error'),
+        t(err?.data?.code === 'BOOKING_PAYMENT_REQUIRED' ? 'pro_space.awaiting_client_payment' : 'pro_space.error_update'),
+      );
     }
   };
 
@@ -484,8 +488,15 @@ export const ProNavigationScreen = ({ navigation, route }: Props) => {
           <Text style={styles.googleMapsBtnText}>{t('driver.open_in_google_maps')}</Text>
         </TouchableOpacity>
 
+        {/* Paiement in-app pas encore confirmé : départ impossible */}
+        {!enRouteAt && isAwaitingClientPayment(booking as any) && (
+          <Text style={{ color: tokens.text.primary, textAlign: 'center', fontSize: 13, paddingVertical: 8 }}>
+            {t('pro_space.awaiting_client_payment')}
+          </Text>
+        )}
+
         {/* Démarrer le trajet (avant markEnRoute) */}
-        {!enRouteAt && (
+        {!enRouteAt && !isAwaitingClientPayment(booking as any) && (
           <TouchableOpacity
             style={[styles.primaryBtn, isEnRouteLoading && styles.btnDisabled]}
             onPress={handleEnRoute}

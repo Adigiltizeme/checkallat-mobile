@@ -1,0 +1,34 @@
+# Publie automatiquement une mise à jour OTA (EAS Update) à chaque push sur master.
+#
+# - Android : builds du profil « preview »   → canal preview
+# - iOS     : builds du profil « production » → canal production
+#
+# runtimeVersion = version de l'app (app.json) : une mise à jour n'atteint que les builds de la même version.
+# Pour tout changement natif (nouveau module, permission, plugin), augmenter « version » dans app.json AVANT le push
+# puis lancer un nouveau build : la mise à jour publiée ne visera alors que la nouvelle version, jamais les anciens builds.
+#
+# Prérequis (une seule fois) : relier le dépôt GitHub au projet sur expo.dev (Project settings → GitHub),
+# et vérifier que chaque canal est relié à sa branche (eas channel:edit production --branch production).
+
+name: Publier les mises à jour
+
+on:
+  push:
+    branches: ['master']
+
+jobs:
+  update_android:
+    name: Mise à jour Android (preview)
+    type: update
+    environment: preview
+    params:
+      channel: preview
+      platform: android
+
+  update_ios:
+    name: Mise à jour iOS (production)
+    type: update
+    environment: production
+    params:
+      channel: production
+      platform: ios

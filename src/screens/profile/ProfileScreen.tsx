@@ -12,6 +12,7 @@ import { logout, setActiveRole, clearDefaultRole } from '../../store/slices/auth
 import { useLogoutApiMutation, useDeleteAccountMutation } from '../../store/api/authApi';
 import { LEGAL_URLS } from '../../config/api';
 import { useAnalyticsConsent } from '../../hooks/useAnalytics';
+import { useDriverIdentity } from '../../hooks/useDriverIdentity';
 import { EmailVerificationCard } from '../../components/shared/EmailVerificationCard';
 import { ProfileStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
@@ -113,6 +114,7 @@ export const ProfileScreen = () => {
   const defaultRole = useSelector((state: RootState) => state.auth.defaultRole);
   const isDriver = activeRole === 'driver';
   const isPro = activeRole === 'pro';
+  const driverIdentity = useDriverIdentity();
   const currentLang = useSelector((state: RootState) => state.auth.language ?? 'fr');
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -192,7 +194,7 @@ export const ProfileScreen = () => {
         </Text>
         {isDriver && (
           <View style={[styles.driverBadge, { backgroundColor: tokens.primary + '15' }]}>
-            <Text style={[styles.driverBadgeText, { color: tokens.primary }]}>🚚 {t('profile.driver_badge')}</Text>
+            <Text style={[styles.driverBadgeText, { color: tokens.primary }]}>{driverIdentity.emoji} {t(driverIdentity.isCourier ? 'profile.courier_badge' : 'profile.driver_badge')}</Text>
           </View>
         )}
         {isPro && (
@@ -211,14 +213,15 @@ export const ProfileScreen = () => {
       {availableRoles.length > 1 && (
         <View style={sectionStyle}>
           {availableRoles.filter((r) => r !== activeRole).map((role, index) => {
-            const iconName = role === 'driver' ? 'truck-delivery' : role === 'pro' ? 'briefcase' : role === 'seller' ? 'store' : 'account';
+            const iconName = role === 'driver' ? driverIdentity.icon : role === 'pro' ? 'briefcase' : role === 'seller' ? 'store' : 'account';
             const iconColor = role === 'driver' ? '#F59E0B' : role === 'pro' ? '#10B981' : role === 'seller' ? '#8B5CF6' : tokens.primary;
+            const roleKey = role === 'driver' ? driverIdentity.roleKey : role;
             return (
               <React.Fragment key={role}>
                 {index > 0 && <Divider />}
                 <List.Item
-                  title={t(`role_selector.role_${role}`)}
-                  description={defaultRole === role ? t('role_selector.default') : t(`role_selector.desc_${role}`)}
+                  title={t(`role_selector.role_${roleKey}`)}
+                  description={defaultRole === role ? t('role_selector.default') : t(`role_selector.desc_${roleKey}`)}
                   left={(props) => <List.Icon {...props} icon={iconName} color={iconColor} />}
                   right={(props) => <List.Icon {...props} icon="swap-horizontal" />}
                   onPress={() => dispatch(setActiveRole({ role, setAsDefault: false }))}

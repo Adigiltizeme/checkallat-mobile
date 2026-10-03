@@ -12,6 +12,7 @@ import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadg
 import { useGetCallRelayNumberQuery } from '../../store/api/communicationApi';
 import { useRefetchOnFocus } from '../../hooks/useRefetchOnFocus';
 import { useTranslation } from 'react-i18next';
+import { TRANSPORT_CONTACT_STATUSES } from '../../types/transport-status';
 import { WEB_URL } from '../../config/api';
 import { STATUS_COLORS, TransportStatus } from '../../types/transport';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -196,8 +197,7 @@ export const TransportTrackingScreen = ({ route, navigation }: Props) => {
     setCollapsed(!collapsed);
   };
 
-  const CONTACT_STATUSES = ['accepted', 'heading_to_pickup', 'arrived_at_pickup', 'loading', 'in_transit', 'arrived_at_delivery', 'unloading'];
-  const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && request.driverId);
+  const canContact = !!(request && TRANSPORT_CONTACT_STATUSES.includes(request.status as any) && request.driverId);
   const driverName = trackingInfo?.driverName || '';
   const { data: callRelay } = useGetCallRelayNumberQuery(
     { entityType: 'transport', entityId: requestId },

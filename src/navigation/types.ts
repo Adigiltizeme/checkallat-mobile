@@ -67,6 +67,7 @@ export type ProfileStackParamList = {
 
 export type SellerStackParamList = {
   SellerDashboard: undefined;
+  Notifications: undefined;
   SellerOrdersList: undefined;
   SellerOrderDetails: { orderId: string };
   SellerProducts: undefined;
@@ -81,6 +82,7 @@ export type SellerStackParamList = {
 
 export type ProStackParamList = {
   ProHome: undefined;
+  Notifications: undefined;
   ProBookingDetails: { bookingId: string };
   ProNavigation: { bookingId: string };
   ProOfferings: undefined;
@@ -175,6 +177,7 @@ export type PaymentStackParamList = {
 
 export type DriverStackParamList = {
   DriverHome: undefined;
+  Notifications: undefined;
   DriverAvailableRequests: undefined;
   DriverTransportDetails: { requestId: string };
   DriverDeliveryDetails: { requestId: string };

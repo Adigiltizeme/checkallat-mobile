@@ -17,11 +17,14 @@ import { CourierOptionsBadges } from '../../components/shared/CourierOptionsBadg
 import { StatusTimeline } from '../../components/transport/StatusTimeline';
 import { DriverActionButton } from '../../components/transport/DriverActionButton';
 import { DriverCancelModal } from '../../components/transport/DriverCancelModal';
-import { TRANSPORT_STATUS_CONFIG, TransportStatus } from '../../types/transport-status';
+import { TRANSPORT_CONTACT_STATUSES, TRANSPORT_STATUS_CONFIG, TransportStatus } from '../../types/transport-status';
+import { ContactPartyButtons } from '../../components/shared/ContactPartyButtons';
 import { TransportObjectType } from '../../types/transport';
 import { colors } from '../../theme/colors';
 import { useAppTheme } from '../../theme/ThemeProvider';
 import { CURRENCY_CONFIG } from '../../config/currency';
+import { CompletionConfirmationCard } from '../../components/shared/CompletionConfirmationCard';
+import { EarningsBreakdownCard } from '../../components/shared/earnings/EarningsBreakdownCard';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -276,14 +279,8 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showSecondaryActions, setShowSecondaryActions] = useState(false);
 
-  const CONTACT_STATUSES = ['driver_assigned', 'driver_en_route_pickup', 'arrived_pickup', 'in_transit'];
-  const canContact = !!(request && CONTACT_STATUSES.includes(request.status) && request.client);
+  const canContact = !!(request && TRANSPORT_CONTACT_STATUSES.includes(request.status as TransportStatus) && request.client);
   const clientName = request?.client ? `${request.client.firstName} ${request.client.lastName}` : '';
-  const { data: callRelay } = useGetCallRelayNumberQuery(
-    { entityType: 'transport', entityId: requestId },
-    { skip: !canContact },
-  );
-
   const signatureMissing =
     (request as any)?.vehicleCategory === 'courier' &&
     !!(request as any)?.courierOptions?.requiresSignature &&
@@ -464,22 +461,13 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
               </Text>
             </View>
             {canContact && (
-              <View style={styles.contactRow}>
-                <TouchableOpacity
-                  style={styles.contactBtn}
-                  onPress={() => { if (callRelay?.relayNumber) Linking.openURL(`tel:${callRelay.relayNumber}`); }}
-                >
-                  <Icon name="phone" size={16} color={colors.white} />
-                  <Text style={styles.contactBtnText}>{t('transport.call_client')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.contactBtn, styles.contactBtnMessage]}
-                  onPress={() => navigation.navigate('BookingChat', { entityType: 'transport', entityId: requestId, otherPartyName: clientName })}
-                >
-                  <Icon name="message-text" size={16} color={tokens.primary} />
-                  <Text style={[styles.contactBtnText, styles.contactBtnMessageText]}>{t('transport.message_client')}</Text>
-                </TouchableOpacity>
-              </View>
+              <ContactPartyButtons
+                entityType="transport"
+                entityId={requestId}
+                otherPartyName={clientName}
+                callLabel={t('transport.call_client')}
+                messageLabel={t('transport.message_client')}
+              />
             )}
           </Card.Content>
         </Card>
@@ -638,53 +626,54 @@ export const DriverTransportDetailsScreen = ({ navigation, route }: Props) => {
           </Card>
         )}
 
-        {/* Informations de paiement */}
-        <Card style={styles.card}>
-          <Card.Title
-            title={t('driver.payment_info')}
-            left={(props) => <Icon {...props} name="cash" size={24} />}
-          />
-          <Card.Content>
-            {(request as any).payment?.proNetAmount ? (
-              <>
-                <View style={styles.priceRow}>
-                  <Text variant="titleLarge" style={styles.priceLabel}>{t('driver.net_amount_label')}</Text>
-                  <Text variant="titleLarge" style={[styles.priceValue, { color: colors.success }]}>
-                    {(request as any).payment.proNetAmount.toFixed(2)} {(request as any).currency || CURRENCY_CONFIG.code}
-                  </Text>
-                </View>
-                <View style={styles.priceRow}>
-                  <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.gross_amount_label')}</Text>
-                  <Text variant="bodySmall">{request.totalPrice} {(request as any).currency || CURRENCY_CONFIG.code}</Text>
-                </View>
-                <View style={styles.priceRow}>
-                  <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.commission_label')}</Text>
-                  <Text variant="bodySmall" style={{ color: colors.error }}>
-                    -{(request as any).payment.commissionAmount?.toFixed(2)} {(request as any).currency || CURRENCY_CONFIG.code} ({(request as any).payment.commissionRate}%)
-                  </Text>
-                </View>
-                <View style={[styles.priceRow, { marginTop: 8 }]}>
-                  <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.escrow_status_label')}</Text>
-                  <Text variant="bodySmall" style={{ color: getEscrowColor((request as any).payment.escrowStatus) }}>
-                    {t('payment.escrow_' + ((request as any).payment.escrowStatus || 'pending'))}
-                  </Text>
-                </View>
-              </>
-            ) : (
+        {/* Gains nets du chauffeur / livreur (calculés par le serveur) */}
+        {(request as any).earnings ? (
+          <EarningsBreakdownCard earnings={(request as any).earnings} style={styles.card} />
+        ) : (
+          <Card style={styles.card}>
+            <Card.Title
+              title={t('driver.payment_info')}
+              left={(props) => <Icon {...props} name="cash" size={24} />}
+            />
+            <Card.Content>
               <View style={styles.priceRow}>
                 <Text variant="titleLarge" style={styles.priceLabel}>{t('driver.total_label')}</Text>
                 <Text variant="titleLarge" style={styles.priceValue}>
                   {request.totalPrice} {(request as any).currency || CURRENCY_CONFIG.code}
                 </Text>
               </View>
-            )}
-            <Text variant="bodySmall" style={styles.paymentMethod}>
-              {t('driver.payment_method_text', {
-                method: request.paymentMethod === 'cash' ? t('driver.payment_cash_text') : t('driver.payment_inapp_text'),
-              })}
-            </Text>
-          </Card.Content>
-        </Card>
+            </Card.Content>
+          </Card>
+        )}
+
+        {/* Séquestre du paiement in-app */}
+        {(request as any).payment?.escrowStatus && (
+          <Card style={styles.card}>
+            <Card.Content>
+              <View style={styles.priceRow}>
+                <Text variant="bodySmall" style={styles.infoLabel}>{t('driver.escrow_status_label')}</Text>
+                <Text variant="bodySmall" style={{ color: getEscrowColor((request as any).payment.escrowStatus) }}>
+                  {t('payment.escrow_' + (request as any).payment.escrowStatus)}
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+        )}
+
+        {/* Double confirmation de fin (client + chauffeur / livreur) */}
+        {request.status === 'completed' && (
+          <CompletionConfirmationCard
+            providerRole={(request as any).vehicleCategory === 'courier' ? 'courier' : 'driver'}
+            viewer="provider"
+            clientConfirmed={!!request.clientConfirmedCompletion}
+            providerConfirmed={!!request.driverConfirmedCompletion}
+            isCash={request.paymentMethod === 'cash'}
+            declaredByClient={(request as any).cashAmountDeclaredByClient}
+            declaredByProvider={(request as any).cashAmountDeclaredByDriver}
+            cashStatus={(request as any).cashPaymentStatus}
+            currency={(request as any).currency}
+          />
+        )}
 
         {/* Notes de confirmation */}
         {((request as any).clientCompletionNotes || (request as any).driverCompletionNotes) && (
